@@ -1,0 +1,76 @@
+﻿/*!****************************************************************************
+* @file    		board.h
+* @author  		d_el
+* @version 		V1.0
+* @date    		01.05.2016, Storozhenko Roman
+* @copyright 	GNU Public License
+*
+* TIM12_CH1 (PB14)             	-> LED
+* TIM3_CH1 						-> ADC TRIGGER
+* TIM15_CH2 (PB15)			    -> FAN_PWM
+*
+* SDADC1_IN4P 					-> U_MEAS
+* SDADC1_IN5P 					-> UDC_MEAS
+* SDADC1_IN6P 					-> I_MEAS
+*
+* UART3 TX - (PD8)              -> 1Wire
+* UART1 TX - (PA9), RX - (PA10)	-> UART CONNECT
+*
+* GPIO (PB9) 					-> ON_OFF
+* GPIO (PA0)                    -> CC_CV
+*/
+#ifndef board_H
+#define board_H
+
+/*!****************************************************************************
+* Include
+*/
+#include "dac.h"
+
+/*!****************************************************************************
+* User define
+*/
+#define SYSTEM_FREQ         24000000    //[Hz]
+#define APB1_FREQ           24000000    //[Hz]
+#define APB2_FREQ           24000000    //[Hz]
+
+//-----------------------------------------------------------------------------
+//ПРИОРИТЕТЫ ПРЕРЫВАНИЙ, ПО УБЫВАНИЮ
+#define EXTI_CC_CV_Priority         0
+#define PVD_IRQ_Priority            1
+#define DMA2_Channel3_IRQn_Priority 15  //Должен быть ниже configMAX_SYSCALL_INTERRUPT_PRIORITY, иначе нельзя испольховать API ф-и ОС
+//-----------------------------------------------------------------------------
+
+/*!****************************************************************************
+* User define
+*/
+
+/*!****************************************************************************
+* User enum
+*/
+
+/*!****************************************************************************
+* User typedef
+*/
+
+/*!****************************************************************************
+* Extern viriables
+*/
+
+/*!****************************************************************************
+* Macro functions
+*/
+#define setDacI(u16val)     setDacCh1(u16val)
+#define setDacU(u16val)     setDacCh2(u16val)
+#define LED_ON()            gppin_set(GP_LED)
+#define LED_OFF()           gppin_reset(GP_LED)
+#define LED_TOGGLE()        gppin_togle(GP_LED)
+#define SWITCH_OFF()		_gppin_set(GPIOB, pinm9)
+#define MODE_IS_CC()        ((gppin_get(GP_CC_CV)) ? 1:0)   //Определяет проверка режима ограничения
+
+/*!****************************************************************************
+* Prototypes for the functions
+*/
+
+#endif //board_H
+/*************** GNU GPL ************** END OF FILE ********* D_EL ***********/
