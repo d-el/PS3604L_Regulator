@@ -104,7 +104,6 @@ ina226State_type ina226_readShuntVoltage(int16_t *dst){
 * @retval
 */
 ina226State_type ina226_verifyConnect(void){
-	ina226State_type	result;
 	uint16_t reg = 0;
 
 	ina226_readReg(&reg, INA226_REG_DIE_ID);

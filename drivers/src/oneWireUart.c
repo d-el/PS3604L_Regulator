@@ -38,16 +38,16 @@ void ow_setOutOpenDrain(void){
 * @retval   owSt_type
 */
 owSt_type ow_init(void){
-    BaseType_t  res;
+    BaseType_t  res __attribute((unused));
 
     if(gppin_get(GP_DS18B20) == 0){
         return owShortCircle;       //Check on the Short Circle bus
     }
-    
+
     uart_setBaud(OW_UART, BR9600);
     OW_UART->pTxBff[0] = 0xF0;
     res = xSemaphoreTake(uart3Sem, pdMS_TO_TICKS(OW_TIMEOUT));
-    
+
     uart_read(OW_UART, OW_UART->pRxBff, 1);
     uart_write(OW_UART, OW_UART->pTxBff, 1);
     res = xSemaphoreTake(uart3Sem, pdMS_TO_TICKS(OW_TIMEOUT));
@@ -70,7 +70,7 @@ void ow_write(const void *src, uint8_t len){
     uint8_t *pSrcEnd    = pSrc + len;
     uint8_t *pBff       = OW_UART->pTxBff;
     uint8_t mask, byteTrans = len << 3;
-    
+
     while(pSrc < pSrcEnd){
         for(mask = 1; mask != 0; mask <<= 1){
             if((*pSrc & mask) != 0){
@@ -81,7 +81,7 @@ void ow_write(const void *src, uint8_t len){
         }
         pSrc++;
     }
-    
+
     uart_setBaud(OW_UART, BR115200);
     uart_read(OW_UART, OW_UART->pRxBff, byteTrans);
     uart_write(OW_UART, OW_UART->pTxBff, byteTrans);
@@ -95,19 +95,19 @@ void ow_write(const void *src, uint8_t len){
 * @retval None
 */
 void ow_read(void *dst, uint8_t len){
-    BaseType_t  res;
-    uint8_t *pDst       = dst;
-    uint8_t *pDstEnd    = pDst + len;
-    uint8_t *pBff       = OW_UART->pRxBff + 0;
-    uint8_t mask, byteTrans = len << 3;
-    
+	BaseType_t  res __attribute((unused));
+    uint8_t 	*pDst       = dst;
+    uint8_t 	*pDstEnd    = pDst + len;
+    uint8_t 	*pBff       = OW_UART->pRxBff + 0;
+    uint8_t 	mask, byteTrans = len << 3;
+
     memset(OW_UART->pTxBff, 0xFF, byteTrans);
-    
+
     uart_setBaud(OW_UART, BR115200);
     uart_read(OW_UART, OW_UART->pRxBff, byteTrans);
     uart_write(OW_UART, OW_UART->pTxBff, byteTrans);
     res = xSemaphoreTake(uart3Sem, pdMS_TO_TICKS(OW_TIMEOUT));
-    
+
     while(pDst < pDstEnd){
         *pDst = 0;
         for(mask = 1; mask != 0; mask <<= 1){
@@ -126,7 +126,7 @@ void ow_read(void *dst, uint8_t len){
 */
 uint8_t ow_crc8(uint8_t *mas, uint8_t n){
     uint8_t j , i, tmp, data, crc = 0;
-    
+
     for(i = 0; i < n; i++){
         data = *mas;
         for(j = 0; j < 8; j++){

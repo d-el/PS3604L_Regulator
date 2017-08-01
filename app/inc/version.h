@@ -1,11 +1,11 @@
 /*!****************************************************************************
 * @file     version
 * @author   d_el - Storozhenko Roman
-* @date     28.07.2017 01:06:36
+* @date     02.08.2017 02:48:41
 * @major    1
 * @minor    0
 * @revision 0
-* @build    50
+* @build    62
 */
 
 #include "stdint.h"

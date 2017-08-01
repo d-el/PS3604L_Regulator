@@ -24,7 +24,7 @@
 */
 #define ADC_NUM_CH                  (3)
 #define MA_FILTER_MAX_WITH          (64)
-#define ADC_SYSTEM_FREQUENCY        (24000000)  //[Hz]
+#define ADC_TIM_FREQUENCY        (24000000)  //[Hz]
 #define SDADC_DR_TO_LSB_ADD     	32767
 
 /*!****************************************************************************
@@ -45,7 +45,7 @@ enum{
 };
 
 /*!****************************************************************************
-* Extern viriables
+* External variables
 */
 extern adcStct_type     adcStct;
 

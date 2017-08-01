@@ -1,14 +1,15 @@
 ﻿/*!****************************************************************************
-* @file    		debugCore.c
-* @author  		d_el
-* @version 		V1.0
-* @date    		15.01.2016, by d_el
-* @copyright 	GNU Public License
+* @file    debugCore.c
+* @author  d_el
+* @version V1.0
+* @date    15.01.2016, by d_el
+* @brief   --
 */
 
-#include "stdint.h"
-#include "stm32f3xx.h"
-#include "semihosting.h"
+/*!****************************************************************************
+* User include
+*/
+#include "debugCore.h"
 
 /*!****************************************************************************
 * Memory
@@ -20,11 +21,7 @@
 *         0 - debug mode disable
 */
 uint32_t coreIsInDebugMode(void){
-    volatile uint32_t _DHCSR;
-    
-    _DHCSR = *(uint32_t*)0xE000EDF0;    //Debug Halting Control and Status Register
-    
-    if((_DHCSR & (1<<0)) != 0){
+    if((CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk) != 0){
         return 1;   //Debug mode enable
     }
     else{
@@ -38,21 +35,15 @@ uint32_t coreIsInDebugMode(void){
 * called from HardFault_Handler
 */
 void hard_fault_handler_c(unsigned int * stackedContextPtr){
-	volatile unsigned long stacked_r0;
-    volatile unsigned long stacked_r1;
-    volatile unsigned long stacked_r2;
-    volatile unsigned long stacked_r3;
-    volatile unsigned long stacked_r12;
-    volatile unsigned long stacked_lr;
-    volatile unsigned long stacked_pc;
-    volatile unsigned long stacked_psr;
-    volatile unsigned long _CFSR;
-    volatile unsigned long _HFSR;
-    volatile unsigned long _DFSR;
-    volatile unsigned long _AFSR;
-    volatile unsigned long _BFAR;
-    volatile unsigned long _MMAR;
-	        
+	volatile uint32_t stacked_r0;
+    volatile uint32_t stacked_r1;
+    volatile uint32_t stacked_r2;
+    volatile uint32_t stacked_r3;
+    volatile uint32_t stacked_r12;
+    volatile uint32_t stacked_lr;
+    volatile uint32_t stacked_pc;
+    volatile uint32_t stacked_psr;
+
     stacked_r0  = stackedContextPtr[0];
     stacked_r1  = stackedContextPtr[1];
     stacked_r2  = stackedContextPtr[2];
@@ -62,27 +53,7 @@ void hard_fault_handler_c(unsigned int * stackedContextPtr){
     stacked_pc  = stackedContextPtr[6];
     stacked_psr = stackedContextPtr[7];
 
-    // Configurable Fault Status Register
-    // Consists of MMSR, BFSR and UFSR
-    _CFSR = (*((volatile unsigned long *)(0xE000ED28))) ;   
-                                                                                        
-    // Hard Fault Status Register
-    _HFSR = (*((volatile unsigned long *)(0xE000ED2C))) ;
-
-    // Debug Fault Status Register
-    _DFSR = (*((volatile unsigned long *)(0xE000ED30))) ;
-
-    // Auxiliary Fault Status Register
-    _AFSR = (*((volatile unsigned long *)(0xE000ED3C))) ;
-
-    // Read the Fault Address Registers. These may not contain valid values.
-    // Check BFARVALID/MMARVALID to see if they are valid values
-    // MemManage Fault Address Register
-    _MMAR = (*((volatile unsigned long *)(0xE000ED34))) ;
-    // Bus Fault Address Register
-    _BFAR = (*((volatile unsigned long *)(0xE000ED38))) ;
-
-    //debug("[GAME OVER]\n");
+    debug("\n\n[GAME OVER]\n");
     debug("R0 = 0x%008X\n", stacked_r0);
     debug("R1 = 0x%008X\n", stacked_r1);
     debug("R2 = 0x%008X\n", stacked_r2);
@@ -91,13 +62,28 @@ void hard_fault_handler_c(unsigned int * stackedContextPtr){
     debug("LR [R14] = 0x%08X  subroutine call return address\n", stacked_lr);
     debug("PC [R15] = 0x%08X  program counter\n", stacked_pc);
     debug("PSR = 0x%08X\n", stacked_psr);
-    debug("BFAR = 0x%08X\n", (*((volatile unsigned long *)(0xE000ED38))));
-    debug("CFSR = 0x%08X\n", (*((volatile unsigned long *)(0xE000ED28))));
-    debug("HFSR = 0x%08X\n", (*((volatile unsigned long *)(0xE000ED2C))));
-    debug("DFSR = 0x%08X\n", (*((volatile unsigned long *)(0xE000ED30))));
-    debug("AFSR = 0x%08X\n", (*((volatile unsigned long *)(0xE000ED3C))));
-    debug("SCB_SHCSR = 0x%08x\n", SCB->SHCSR);
-    
+
+    // Configurable Fault Status Register
+    // Consists of MMSR, BFSR and UFSR
+    debug("CFSR = 0x%08X\n", SCB->CFSR);
+
+    // Hard Fault Status Register
+    debug("HFSR = 0x%08X\n", SCB->HFSR);
+
+    // Debug Fault Status Register
+    debug("DFSR = 0x%08X\n", SCB->DFSR);
+
+    // Auxiliary Fault Status Register
+    debug("AFSR = 0x%08X\n", SCB->AFSR);
+
+    // Read the Fault Address Registers. These may not contain valid values.
+    // Check BFARVALID/MMARVALID to see if they are valid values
+    // MemManage Fault Address Register
+    debug("MMFAR = 0x%08X\n", SCB->MMFAR);
+
+    // Bus Fault Address Register
+    debug("BFAR = 0x%08X\n", SCB->BFAR);
+
     asm("BKPT #1");
     while (1);
 }
@@ -105,8 +91,7 @@ void hard_fault_handler_c(unsigned int * stackedContextPtr){
 /*!****************************************************************************
 *
 */
-void HardFault_Handler(void)
-{
+void HardFault_Handler(void){
 	__asm volatile	(
 " 		MOVS   R0, #4							\n" /* Determine if processor uses PSP or MSP by checking bit.4 at LR register.		*/
 "		MOV    R1, LR							\n"
@@ -121,4 +106,4 @@ void HardFault_Handler(void)
 	::	);
 }
 
-/*************** GNU GPL ************** END OF FILE ********* D_EL ***********/
+/***************** (C) COPYRIGHT ************** END OF FILE ******** d_el ****/

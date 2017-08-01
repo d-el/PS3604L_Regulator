@@ -73,7 +73,7 @@ void i2c_init(i2c_type *i2cx){
 		RCC->AHBENR |= RCC_AHBENR_DMA1EN;
 	}
 	#endif //I2C2_USE
-    
+
     #if (I2C2_USE > 0)
     if(i2cx == i2c2){
         /************************************************
@@ -112,7 +112,7 @@ void i2c_init(i2c_type *i2cx){
 		RCC->AHBENR |= RCC_AHBENR_DMA1EN;
 	}
     #endif //I2C2_USE
-    
+
     /************************************************
     * I2C
     */
@@ -241,7 +241,7 @@ void i2cEventHendler(i2c_type *i2cx){
 * I2C ERROR HANDLER
 */
 void i2cErrorHendler(i2c_type *i2cx){
-	__IO uint32_t  I2Cx_SR1 = i2cx->I2C->ISR;
+	//__IO uint32_t  I2Cx_SR1 = i2cx->I2C->ISR;
 }
 
 /******************************************************************************
