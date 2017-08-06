@@ -19,7 +19,7 @@
 /*!****************************************************************************
 * User define
 */
-#define PieceBufRx          32	//[bytes]
+#define PIECE_BUF_RX          32	//[bytes]
 #define maxWait_ms			1000
 #define connectUart			(uart1)
 

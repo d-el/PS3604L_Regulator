@@ -32,13 +32,13 @@ void main(void){
     Init_Hard();
 
     LED_ON();
-    
+
     //Great mutex, semaphore, task, start scheduler
     OSinit();
 
     while(1){
     	__NOP();
     }
-}	
-	
+}
+
 /*************** GNU GPL ************** END OF FILE ********* D_EL ***********/

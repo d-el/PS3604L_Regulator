@@ -41,20 +41,18 @@ static inline void switchOFF(void){
 */
 void systemTSK(void *pPrm){
 	BaseType_t  		osRes;
-    portTickType        ledTime = xTaskGetTickCount();
-    portTickType		curOffTime = xTaskGetTickCount();	//Время тока < 10%
+	TickType_t			curOffTime = xTaskGetTickCount();	//Время тока < 10%
+	TickType_t          timeOffset = xTaskGetTickCount();
     regulator_type      *reg = &rg;
     regSetting_type     *s = &reg->rgSet; 		//Указатель на структуру с калибровками
     adcTaskStct_type    *a = &adcTaskStct;    	//Указатель на сруктуру с данными АЦП
     request_type        l_switchRequest;    	//Локальный запрос на вкл / выкл выход
     _iq                 qpwmTask;           	//Заполнение ШИМ для венитлятора
     _iq                 qTask, qdac;
-    uint32_t            vTaskCumul;
-    uint32_t            timeOffset;
+
     uint16_t            idac, udac;
 
     l_switchRequest     = setSwitchOff;
-    vTaskCumul          = 0;
 
     while(1){
     	osRes = xSemaphoreTake(rxRequest, pdMS_TO_TICKS(MAX_WAIT_RxRequest));
@@ -263,6 +261,15 @@ void systemTSK(void *pPrm){
 		}
 
 		/**************************************
+		 * Случай когда в режиме ограничения тока переключили на mode_limitation
+		 */
+		if(reg->tf.task.mode == mode_overcurrentShutdown){
+			if(reg->tf.state.bit.modeIlim != 0){
+				l_switchRequest = setSwitchOff;
+			}
+		}
+
+		/**************************************
 		 * Выключение по падению тока до 10% от задания
 		 */
 		if(reg->tf.task.mode == mode_lowCurrentShutdown){
@@ -303,7 +310,6 @@ void systemTSK(void *pPrm){
         if(l_switchRequest == setSwitchOn){
             if(reg->tf.state.bit.switchIsON == 0){
                 reg->tf.state.bit.ovfCurrent = 0;
-                vTaskCumul = 0;
                 setDacU(0);
                 switchON();
             }
@@ -312,7 +318,6 @@ void systemTSK(void *pPrm){
         }
         if(l_switchRequest == setSwitchOff){
             if(reg->tf.state.bit.switchIsON != 0){
-                vTaskCumul = 0;
                 setDacU(0);
                 switchOFF();
             }

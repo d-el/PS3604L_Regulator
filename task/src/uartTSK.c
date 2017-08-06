@@ -25,9 +25,9 @@ void uartTSK(void *pPrm){
 	uint8_t     numRx = 0;
     
     while(1){
-        uart_read(connectUart, connectUart->pRxBff, PieceBufRx);       //Запуск нового приема
+        uart_read(connectUart, connectUart->pRxBff, PIECE_BUF_RX);       //Запуск нового приема
         res = xSemaphoreTake(uart1Sem, pdMS_TO_TICKS(maxWait_ms));
-        numRx += PieceBufRx - uartGetRemainRx(connectUart);
+        numRx += PIECE_BUF_RX - uartGetRemainRx(connectUart);
 
         if((numRx != 0)&&(res == pdTRUE)){
             crc = GetCrc(connectUart->pRxBff, sizeof(task_type) + sizeof(uint16_t));
