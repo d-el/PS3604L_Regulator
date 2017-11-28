@@ -23,7 +23,7 @@
  */
 #define ADC_NUM_CH                  (3)
 #define MA_FILTER_MAX_WITH          (64)
-#define ADC_TIM_FREQUENCY        (24000000)  //[Hz]
+#define ADC_TIM_FREQUENCY           (24000000)  //[Hz]
 
 #define AdcVref                     3.3         //[V]
 #define UDC_Rh                      20          //[kOhm]

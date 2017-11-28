@@ -232,7 +232,6 @@ void uart_init(uart_type *uartx, uartBaudRate_type baudRate){
 
     uartx->pUart->CR1      |= USART_CR1_TE;                                		//Transmitter enable
     uartx->pUart->CR1      |= USART_CR1_RE;                                		//Receiver enable
-    //while((uartx->pUart->ISR & USART_ISR_IDLE) == 0) __NOP();
     uartx->pUart->ICR      = USART_ICR_TCCF | USART_ICR_IDLECF;            		//Clear the flags
     if(uartx->rxIdleLineMode != 0){
     	uartx->pUart->ICR    = USART_ICR_IDLECF;								//Clear flag

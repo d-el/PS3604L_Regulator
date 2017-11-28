@@ -226,7 +226,7 @@ void adcTSK(void *pPrm){
 		}
 
 		/*****************************************
-		 * Рассчет A/h от момента включения ключа
+		 * Рассчет Ah от момента включения ключа
 		 */
 		static uint64_t capacity;
 		if(rg.tf.state.bit.switchIsON != 0){
