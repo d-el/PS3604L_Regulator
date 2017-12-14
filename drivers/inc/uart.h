@@ -1,11 +1,15 @@
 ﻿/*!****************************************************************************
-* @file    		uart.h
-* @author  		Storozhenko Roman - D_EL
-* @version 		V1.4
-* @brief   		driver for uart of STM32 F3 MCUs
-* @date    		09.01.2016
-* @copyright 	GNU Public License
-*/
+ * @file		crc.h
+ * @author		d_el - Storozhenko Roman
+ * @version		V1.5
+ * @date		12.12.2017
+ * @brief		Driver for uart STM32F3 MCUs
+ * @copyright	Copyright (C) 2017 Storozhenko Roman
+ *				All rights reserved
+ *				This software may be modified and distributed under the terms
+ *				of the BSD license.	 See the LICENSE file for details
+ */
+
 #ifndef UART_H
 #define UART_H
 
@@ -21,10 +25,10 @@
 /*!****************************************************************************
 * User define
 */
+#define UART_FREQ						(24000000U)		///< [Hz]
+
 //UART1
 #define     UART1_USE                   (1)
-#define     UART1_Tx_HOOK               (1)
-#define     UART1_Rx_HOOK               (1)
 #define     UART1_TxBffSz               (128)
 #define     UART1_RxBffSz               (128)
 #define     UART1_RxDmaInterruptPrior   (15)
@@ -36,8 +40,6 @@
 
 //UART2
 #define     UART2_USE                   (0)
-#define     UART2_Tx_HOOK               (1)
-#define     UART2_Rx_HOOK               (1)
 #define     UART2_TxBffSz               (128)
 #define     UART2_RxBffSz               (128)
 #define     UART2_RxDmaInterruptPrior   (15)
@@ -49,8 +51,6 @@
 
 //UART3
 #define     UART3_USE                   (1)
-#define     UART3_Tx_HOOK               (0)
-#define     UART3_Rx_HOOK               (1)
 #define     UART3_TxBffSz               (128)
 #define     UART3_RxBffSz               (128)
 #define     UART3_RxDmaInterruptPrior   (15)
@@ -61,26 +61,28 @@
 #define     UART3_RX_IDLE_LINE_MODE     (1)
 
 /*!****************************************************************************
-* User enum
-*/
+ * Enumeration
+ */
 
-/*!****************************************************************************
-* User typedef
-*/
+/******************************************************************************
+ * Typedef
+ */
 typedef enum{
-    BR9600,
-    BR38400,
-    BR115200
+	BR9600,  //!< BR9600
+	BR38400, //!< BR38400
+	BR57600, //!< BR57600
+	BR115200,//!< BR115200
+	BR_NUMBER//!< BR_NUMBER
 }uartBaudRate_type;
 
-typedef enum{  
+typedef enum{
     uartTxFree,
     uartTxRun,
     uartTxSuccess,
     uartTxErr
 }uartTxState_type;
 
-typedef enum{  
+typedef enum{
     uartRxFree,
     uartRxRun,
     uartRxSuccess,
@@ -88,12 +90,18 @@ typedef enum{
     uartRxErr
 }uartRxState_type;
 
-typedef struct{
+typedef struct uartStruct{
     USART_TypeDef           	*pUart;
     uint8_t                 	*pTxBff;
     uint8_t                 	*pRxBff;
     DMA_Channel_TypeDef     	*pUartTxDmaCh;
     DMA_Channel_TypeDef     	*pUartRxDmaCh;
+	volatile uint32_t			*dmaIfcrTx;			///< DMA interrupt flag clear register Tx
+	volatile uint32_t			*dmaIfcrRx;			///< DMA interrupt flag clear register Rx
+	uint32_t					dmaIfcrMaskTx;		///< DMA interrupt flag clear register mask Tx
+	uint32_t					dmaIfcrMaskRx;		///< DMA interrupt flag clear register mask Rx
+    void (*txHoock)(struct uartStruct *uart);
+    void (*rxHoock)(struct uartStruct *uart);
     volatile uartTxState_type 	txState     	:8;
     volatile uartRxState_type  	rxState     	:8;
     uartTxState_type       	    baudRate    	:4;
@@ -101,13 +109,13 @@ typedef struct{
     uint8_t						rxIdleLineMode	:1;
     volatile uint16_t         	txCnt;
     volatile uint16_t          	rxCnt;
-    volatile uint16_t           errorRxCnt;
 }uart_type;
 
+typedef void (*uartCallback_type)(uart_type *uart);
+
 /*!****************************************************************************
-* Extern viriables
-*/
-extern uint32_t usartBaudRate[3];
+ * Exported variables
+ */
 #if (UART1_USE == 1)
 extern uart_type            *uart1;
 #endif //UART1_USE
@@ -126,40 +134,16 @@ extern uart_type            *uart3;
 #define uartGetRemainTx(uartx)      (uartx->pUartTxDmaCh->CNDTR)
 #define uartGetRemainRx(uartx)      (uartx->pUartRxDmaCh->CNDTR)
 
-__attribute__((always_inline)) __STATIC_INLINE
-void uart1TxHook(){
-    BaseType_t  xHigherPriorityTaskWoken;
-    xHigherPriorityTaskWoken = pdFALSE;
-    xSemaphoreGiveFromISR(uart1Sem, &xHigherPriorityTaskWoken);
-    if(xHigherPriorityTaskWoken != pdFALSE){
-        portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
-    }
-}
-
-__attribute__((always_inline)) __STATIC_INLINE
-void uart1RxHook(){
-	uart1TxHook();
-}
-
-__attribute__((always_inline)) __STATIC_INLINE
-void uart3RxHook(){
-    BaseType_t  xHigherPriorityTaskWoken;
-    xHigherPriorityTaskWoken = pdFALSE;
-    xSemaphoreGiveFromISR(uart3Sem, &xHigherPriorityTaskWoken);
-    if(xHigherPriorityTaskWoken != pdFALSE){
-        portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
-    }
-}
-
 /*!****************************************************************************
-* Prototypes for the functions
-*/
+ * Function declaration
+ */
 void uart_init(uart_type *uartx, uartBaudRate_type baudRate);
 void uart_deinit(uart_type *uartx);
 void uart_setBaud(uart_type *uartx, uartBaudRate_type baudRate);
+void uart_setCallback(uart_type *uartx, uartCallback_type txHoock, uartCallback_type rxHoock);
 void uart_write(uart_type *uartx, void *src, uint16_t len);
 void uart_read(uart_type *uartx, void *dst, uint16_t len);
 void uart_stopRead(uart_type *uartStruct);
 
 #endif //UART_H
-/*************** GNU GPL ************** END OF FILE ********* D_EL ***********/
+/***************** Copyright (C) Storozhenko Roman ******* END OF FILE *******/

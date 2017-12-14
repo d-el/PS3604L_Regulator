@@ -2,7 +2,7 @@
 * @file    		debugCore.h
 * @author  		d_el
 * @version 		V1.0
-* @date    		15.01.2016, by d_el
+* @date    		13.12.2017, by d_el
 * @copyright 	GNU Public License
 */
 #ifndef debugCore_H
@@ -13,7 +13,7 @@
 */
 #include "stm32f3xx.h"
 #include "stdint.h"
-#include "semihosting.h"
+#include "debugPrint.h"
 
 /*!****************************************************************************
 * User define

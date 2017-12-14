@@ -1,10 +1,14 @@
 ﻿/*!****************************************************************************
-* @file    		uartTSK.h
-* @author  		D_EL
-* @version 		V1.1
-* @date    		2015-20-11
-* @copyright 	GNU Public License
-*/
+ * @file		uartTSK.h
+ * @author		d_el
+ * @version		V1.2
+ * @date		13.12.2017
+ * @brief		connect interface with regulator
+ * @copyright	Copyright (C) 2017 Storozhenko Roman
+ *				All rights reserved
+ *				This software may be modified and distributed under the terms
+ *				of the BSD license.	 See the LICENSE file for details
+ */
 #ifndef uartTSK_H
 #define uartTSK_H
 
@@ -15,13 +19,14 @@
 #include "crc.h"
 #include "string.h"
 #include "OSinit.h"
+#include "assert.h"
 
 /*!****************************************************************************
 * User define
 */
-#define PIECE_BUF_RX          32	//[bytes]
+#define PIECE_BUF_RX        32	//[bytes]
 #define maxWait_ms			1000
-#define connectUart			(uart1)
+#define connectUart			uart1
 
 /*!****************************************************************************
 * User typedef
@@ -63,4 +68,4 @@ typedef struct{
 void uartTSK(void *pPrm);
 
 #endif //uartTSK_H
-/*************** GNU GPL ************** END OF FILE ********* D_EL ***********/
+/***************** Copyright (C) Storozhenko Roman ******* END OF FILE *******/

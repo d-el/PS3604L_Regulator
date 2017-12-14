@@ -15,6 +15,30 @@
 /*!****************************************************************************
 * MEMORY
 */
+static SemaphoreHandle_t oneWireUartSem;
+
+/*!****************************************************************************
+ * @brief	uart RX callback
+ */
+static void uartRxHook(uart_type *puart){
+	BaseType_t xHigherPriorityTaskWoken;
+	xHigherPriorityTaskWoken = pdFALSE;
+	xSemaphoreGiveFromISR(oneWireUartSem, &xHigherPriorityTaskWoken);
+	if(xHigherPriorityTaskWoken != pdFALSE){
+		portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
+	}
+}
+
+/*!****************************************************************************
+* @brief    Initialization one wire interface
+*/
+void ow_init(void){
+	// Create Semaphore for UART
+	vSemaphoreCreateBinary(oneWireUartSem);
+	assert(oneWireUartSem != NULL);
+
+	uart_setCallback(OW_UART, (uartCallback_type)NULL, uartRxHook);
+}
 
 /*!****************************************************************************
 * @brief    Set One Wire pin to push-pull output
@@ -37,7 +61,7 @@ void ow_setOutOpenDrain(void){
 * @param    None
 * @retval   owSt_type
 */
-owSt_type ow_init(void){
+owSt_type ow_reset(void){
     BaseType_t  res __attribute((unused));
 
     if(gppin_get(GP_DS18B20) == 0){
@@ -46,11 +70,11 @@ owSt_type ow_init(void){
 
     uart_setBaud(OW_UART, BR9600);
     OW_UART->pTxBff[0] = 0xF0;
-    res = xSemaphoreTake(uart3Sem, pdMS_TO_TICKS(OW_TIMEOUT));
+    res = xSemaphoreTake(oneWireUartSem, pdMS_TO_TICKS(OW_TIMEOUT));
 
     uart_read(OW_UART, OW_UART->pRxBff, 1);
     uart_write(OW_UART, OW_UART->pTxBff, 1);
-    res = xSemaphoreTake(uart3Sem, pdMS_TO_TICKS(OW_TIMEOUT));
+    res = xSemaphoreTake(oneWireUartSem, pdMS_TO_TICKS(OW_TIMEOUT));
 
     if(((OW_UART->pRxBff[0] >= 0x90)&&(OW_UART->pRxBff[0] <= 0xE0))||(OW_UART->pRxBff[0] == 0)){
         return owOk;
@@ -85,7 +109,7 @@ void ow_write(const void *src, uint8_t len){
     uart_setBaud(OW_UART, BR115200);
     uart_read(OW_UART, OW_UART->pRxBff, byteTrans);
     uart_write(OW_UART, OW_UART->pTxBff, byteTrans);
-    xSemaphoreTake(uart3Sem, pdMS_TO_TICKS(OW_TIMEOUT));
+    xSemaphoreTake(oneWireUartSem, pdMS_TO_TICKS(OW_TIMEOUT));
 }
 
 /*!***************************************************************************
@@ -98,7 +122,7 @@ void ow_read(void *dst, uint8_t len){
 	BaseType_t  res __attribute((unused));
     uint8_t 	*pDst       = dst;
     uint8_t 	*pDstEnd    = pDst + len;
-    uint8_t 	*pBff       = OW_UART->pRxBff + 0;
+    uint8_t 	*pBff       = OW_UART->pRxBff;
     uint8_t 	mask, byteTrans = len << 3;
 
     memset(OW_UART->pTxBff, 0xFF, byteTrans);
@@ -106,7 +130,7 @@ void ow_read(void *dst, uint8_t len){
     uart_setBaud(OW_UART, BR115200);
     uart_read(OW_UART, OW_UART->pRxBff, byteTrans);
     uart_write(OW_UART, OW_UART->pTxBff, byteTrans);
-    res = xSemaphoreTake(uart3Sem, pdMS_TO_TICKS(OW_TIMEOUT));
+    res = xSemaphoreTake(oneWireUartSem, pdMS_TO_TICKS(OW_TIMEOUT));
 
     while(pDst < pDstEnd){
         *pDst = 0;

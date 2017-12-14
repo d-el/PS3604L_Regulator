@@ -13,7 +13,7 @@
 */
 #include "gpio.h"
 #include "oneWireUart.h"
-#include "delay.h"
+#include "crc.h"
 
 /*!****************************************************************************
 * User define

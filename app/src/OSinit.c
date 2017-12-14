@@ -18,8 +18,6 @@
 * Semaphore
 */
 xSemaphoreHandle    AdcEndConversionSem;
-xSemaphoreHandle    uart1Sem;
-xSemaphoreHandle    uart3Sem;
 xSemaphoreHandle    rxRequest;
 xSemaphoreHandle    i2c1Sem;
 
@@ -32,12 +30,6 @@ void OSinit(void){
     //AdcEndConversionSem
     vSemaphoreCreateBinary(AdcEndConversionSem);
     xSemaphoreTake(AdcEndConversionSem, portMAX_DELAY);
-    //uart1Sem
-    vSemaphoreCreateBinary(uart1Sem);
-    xSemaphoreTake(uart1Sem, portMAX_DELAY);
-    //uart3Sem
-    vSemaphoreCreateBinary(uart3Sem);
-    xSemaphoreTake(uart3Sem, portMAX_DELAY);
     //rxRequest
     vSemaphoreCreateBinary(rxRequest);
     xSemaphoreTake(rxRequest, portMAX_DELAY);

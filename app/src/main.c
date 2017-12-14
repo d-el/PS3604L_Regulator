@@ -23,8 +23,6 @@
 #include "debugCore.h"
 #include "semihosting.h"
 
-uint8_t iii = 1;
-
 /*!****************************************************************************
 * @brief    main function
 */
@@ -32,13 +30,11 @@ void main(void){
     Init_Hard();
 
     LED_ON();
+    LED_ON();
 
     //Great mutex, semaphore, task, start scheduler
     OSinit();
-
-    while(1){
-    	__NOP();
-    }
+    while(1);
 }
 
 /*************** GNU GPL ************** END OF FILE ********* D_EL ***********/

@@ -39,8 +39,6 @@ extern xSemaphoreHandle    oneWireBusyMutex;
 * Semaphore
 */
 extern xSemaphoreHandle    AdcEndConversionSem;
-extern xSemaphoreHandle    uart1Sem;
-extern xSemaphoreHandle    uart3Sem;
 extern xSemaphoreHandle    rxRequest;
 extern xSemaphoreHandle    i2c1Sem;
 

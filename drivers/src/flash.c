@@ -67,7 +67,7 @@ nvMem_state_type flash_write(void *dst, void *src, uint32_t num){
     pRd     = src;
     pWr     = dst;
     pEnd    = pWr + num;
-    
+
     while(pWr < pEnd){
         *pWr++ = *pRd++;
         while(flash_busy());
@@ -83,7 +83,7 @@ nvMem_state_type flash_write(void *dst, void *src, uint32_t num){
 */
 nvMem_state_type nvMem_init(void){
     nvMem.fullSize  = 0;
-    
+
     for(uint16_t i = 0; i < nvMem.numPrm; i++){
         nvMem.fullSize += nvMem.memreg[i].sizeofData;
     }
@@ -104,9 +104,9 @@ nvMem_state_type nvMem_init(void){
 */
 nvMem_state_type nvMem_savePrm(void *adrNvMem){
     uint8_t     *ptr;
-    
+
     ptr   = nvMemTmpBff;
-    
+
     //Check flag
     if(nvMem.flags.bit.prepareForWrite == 0){
         nvMem_prepareMemory(adrNvMem);
@@ -127,14 +127,14 @@ nvMem_state_type nvMem_savePrm(void *adrNvMem){
         ptr += nvMem.memreg[i].sizeofData;
     }
     //CRC
-    *(uint16_t*)ptr = GetCrc(nvMemTmpBff, ptr - nvMemTmpBff);
+    *(uint16_t*)ptr = crc16Calc(&crcModBus, nvMemTmpBff, ptr - nvMemTmpBff);
     ptr += sizeof(uint16_t);
-    
+
     //Sava
     flash_write(adrNvMem, nvMemTmpBff, ptr - nvMemTmpBff);
-    
+
     nvMem.flags.bit.prepareForWrite = 0;
-    
+
     return nvMem_ok;
 }
 
@@ -148,13 +148,13 @@ nvMem_state_type nvMem_savePrm(void *adrNvMem){
 nvMem_state_type nvMem_loadPrm(void *adrNvMem){
     uint8_t     *ptr;
     uint16_t    l_crc, l_signature;
-    
+
     ptr   = nvMemTmpBff;
-    
+
     memcpy(nvMemTmpBff,  adrNvMem, nvMem.fullSize);
-    
-    l_crc = GetCrc(nvMemTmpBff, nvMem.fullSize);
-    
+
+    l_crc = crc16Calc(&crcModBus, nvMemTmpBff, nvMem.fullSize);
+
     if(l_crc == 0){ //CRC OK
         l_signature = *(uint16_t*)ptr;
         if(l_signature != nvMemSignature){  //signature error
@@ -163,12 +163,12 @@ nvMem_state_type nvMem_loadPrm(void *adrNvMem){
         ptr += sizeof(l_signature);
         nvMem.saveCnt = *(uint16_t*)ptr;
         ptr += sizeof(nvMem.saveCnt);
-        
+
         for(uint16_t i = 0; i < nvMem.numPrm; i++){
             memcpy(nvMem.memreg[i].dataPtr, ptr, nvMem.memreg[i].sizeofData);
             ptr += nvMem.memreg[i].sizeofData;
         }
-        
+
         return nvMem_ok;
     }
     else{   //CRC ERROR
@@ -183,9 +183,9 @@ nvMem_state_type nvMem_prepareMemory(void *adrNvMem){
     flash_unlock();
     flash_erasePage(adrNvMem);
     flash_lock();
-    
+
     nvMem.flags.bit.prepareForWrite = 1;
-    
+
     return nvMem_ok;
 }
 

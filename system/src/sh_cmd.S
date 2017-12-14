@@ -1,11 +1,11 @@
 /*!****************************************************************************
- * @file      semihost_cmd.s
- * @author    Coocox
- * @version   V1.0
- * @date      09/10/2011
- * @brief     Semihost command support.
+ * @file        semihost_cmd.s
+ * @author      d_el - Storozhenko Roman
+ * @version     V1.0
+ * @date        09.10.2011
+ * @copyright   GNU Lesser General Public License v3
+ * @brief       Debug utils, HardFault_Handler tracer
  */
-
 
 .text
 .global SH_DoCommand
@@ -16,7 +16,7 @@
 .type HardFault_Handler, function
 
 
-/**************************************************************************//**
+/*!****************************************************************************
   * @brief  prototype: int SH_DoCommand(int n32In_R0, int n32In_R1, int *pn32Out_R0)
   *
   * @param  n32In_R0	R0
@@ -24,7 +24,7 @@
   * @param  pn32Out_R0  R2
   *
   * @retval None
-  *****************************************************************************/
+  */
 SH_DoCommand:
     BKPT 0xAB                 		/* Wait ICE or HardFault */
                               		/* ICE will step over BKPT directly */
@@ -44,30 +44,5 @@ SH_ICE:                           	/* Captured by ICE */
 SH_End:
     MOVS R0, #1                   	/* Set return value to 1 */
 	BX LR                         	/* Return */
-
-/**************************************************************************//**
-  * @brief  HardFault Handler
-  *
-  * @param  None.
-  *
-  * Skip the semihost command in free run mode.
-  *
-  * @retval None
-  *****************************************************************************/
-;HardFault_Handler2:
-;	LDR    R0, [R13, #24]         	/* Get previous PC */
-;	LDRH   R1, [R0]               	/* Get instruction */
-;	LDR    R2, =0xBEAB            	/* The sepcial BKPT instruction */
-;	CMP    R1, R2                 	/* Test if the instruction at previous PC is BKPT */
-;	BNE    HardFault_Handler_Ret  	/* Not BKPT */
-;
-;	ADDS   R0, #4                 	/* Skip BKPT and next line */
-;	STR    R0, [R13, #24]         	/* Save previous PC */
-;
-;	BX     LR
-;
-;HardFault_Handler_Ret:
-;	B      .
-
 
 .end

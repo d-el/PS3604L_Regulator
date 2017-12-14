@@ -2,7 +2,7 @@
 * @file    debugCore.c
 * @author  d_el
 * @version V1.0
-* @date    15.01.2016, by d_el
+* @date    13.12.2017, by d_el
 * @brief   --
 */
 
@@ -17,15 +17,15 @@
 
 /*!****************************************************************************
 * @brief
-* @retval 1 - debug mode enable
-*         0 - debug mode disable
+* @retval 1 - print mode enable
+*         0 - print mode disable
 */
 uint32_t coreIsInDebugMode(void){
     if((CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk) != 0){
-        return 1;   //Debug mode enable
+        return 1;   //print mode enable
     }
     else{
-        return 0;   //Debug mode disable
+        return 0;   //print mode disable
     }
 }
 
@@ -53,36 +53,36 @@ void hard_fault_handler_c(unsigned int * stackedContextPtr){
     stacked_pc  = stackedContextPtr[6];
     stacked_psr = stackedContextPtr[7];
 
-    debug("\n\n[GAME OVER]\n");
-    debug("R0 = 0x%008X\n", stacked_r0);
-    debug("R1 = 0x%008X\n", stacked_r1);
-    debug("R2 = 0x%008X\n", stacked_r2);
-    debug("R3 = 0x%008X\n", stacked_r3);
-    debug("R12 = 0x%08X\n", stacked_r12);
-    debug("LR [R14] = 0x%08X  subroutine call return address\n", stacked_lr);
-    debug("PC [R15] = 0x%08X  program counter\n", stacked_pc);
-    debug("PSR = 0x%08X\n", stacked_psr);
+    print("\n\n[GAME OVER]\n");
+    print("R0 = 0x%008X\n", stacked_r0);
+    print("R1 = 0x%008X\n", stacked_r1);
+    print("R2 = 0x%008X\n", stacked_r2);
+    print("R3 = 0x%008X\n", stacked_r3);
+    print("R12 = 0x%08X\n", stacked_r12);
+    print("LR [R14] = 0x%08X  subroutine call return address\n", stacked_lr);
+    print("PC [R15] = 0x%08X  program counter\n", stacked_pc);
+    print("PSR = 0x%08X\n", stacked_psr);
 
     // Configurable Fault Status Register
     // Consists of MMSR, BFSR and UFSR
-    debug("CFSR = 0x%08X\n", SCB->CFSR);
+    print("CFSR = 0x%08X\n", SCB->CFSR);
 
     // Hard Fault Status Register
-    debug("HFSR = 0x%08X\n", SCB->HFSR);
+    print("HFSR = 0x%08X\n", SCB->HFSR);
 
-    // Debug Fault Status Register
-    debug("DFSR = 0x%08X\n", SCB->DFSR);
+    // print Fault Status Register
+    print("DFSR = 0x%08X\n", SCB->DFSR);
 
     // Auxiliary Fault Status Register
-    debug("AFSR = 0x%08X\n", SCB->AFSR);
+    print("AFSR = 0x%08X\n", SCB->AFSR);
 
     // Read the Fault Address Registers. These may not contain valid values.
     // Check BFARVALID/MMARVALID to see if they are valid values
     // MemManage Fault Address Register
-    debug("MMFAR = 0x%08X\n", SCB->MMFAR);
+    print("MMFAR = 0x%08X\n", SCB->MMFAR);
 
     // Bus Fault Address Register
-    debug("BFAR = 0x%08X\n", SCB->BFAR);
+    print("BFAR = 0x%08X\n", SCB->BFAR);
 
     asm("BKPT #1");
     while (1);

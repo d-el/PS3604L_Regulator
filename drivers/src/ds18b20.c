@@ -30,7 +30,7 @@ uint8_t ds18b20Init(void){
     uint8_t result, buff[8];
     uint8_t crc = 0;
 
-    result = ow_init();
+    result = ow_reset();
     if(result != 0){
         return result;
     }
@@ -50,22 +50,13 @@ uint8_t ds18b20Init(void){
     buff[1] = WRITE_SCRATCHPAD;
     buff[2] = 127;              //TH
     buff[3] = 0;                //TL
-    //buff[4] = 0x1F;         //9bit          93.75ms 0.5
-    //buff[4] = 0x3F;         //10bit         187.5ms 0.25
-    //buff[4] = 0x5F;         //11bit 375ms   0.125
-    buff[4] = 0x7F;         //12bit 750ms   0.0625
-    ow_init(); 
+    buff[4] = 0x7F;         	//12bit 750ms   0.0625
+    ow_reset();
     ow_write(buff, 5);
-    
-    //Save to eeprom
-    //buff[0] = SKIP_ROM;
-    //buff[1] = COPY_SCRATCHPAD;
-    //ow_init(); 
-    //ow_write(buff, 2); 
-    
+
     buff[0] = SKIP_ROM;
     buff[1] = CONVERT_T;
-    ow_init(); 
+    ow_reset();
     ow_write(buff, 2);
 
     return 0;
@@ -84,10 +75,10 @@ uint16_t reg2tmpr(uint8_t rl, uint8_t rh){
         }byte;
         uint16_t    word;
     }scratchpad;
-    
+
     scratchpad.byte.rl = rl;
     scratchpad.byte.rh = rh;
-    
+
     return (scratchpad.word * 10U + (16/2)) / 16;   //Деление с округлением
 }
 

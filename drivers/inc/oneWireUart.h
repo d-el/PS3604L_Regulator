@@ -13,6 +13,7 @@
 */
 #include "uart.h"
 #include "OSinit.h"
+#include "semphr.h"
 
 /*!****************************************************************************
 * User define
@@ -38,7 +39,7 @@ typedef enum{
 }owSt_type;
 
 /*!****************************************************************************
-* Extern viriables
+* External variables
 */
 
 /*!****************************************************************************
@@ -48,9 +49,10 @@ typedef enum{
 /*!****************************************************************************
 * Prototypes for the functions
 */
+void ow_init(void);
 void ow_setOutHi(void);
 void ow_setOutOpenDrain(void);
-owSt_type ow_init(void);
+owSt_type ow_reset(void);
 void ow_write(const void *src, uint8_t len);
 void ow_read(void *dst, uint8_t len);
 uint8_t ow_crc8(uint8_t *mas, uint8_t n);

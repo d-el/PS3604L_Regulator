@@ -29,6 +29,8 @@ void ds18TSK(void *pPrm){
     uint8_t		errorcnt = 0;
     owSt_type   st;
 
+    ow_init();
+
     temperature.state = temp_Ok;
 
     /*****************************
@@ -50,7 +52,7 @@ void ds18TSK(void *pPrm){
 
     while(1){
     	ow_setOutOpenDrain();
-        st = ow_init();
+        st = ow_reset();
         if(st == owOk){
             bff[0] = SKIP_ROM;
             ow_write(bff, 1);
@@ -76,7 +78,7 @@ void ds18TSK(void *pPrm){
             	}
             }
 
-            st =  ow_init();
+            st =  ow_reset();
             bff[0] = SKIP_ROM;
             ow_write(bff, 1);
             bff[0] = CONVERT_T;

@@ -22,6 +22,7 @@
 #include "board.h"
 #include "flash.h"
 #include "systemTSK.h"
+#include "delay.h"
 
 /*!****************************************************************************
 * User define
