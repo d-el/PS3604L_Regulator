@@ -23,7 +23,6 @@
  */
 #define ADC_NUM_CH                  (3)
 #define MA_FILTER_MAX_WITH          (128)
-//#define ADC_TIM_FREQUENCY           (24000000)  //[Hz]
 
 #define AdcVref                     3.3         //[V]
 #define UDC_Rh                      20          //[kOhm]
@@ -42,12 +41,13 @@ typedef struct {
 	uint16_t adcDefVal;
 	uint16_t oversampling;
 	uint16_t recursiveK;
-	uint16_t MA_filter_WITH;         ///<Кратно 8
+	uint16_t MA_filter_WITH;
 
 	uint32_t recursiveFilterCumul;
 	uint16_t recursiveFilterOut;
 	uint16_t MA_filterMas[MA_FILTER_MAX_WITH];
 	uint16_t MA_filterIndex;
+	uint32_t MA_accumulator;
 } adcFilt_type;
 
 typedef struct {

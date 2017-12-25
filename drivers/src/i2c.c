@@ -40,7 +40,7 @@ void i2c_init(i2c_type *i2cx){
 		/************************************************
 		* Memory setting
 		*/
-		i2cx->I2C           = I2C1;
+		i2cx->pI2c           = I2C1;
 		i2cx->pDmaTxDmaCh  	= DMA1_Channel6;
 		i2cx->pDmaRxDmaCh  	= DMA1_Channel7;
 
@@ -79,7 +79,7 @@ void i2c_init(i2c_type *i2cx){
         /************************************************
         * Memory setting
         */
-        i2cx->I2C        	= I2C2;
+        i2cx->pI2c        	= I2C2;
         i2cx->pDmaTxDmaCh  	= DMA1_Channel4;
         i2cx->pDmaRxDmaCh  	= DMA1_Channel5;
 
@@ -116,21 +116,19 @@ void i2c_init(i2c_type *i2cx){
     /************************************************
     * I2C
     */
-    i2cx->I2C->CR1	|= I2C_CR1_TXDMAEN;								//DMA mode disabled for transmission
-    i2cx->I2C->CR1	|= I2C_CR1_RXDMAEN;								//DMA mode enabled for reception
-
-    i2cx->I2C->CR1	|= I2C_CR1_STOPIE;								//Stop detection (STOPF) interrupt enabled
-
-    i2cx->I2C->CR2	|= I2C_CR2_AUTOEND;								//Automatic end mode: a STOP condition is automatically sent when NBYTES data are transferred
+    i2cx->pI2c->CR1	|= I2C_CR1_TXDMAEN;								//DMA mode disabled for transmission
+    i2cx->pI2c->CR1	|= I2C_CR1_RXDMAEN;								//DMA mode enabled for reception
+    i2cx->pI2c->CR1	|= I2C_CR1_STOPIE;								//Stop detection (STOPF) interrupt enabled
+    i2cx->pI2c->CR2	|= I2C_CR2_AUTOEND;								//Automatic end mode: a STOP condition is automatically sent when NBYTES data are transferred
 
     //I2C_TIMINGR 400 kHz for 8 MHz Peripheral clock	(ref DocID027295 Rev 2 1024/1426)
-    i2cx->I2C->TIMINGR |= (0x0) << I2C_TIMINGR_PRESC_Pos;
-    i2cx->I2C->TIMINGR |= (0x9) << I2C_TIMINGR_SCLL_Pos;
-    i2cx->I2C->TIMINGR |= (0x3) << I2C_TIMINGR_SCLH_Pos;
-    i2cx->I2C->TIMINGR |= (0x1) << I2C_TIMINGR_SDADEL_Pos;
-    i2cx->I2C->TIMINGR |= (0x3) << I2C_TIMINGR_SCLDEL_Pos;
+    i2cx->pI2c->TIMINGR |= (0x0) << I2C_TIMINGR_PRESC_Pos;
+    i2cx->pI2c->TIMINGR |= (0x9) << I2C_TIMINGR_SCLL_Pos;
+    i2cx->pI2c->TIMINGR |= (0x3) << I2C_TIMINGR_SCLH_Pos;
+    i2cx->pI2c->TIMINGR |= (0x1) << I2C_TIMINGR_SDADEL_Pos;
+    i2cx->pI2c->TIMINGR |= (0x3) << I2C_TIMINGR_SCLDEL_Pos;
 
-    i2cx->I2C->CR1	|= I2C_CR1_PE;			//Peripheral Enable
+    i2cx->pI2c->CR1	|= I2C_CR1_PE;			//Peripheral Enable
 
     /************************************************
     * DMA
@@ -145,9 +143,8 @@ void i2c_init(i2c_type *i2cx){
     i2cx->pDmaTxDmaCh->CCR &= ~DMA_CCR_PINC;                             		//Peripheral increment mode disabled
     i2cx->pDmaTxDmaCh->CCR &= ~DMA_CCR_CIRC;                             		//Circular mode disabled
     i2cx->pDmaTxDmaCh->CCR |= DMA_CCR_DIR;                               		//Read from memory
-    //i2cx->pDmaTxDmaCh->CCR |= DMA_CCR_TCIE;                    					//Transfer complete interrupt disable
     i2cx->pDmaTxDmaCh->CNDTR = 0;                                        		//Number of data
-    i2cx->pDmaTxDmaCh->CPAR = (uint32_t)&i2cx->I2C->TXDR;       				//Peripheral address
+    i2cx->pDmaTxDmaCh->CPAR = (uint32_t)&i2cx->pI2c->TXDR;       				//Peripheral address
     i2cx->pDmaTxDmaCh->CMAR = (uint32_t)NULL;                            		//Memory address
 
     //DMA Channel I2C RX
@@ -162,7 +159,7 @@ void i2c_init(i2c_type *i2cx){
     i2cx->pDmaRxDmaCh->CCR &= ~DMA_CCR_DIR;                              		//Read from peripheral
     i2cx->pDmaRxDmaCh->CCR |= DMA_CCR_TCIE;                              		//Transfer complete interrupt enable
     i2cx->pDmaRxDmaCh->CNDTR = 0;                                        		//Number of data
-    i2cx->pDmaRxDmaCh->CPAR = (uint32_t)&i2cx->I2C->RXDR;       				//Peripheral address
+    i2cx->pDmaRxDmaCh->CPAR = (uint32_t)&i2cx->pI2c->RXDR;       				//Peripheral address
     i2cx->pDmaRxDmaCh->CMAR = (uint32_t)NULL;                      				//Memory address
 }
 
@@ -184,21 +181,21 @@ void i2c_write(i2c_type *i2cx, void *src, uint16_t len, uint8_t slaveAdr, i2c_st
     i2cx->stopMode				= stopMode;
 
     if(stopMode == i2cNeedStop){
-    	i2cx->I2C->CR2	|= I2C_CR2_AUTOEND;					//Automatic end mode: a STOP condition is automatically sent when NBYTES data are transferred
-    	i2cx->I2C->CR1	&= ~I2C_CR1_TXIE;					//TX interrupt disable
+    	i2cx->pI2c->CR2	|= I2C_CR2_AUTOEND;					//Automatic end mode: a STOP condition is automatically sent when NBYTES data are transferred
+    	i2cx->pI2c->CR1	&= ~I2C_CR1_TXIE;					//TX interrupt disable
     }else{
-    	i2cx->I2C->CR2	&= ~I2C_CR2_AUTOEND;
-    	i2cx->I2C->CR1	|= I2C_CR1_TXIE;					//TX interrupt enable
+    	i2cx->pI2c->CR2	&= ~I2C_CR2_AUTOEND;
+    	i2cx->pI2c->CR1	|= I2C_CR1_TXIE;					//TX interrupt enable
     }
 
-    i2cx->I2C->CR2 	&= ~I2C_CR2_RD_WRN;						//Master requests a write transfer
-    i2cx->I2C->CR2	&= ~I2C_CR2_NBYTES;
-    i2cx->I2C->CR2	|= (len) << I2C_CR2_NBYTES_Pos;			//Number of bytes
-    i2cx->I2C->CR2	&= ~I2C_CR2_SADD;						//Slave address bit (master mode) clear
-    i2cx->I2C->CR2	|= (slaveAdr) << I2C_CR2_SADD_Pos;		//Slave address bit (master mode)
+    i2cx->pI2c->CR2 	&= ~I2C_CR2_RD_WRN;						//Master requests a write transfer
+    i2cx->pI2c->CR2	&= ~I2C_CR2_NBYTES;
+    i2cx->pI2c->CR2	|= (len) << I2C_CR2_NBYTES_Pos;			//Number of bytes
+    i2cx->pI2c->CR2	&= ~I2C_CR2_SADD;						//Slave address bit (master mode) clear
+    i2cx->pI2c->CR2	|= (slaveAdr) << I2C_CR2_SADD_Pos;		//Slave address bit (master mode)
 
     i2cx->pDmaTxDmaCh->CCR		|= DMA_CCR_EN;
-    i2cx->I2C->CR2       		|= I2C_CR2_START;			//Generation start condition
+    i2cx->pI2c->CR2       		|= I2C_CR2_START;			//Generation start condition
     i2cx->state            		= i2cTxRun;
 }
 
@@ -211,19 +208,19 @@ void i2c_read(i2c_type *i2cx, void *dst, uint16_t len, uint8_t slaveAdr){
     i2cx->pDmaRxDmaCh->CNDTR	= len;
     i2cx->slaveAdr       		= slaveAdr;
 
-    i2cx->I2C->CR2	|= I2C_CR2_AUTOEND;						//Automatic end mode: a STOP condition is automatically sent when NBYTES data are transferred
-    i2cx->I2C->CR1	&= ~I2C_CR1_TXIE;						//TX interrupt disable
+    i2cx->pI2c->CR2	|= I2C_CR2_AUTOEND;						//Automatic end mode: a STOP condition is automatically sent when NBYTES data are transferred
+    i2cx->pI2c->CR1	&= ~I2C_CR1_TXIE;						//TX interrupt disable
 
-    i2cx->I2C->CR2 	|= I2C_CR2_RD_WRN;						//Master requests a read transfer
+    i2cx->pI2c->CR2 	|= I2C_CR2_RD_WRN;						//Master requests a read transfer
 
-    i2cx->I2C->CR2	&= ~I2C_CR2_NBYTES;
-    i2cx->I2C->CR2	|= (len) << I2C_CR2_NBYTES_Pos;			//Number of bytes
+    i2cx->pI2c->CR2	&= ~I2C_CR2_NBYTES;
+    i2cx->pI2c->CR2	|= (len) << I2C_CR2_NBYTES_Pos;			//Number of bytes
 
-    i2cx->I2C->CR2	&= (~(slaveAdr)) << I2C_CR2_SADD_Pos;	//Slave address bit (master mode)
-    i2cx->I2C->CR2	|= (slaveAdr) << I2C_CR2_SADD_Pos;		//Slave address bit (master mode)
+    i2cx->pI2c->CR2	&= (~(slaveAdr)) << I2C_CR2_SADD_Pos;	//Slave address bit (master mode)
+    i2cx->pI2c->CR2	|= (slaveAdr) << I2C_CR2_SADD_Pos;		//Slave address bit (master mode)
 
     i2cx->pDmaRxDmaCh->CCR		|= DMA_CCR_EN;
-    i2cx->I2C->CR2       		|= I2C_CR2_START;			//Generation start condition
+    i2cx->pI2c->CR2       		|= I2C_CR2_START;			//Generation start condition
     i2cx->state            		= i2cRxRun;
 }
 
@@ -231,9 +228,9 @@ void i2c_read(i2c_type *i2cx, void *dst, uint16_t len, uint8_t slaveAdr){
 * I2C EVENT HANDLER
 */
 void i2cEventHendler(i2c_type *i2cx){
-    if((i2cx->I2C->ISR & I2C_ISR_STOPF) != 0){
+    if((i2cx->pI2c->ISR & I2C_ISR_STOPF) != 0){
     	i2cx->state = i2cTxSuccess;
-    	i2cx->I2C->ICR = I2C_ICR_STOPCF;
+    	i2cx->pI2c->ICR = I2C_ICR_STOPCF;
     }
 }
 
@@ -249,7 +246,7 @@ void i2cErrorHendler(i2c_type *i2cx){
 */
 #if (I2C1_USE > 0)
 void I2C1_EV_IRQHandler(void){
-    if((i2c1->I2C->ISR & I2C_ISR_STOPF) != 0){
+    if((i2c1->pI2c->ISR & I2C_ISR_STOPF) != 0){
     	if(i2c1->state == i2cTxRun){
     		i2c1->state = i2cTxSuccess;
     	}
@@ -259,14 +256,14 @@ void I2C1_EV_IRQHandler(void){
 		#if (I2C1_TC_HOOK > 0)
     	i2c1TC_Hook();
 		#endif //I2C1_TC_HOOK
-    	i2c1->I2C->ICR = I2C_ICR_STOPCF;
+    	i2c1->pI2c->ICR = I2C_ICR_STOPCF;
     }
-    else if((i2c1->I2C->ISR & I2C_ISR_TXE) != 0){
+    else if((i2c1->pI2c->ISR & I2C_ISR_TXE) != 0){
     	i2c1->state = i2cTxSuccess;
 		#if (I2C1_TC_HOOK > 0)
     	i2c1TC_Hook();
 		#endif //I2C1_TC_HOOK
-    	i2c1->I2C->ICR = I2C_ICR_STOPCF;
+    	i2c1->pI2c->ICR = I2C_ICR_STOPCF;
     }
 }
 void I2C1_ER_IRQHandler(void){
@@ -283,7 +280,7 @@ void DMA1_Channel5_IRQHandler(void){   			//RX
 */
 #if (I2C2_USE > 0)
 void I2C2_EV_IRQHandler(void){
-    if((i2c2->I2C->ISR & I2C_ISR_STOPF) != 0){
+    if((i2c2->pI2c->ISR & I2C_ISR_STOPF) != 0){
     	if(i2c2->state == i2cTxRun){
     		i2c2->state = i2cTxSuccess;
     	}
@@ -293,14 +290,14 @@ void I2C2_EV_IRQHandler(void){
 		#if (I2C2_TC_HOOK > 0)
     	i2c2TC_Hook();
 		#endif //I2C2_TC_HOOK
-    	i2c2->I2C->ICR = I2C_ICR_STOPCF;
+    	i2c2->pI2c->ICR = I2C_ICR_STOPCF;
     }
-    else if((i2c2->I2C->ISR & I2C_ISR_TXE) != 0){
+    else if((i2c2->pI2c->ISR & I2C_ISR_TXE) != 0){
     	i2c2->state = i2cTxSuccess;
 		#if (I2C2_TC_HOOK > 0)
     	i2c2TC_Hook();
 		#endif //I2C2_TC_HOOK
-    	i2c2->I2C->ICR = I2C_ICR_STOPCF;
+    	i2c2->pI2c->ICR = I2C_ICR_STOPCF;
     }
 }
 void I2C2_ER_IRQHandler(void){

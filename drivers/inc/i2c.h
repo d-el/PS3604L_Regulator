@@ -74,7 +74,7 @@ typedef enum{
 
 typedef struct{   
     uint32_t            		clockSpeed;     //[Hz]
-    I2C_TypeDef         		*I2C;
+    I2C_TypeDef         		*pI2c;
     DMA_Channel_TypeDef 		*pDmaTxDmaCh;
     DMA_Channel_TypeDef 		*pDmaRxDmaCh;
     uint8_t             		slaveAdr;

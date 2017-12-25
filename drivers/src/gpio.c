@@ -29,9 +29,9 @@ static const uint32_t pinNum = sizeof(pinsMode) / sizeof(pinMode_type);
 */
 void EXTI0_IRQHandler(void){
 	SWITCH_OFF();
-	rg.tf.state.bit.switchIsON = 0;
-    rg.tf.state.bit.ovfCurrent = 1;
-    EXTI->PR    |= EXTI_PR_PR0;     //Pending
+	//rg.tf.state.bit.switchIsON = 0;
+	//rg.tf.state.bit.ovfCurrent = 1;
+	EXTI->PR    |= EXTI_PR_PR0;     //Pending
 }
 
 /*!****************************************************************************

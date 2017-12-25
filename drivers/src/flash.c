@@ -24,6 +24,7 @@ nvMem_struct_type   nvMem = {
     nvMem_memreg,
     nvMemBaseAdr(flashPage1),
     nvMemBaseAdr(flashPage2),
+	.flags.all = 0
 };
 
 /*!****************************************************************************
@@ -140,7 +141,7 @@ nvMem_state_type nvMem_savePrm(void *adrNvMem){
 
 /*!****************************************************************************
 * @brief
-* @param[in]    adrNvMem - Р°РґСЂРµСЃ РёСЃС‚РѕС‡РЅРёРєР° РІ flash РїР°РјСЏС‚Рё
+* @param[in] - adrNvMem - Р°РґСЂРµСЃ РёСЃС‚РѕС‡РЅРёРєР° РІ flash РїР°РјСЏС‚Рё
 * @retval   - nvMem_ok
 *           - nvMem_CRCError
 *           - nvMem_signatureError

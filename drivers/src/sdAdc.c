@@ -20,9 +20,9 @@ adcStct_type        adcStct = {
 
 /*!****************************************************************************
 * TIM3 -> SDADC1 -> DMA2_Channel3 -> DMA2_Channel3_IRQHandler
-* SDADC1_IN4P -> U_MEAS
-* SDADC1_IN5P -> UDC_MEAS
-* SDADC1_IN6P -> I_MEAS
+* SDADC1_IN4P
+* SDADC1_IN5P
+* SDADC1_IN6P
 */
 void sdadc_init(void){
 	/**********************************
@@ -34,7 +34,7 @@ void sdadc_init(void){
     gppin_init(GPIOB, 1, analogMode, pullDisable, 0,  0);
     //Analog Input
     gppin_init(GPIOB, 2, analogMode, pullDisable, 0, 0);
-    
+
     for(int i = 0; i < 360000; i++) __NOP();
 
     /**********************************
@@ -51,7 +51,7 @@ void sdadc_init(void){
     RCC->APB2ENR    |= RCC_APB2ENR_SDADC1EN;                 	//SDADC1 clock Enable
     RCC->APB2RSTR   |= RCC_APB2RSTR_SDADC1RST;                  //SDADC1 reset
     RCC->APB2RSTR   &= ~RCC_APB2RSTR_SDADC1RST;
-    
+
     PWR->CR |= PWR_CR_SDADC1EN;
     for(int i = 0; i < 360000; i++) __NOP();
 
@@ -82,10 +82,10 @@ void sdadc_init(void){
     SDADC1->CR2     |= SDADC_CR2_JEXTEN_0;						//Each rising edge on the selected trigger makes a request to launch a injected conversion
     SDADC1->CR2     |= SDADC_CR2_JEXTSEL_0 |					//Trigger signal selection for launching injected conversions TIM3_CH1
     					SDADC_CR2_JEXTSEL_1;
-    
+
     SDADC1->CR1     &= ~SDADC_CR1_INIT;                 		//Exit initialization mode
     while((SDADC1->ISR & SDADC_ISR_INITRDY) != 0);
-    
+
     SDADC1->CR2     |= SDADC_CR2_STARTCALIB;
     while((SDADC1->ISR & SDADC_ISR_EOCALF) == 0);				//Wait for Calibration has completed and the offsets have been updated
     SDADC1->CLRISR  = SDADC_ISR_CLREOCALF;
