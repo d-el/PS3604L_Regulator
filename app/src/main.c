@@ -32,6 +32,8 @@ void main(void){
     LED_ON();
     LED_ON();
 
+    //SH_SendString("Hello\n");
+
     //Great mutex, semaphore, task, start scheduler
     OSinit();
     while(1);

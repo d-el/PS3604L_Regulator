@@ -1,34 +1,35 @@
 ﻿#******************************************************************************
-# Regulator
+# Makefile PS3604LR
 #
-PROJECT_NAME	:= regulator
-OUTDIR 			:= build
+TARGET := PS3604LR
+ODIR := build
+
 INCLUDES := \
-	app/inc	\
-	cm4/Device/ST/STM32F3xx/Include \
-	cm4/Include \
-	drivers/inc \
-	FreeRTOS/inc \
-	lib/inc \
-	system/inc \
-	task/inc \
-	system/inc
+	-I app/inc	\
+	-I cm4/Device/ST/STM32F3xx/Include \
+	-I cm4/Include \
+	-I drivers/inc \
+	-I FreeRTOS/inc \
+	-I lib/inc \
+	-I system/inc \
+	-I task/inc \
+	-I system/inc
 
-LD_FILES 		:= -T ldscripts/STM32F373CC_FLASH.ld
-LIBS			:= lib/IQmathLib-cm4.a
-TOOLCHAIN_PATH	:= arm-none-eabi
+LDFILES := -T ldscript/STM32F373CC_FLASH.ld
+LIBS	:= lib/IQmathLib-cm4.a
 
-CPU_FLAGS := \
+CPUFLAGS := \
 	-mcpu=cortex-m4 -mthumb \
 	-mfloat-abi=hard \
 	-mfpu=fpv4-sp-d16 \
 	-ffunction-sections \
 	-fdata-sections \
-	-MMD -MP
+	-DSTM32F373xC
 
-CC_FLAGS := \
-	$(CPU_FLAGS) \
+CCFLAGS := \
+	$(CPUFLAGS) \
 	-std=gnu11 \
+	-g3 -O2 \
 	-fmessage-length=0 \
 	-fsigned-char \
 	-fsingle-precision-constant \
@@ -37,172 +38,122 @@ CC_FLAGS := \
 	-Wextra
 
 LDFLAGS := \
-	$(CPU_FLAGS) \
-	$(LD_FILES) \
-	-Werror -Wall -Wextra \
+	$(CPUFLAGS) \
+	$(LDFILES) \
 	-Wl,--gc-sections \
-	-Wl,-Map="$(OUTDIR)/$(PROJECT_NAME).map" \
-	-nostartfiles \
-	-Xlinker --gc-sections --specs=nano.specs \
-	
-#******************************************************************************
-# Параметры сборки проекта.
-#
-APP_OPTIMIZATION			:= -g3 -O2
-CM4_OPTIMIZATION			:= -g3 -O2
-DRIVERS_OPTIMIZATION		:= -g3 -O2
-FREERTOS_OPTIMIZATION		:= -g3 -O2
-SYSTEM_OPTIMIZATION			:= -g3 -O2
-TASK_OPTIMIZATION			:= -g3 -O2
+	-Wl,-Map="$(ODIR)/$(TARGET).map" \
+	-Xlinker --gc-sections --specs=nano.specs
 
 #******************************************************************************
-# toolchain
+# Toolchain
 #
-CC		= $(TOOLCHAIN_PATH)-gcc
-CPP		= $(TOOLCHAIN_PATH)-g++
-CCDEP	= $(TOOLCHAIN_PATH)-gcc
-LD		= $(TOOLCHAIN_PATH)-gcc
+TOOLCHAIN_PATH := arm-none-eabi
 AR		= $(TOOLCHAIN_PATH)-ar
 AS		= $(TOOLCHAIN_PATH)-gcc
+CC		= $(TOOLCHAIN_PATH)-gcc
+CPP		= $(TOOLCHAIN_PATH)-g++
+LD		= $(TOOLCHAIN_PATH)-gcc
 OBJCOPY	= $(TOOLCHAIN_PATH)-objcopy
 OBJDUMP	= $(TOOLCHAIN_PATH)-objdump
 GDB		= $(TOOLCHAIN_PATH)-gdb
 SIZE	= $(TOOLCHAIN_PATH)-size
 
 #******************************************************************************
-# Build [app]
-#
-CURRENT_DIR		:= app
-C_FILE			:= $(shell find $(CURRENT_DIR) -maxdepth 3 -type f -name "*.c" )
-I_PATH			:= $(addprefix -I, $(INCLUDES)) 
-OBJ_FILE		:= $(addprefix $(OUTDIR)/obj/, $(C_FILE))
-APP_OBJ_FILE	:= $(patsubst %.c, %.obj, $(OBJ_FILE))
-$(OUTDIR)/obj/$(CURRENT_DIR)/%.obj:	$(CURRENT_DIR)/%.c
-	@echo [CC] $<
-	@mkdir -p $(dir $@)
-	@$(CC) $(CC_FLAGS) $(I_PATH) $(APP_OPTIMIZATION) -c $< -o $@
-	
-#******************************************************************************
-# Build [cm4]
-#
-CURRENT_DIR		:= cm4
-C_FILE			:= $(shell find $(CURRENT_DIR) -maxdepth 6 -type f -name "*.c" )
-I_PATH			:= $(addprefix -I, $(INCLUDES)) 
-OBJ_FILE		:= $(addprefix $(OUTDIR)/obj/, $(C_FILE))
-CM4_OBJ_FILE	:= $(patsubst %.c, %.obj, $(OBJ_FILE))
-$(OUTDIR)/obj/$(CURRENT_DIR)/%.obj:	$(CURRENT_DIR)/%.c
-	@echo [CC] $<
-	@mkdir -p $(dir $@)
-	@$(CC) $(CC_FLAGS) $(I_PATH) $(CM4_OPTIMIZATION) -c $< -o $@
-	
-#******************************************************************************
-# Build [drivers]
-#
-CURRENT_DIR		:= drivers
-C_FILE			:= $(shell find $(CURRENT_DIR) -maxdepth 3 -type f -name "*.c" )
-I_PATH			:= $(addprefix -I, $(INCLUDES)) 
-OBJ_FILE		:= $(addprefix $(OUTDIR)/obj/, $(C_FILE))
-DRIVERS_OBJ_FILE	:= $(patsubst %.c, %.obj, $(OBJ_FILE))
-$(OUTDIR)/obj/$(CURRENT_DIR)/%.obj:	$(CURRENT_DIR)/%.c
-	@echo [CC] $<
-	@mkdir -p $(dir $@)
-	@$(CC) $(CC_FLAGS) $(I_PATH) $(DRIVERS_OPTIMIZATION) -c $< -o $@
+# C File
+CSRCS := \
+	$(shell find app -maxdepth 3 -type f -name "*.c") \
+	$(shell find cm4 -maxdepth 7 -type f -name "*.c") \
+	$(shell find drivers -maxdepth 3 -type f -name "*.c") \
+	$(shell find freertos -maxdepth 3 -type f -name "*.c") \
+	$(shell find system -maxdepth 3 -type f -name "*.c") \
+	$(shell find task -maxdepth 3 -type f -name "*.c")
 
 #******************************************************************************
-# Build [freertos]
-#
-CURRENT_DIR		:= freertos
-C_FILE			:= $(shell find $(CURRENT_DIR) -maxdepth 3 -type f -name "*.c" )
-I_PATH			:= $(addprefix -I, $(INCLUDES)) 
-OBJ_FILE		:= $(addprefix $(OUTDIR)/obj/, $(C_FILE))
-FREERTOS_OBJ_FILE	:= $(patsubst %.c, %.obj, $(OBJ_FILE))
-$(OUTDIR)/obj/$(CURRENT_DIR)/%.obj:	$(CURRENT_DIR)/%.c
-	@echo [CC] $<
-	@mkdir -p $(dir $@)
-	@$(CC) $(CC_FLAGS) $(I_PATH) $(FREERTOS_OPTIMIZATION) -c $< -o $@
+# CPP File
+CPPSRCS :=
 
 #******************************************************************************
-# Build [system]
-#
-CURRENT_DIR		:= system
-C_FILE			:= $(shell find $(CURRENT_DIR) -maxdepth 3 -type f -name "*.c" )
-I_PATH			:= $(addprefix -I, $(INCLUDES)) 
-OBJ_FILE		:= $(addprefix $(OUTDIR)/obj/, $(C_FILE))
-SYSTEM_OBJ_FILE	:= $(patsubst %.c, %.obj, $(OBJ_FILE))
-$(OUTDIR)/obj/$(CURRENT_DIR)/%.obj:	$(CURRENT_DIR)/%.c
-	@echo [CC] $<
-	@mkdir -p $(dir $@)
-	@$(CC) $(CC_FLAGS) $(I_PATH) $(SYSTEM_OPTIMIZATION) -c $< -o $@
-	
+# ASM File (*.S)
+ASRCS := $(shell find system -maxdepth 3 -type f -name "*.S" )
+
 #******************************************************************************
-# Build [system] *.S
-#
-CURRENT_DIR		:= system
-C_FILE			:= $(shell find $(CURRENT_DIR) -maxdepth 3 -type f -name "*.S" )
-I_PATH			:= $(addprefix -I, $(INCLUDES)) 
-OBJ_FILE		:= $(addprefix $(OUTDIR)/obj/, $(C_FILE))
-SYSTEMASM_OBJ_FILE	:= $(patsubst %.S, %.obj, $(OBJ_FILE))
-$(OUTDIR)/obj/$(CURRENT_DIR)/%.obj:	$(CURRENT_DIR)/%.S
-	@echo [CC] $<
-	@mkdir -p $(dir $@)
-	@$(CC) $(CC_FLAGS) $(I_PATH) $(SYSTEM_OPTIMIZATION) -c $< -o $@
-	
-#******************************************************************************
-# Build [system]
-#
-#CURRENT_DIR		:= system
-#C_FILE			:= $(shell find $(CURRENT_DIR) -maxdepth 3 -type f -name "*.c" )
-#SOURCEEXP		:= $(suffix $(C_FILE))
-#I_PATH			:= $(addprefix -I, $(INCLUDES)) 
-#OBJ_FILE		:= $(addprefix $(OUTDIR)/obj/, $(C_FILE))
-#SYSTEM_OBJ_FILE	:= $(patsubst %.c, %.obj, $(OBJ_FILE))
-#$(OUTDIR)/obj/$(CURRENT_DIR)/%.obj:	$(CURRENT_DIR)/%.c
-#	@echo [CC] $<
-#	@mkdir -p $(dir $@)
-#	@$(CC) $(CC_FLAGS) $(I_PATH) $(APP_OPTIMIZATION) -c $< -o $@
-	
-#******************************************************************************
-# Build [task]
-#
-CURRENT_DIR		:= task
-C_FILE			:= $(shell find $(CURRENT_DIR) -maxdepth 3 -type f -name "*.c" )
-I_PATH			:= $(addprefix -I, $(INCLUDES))
-OBJ_FILE		:= $(addprefix $(OUTDIR)/obj/, $(C_FILE))
-TASK_OBJ_FILE	:= $(patsubst %.c, %.obj, $(OBJ_FILE))
-$(OUTDIR)/obj/$(CURRENT_DIR)/%.obj:	$(CURRENT_DIR)/%.c
-	@echo [CC] $<
-	@mkdir -p $(dir $@)
-	@$(CC) $(CC_FLAGS) $(I_PATH) $(TASK_OPTIMIZATION) -c $< -o $@
-	
-PROJECT_OBJ_FILE	:= $(APP_OBJ_FILE) $(CM4_OBJ_FILE) $(DRIVERS_OBJ_FILE) $(FREERTOS_OBJ_FILE) $(SYSTEM_OBJ_FILE) $(SYSTEMASM_OBJ_FILE) $(TASK_OBJ_FILE) $(LIBS)
+# ASM File (*.s)
+ASRCs :=
+
+OBJODIR := $(ODIR)/obj
+
+OBJS :=	$(CSRCS:%.c=$(OBJODIR)/%.o) \
+		$(CPPSRCS:%.cpp=$(OBJODIR)/%.o) \
+		$(ASRCs:%.s=$(OBJODIR)/%.o) \
+		$(ASRCS:%.S=$(OBJODIR)/%.o)
+
+DEPS :=	$(CSRCS:%.c=$(OBJODIR)/%.d) \
+		$(CPPSRCS:%.cpp=$(OBJODIR)/%.d) \
+		$(ASRCs:%.s=$(OBJODIR)/%.d) \
+		$(ASRCS:%.S=$(OBJODIR)/%.d)
+
+CFLAGS = $(CCFLAGS) $(INCLUDES)
+DFLAGS = $(CCFLAGS) $(INCLUDES)
 
 #******************************************************************************
 # Targets
 #
-$(PROJECT_NAME).elf:	$(PROJECT_OBJ_FILE)
-	@$(LD) $(LDFLAGS) $(PROJECT_OBJ_FILE) -o $(OUTDIR)/$(PROJECT_NAME).elf
-	@echo ' '
-
-$(PROJECT_NAME).hex: $(PROJECT_NAME).elf
-	@$(OBJCOPY) -O ihex $(OUTDIR)/$(PROJECT_NAME).elf $(OUTDIR)/$(PROJECT_NAME).hex
-	@echo ' '
-
-mainbuild: $(PROJECT_NAME).elf $(PROJECT_NAME).hex
-	@echo 'Print Size:'
-	@$(SIZE) --format=berkeley "$(OUTDIR)/$(PROJECT_NAME).elf"
-	@echo ' '
-
 all: prebuild mainbuild
 
-rebuild: clean all
+clean:
+	@rm -rf $(ODIR)
 	@echo ' '
 
-clean:	
-	@rm -rf $(OUTDIR)
+disasm:
+	@$(OBJDUMP) -D $(ODIR)/$(TARGET).elf > $(ODIR)/$(TARGET).S
+	@echo ' '
+
+$(TARGET).elf: $(OBJS)
+	@echo [LD] $@
+	@$(LD) $(LDFLAGS) $(OBJS) $(OBJS1) $(LIBS) -o $(ODIR)/$(TARGET).elf
+	@echo ' '
+	
+$(TARGET).hex: $(TARGET).elf
+	@$(OBJCOPY) -O ihex $(ODIR)/$(TARGET).elf $(ODIR)/$(TARGET).hex
 	@echo ' '
 
 prebuild:
 	-wscript.exe otherFiles\versionGen.vbs app\src\version.c app\inc\version.h
 	@echo ' '
 
-.PHONY: all rebuild clean
+mainbuild: $(TARGET).elf $(TARGET).hex
+	@echo 'Print Size:'
+	@$(SIZE) --format=berkeley "$(ODIR)/$(TARGET).elf"
+	@echo ' '
+
+ifneq ($(MAKECMDGOALS),clean)
+ifneq ($(MAKECMDGOALS),disasm)
+ifdef DEPS
+sinclude $(DEPS)
+endif
+endif
+endif
+
+$(OBJODIR)/%.o: %.c
+	@echo [CC] $<
+	@mkdir -p $(dir $@)
+	@$(CC) -MT $@ -MMD -MP -MF $(OBJODIR)/$*.Td $(CFLAGS) -c -o $@ $<
+	@mv -f $(OBJODIR)/$*.Td $(OBJODIR)/$*.d && touch $@
+
+$(OBJODIR)/%.o: %.cpp
+	@echo [CPP] $<
+	@mkdir -p $(dir $@)
+	@$(CC) -MT $@ -MMD -MP -MF $(OBJODIR)/$*.Td $(CFLAGS) -c -o $@ $<
+	@mv -f $(OBJODIR)/$*.Td $(OBJODIR)/$*.d && touch $@
+
+$(OBJODIR)/%.o: %.s
+	@echo [AS] $<
+	@mkdir -p $(dir $@)
+	@$(AS) $(CFLAGS) -M -o $(OBJODIR)/$*.d $<
+	@$(AS) $(CFLAGS) -MMD -MP -MF $(OBJODIR)/$*.d -MT$@ -c -o $@ $<
+
+$(OBJODIR)/%.o: %.S
+	@echo [AS] $<
+	@mkdir -p $(dir $@)
+	@$(AS) $(CFLAGS) -M -o $(OBJODIR)/$*.d $<
+	@$(AS) $(CFLAGS) -MMD -MP -MF $(OBJODIR)/$*.d -MT$@ -c -o $@ $<
