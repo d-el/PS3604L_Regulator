@@ -11,9 +11,7 @@
 /*!****************************************************************************
 * Include
 */
-#include "gpio.h"
-#include "oneWireUart.h"
-#include "crc.h"
+#include "stdint.h"
 
 /*!****************************************************************************
 * User define
@@ -47,7 +45,7 @@ typedef struct{
 */
 
 /*!****************************************************************************
-* Extern viriables
+* External variables
 */
 extern volatile     tmpr_type   tem;
 

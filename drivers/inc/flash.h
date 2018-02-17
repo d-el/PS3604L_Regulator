@@ -12,10 +12,7 @@
 /*!****************************************************************************
 * Include
 */
-#include "stm32f3xx.h"
-#include "systemTSK.h"
-#include "string.h"
-#include "crc.h"
+#include "stdint.h"
 
 /*!****************************************************************************
 * User define
@@ -65,7 +62,7 @@ typedef struct{
 }nvMem_struct_type;
 
 /*!****************************************************************************
-* Extern viriables
+* External variables
 */
 extern nvMem_struct_type   nvMem;
 

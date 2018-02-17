@@ -9,7 +9,21 @@
 /*!****************************************************************************
 * Include
 */
+#include "FreeRTOS.h"
+#include "task.h"
+#include "semphr.h"
+#include "IQmathLib.h"
+#include "specificMath.h"
+#include "adc.h"
+#include "pwm.h"
+#include "flash.h"
+#include "board.h"
+#include "OSinit.h"
+#include "pstypes.h"
 #include "systemTSK.h"
+#include "uartTSK.h"
+#include "adcTSK.h"
+#include "ds18TSK.h"
 
 /*!****************************************************************************
 * Memory
@@ -106,7 +120,7 @@ void systemTSK(void *pPrm){
 		reg->tf.meas.adci 			= a->filtered[CH_IADC];
 		reg->tf.meas.u 				= IQtoInt(a->voltage, 1000000);
 		reg->tf.meas.i 				= IQtoInt(a->current, 1000000);
-        reg->tf.meas.resistens      = IQNtoInt(a->resistens, 1, 14);
+        reg->tf.meas.resistance      = IQNtoInt(a->resistens, 1, 14);
         reg->tf.meas.power          = IQNtoInt(a->outPower, 1000, 14);
         reg->tf.meas.uin            = IQtoInt(a->udc, 1000);
         reg->tf.meas.temperatureLin = temperature.temperature;

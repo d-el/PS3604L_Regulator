@@ -12,7 +12,6 @@
 * Include
 */
 #include "stdint.h"
-#include "stm32f3xx.h"
 
 /*!****************************************************************************
 * User define
@@ -42,9 +41,9 @@ typedef struct{
 }clock_type;
 
 /*!****************************************************************************
-* Extern viriables
+* External variables
 */
-extern clock_type            clockSource;
+extern clock_type clockSource;
 
 /*!****************************************************************************
 * Macro functions

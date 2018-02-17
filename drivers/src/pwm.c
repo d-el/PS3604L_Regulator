@@ -9,6 +9,8 @@
 /*!****************************************************************************
 * Include
 */
+#include "board.h"
+#include "gpio.h"
 #include "pwm.h"
 
 /*!****************************************************************************
@@ -21,11 +23,11 @@
 void pwmFan_init(void){
     //TIM15_CH2 - PB15
     gppin_init(GPIOB, 15, alternateFunctionPushPull, pullDisable, 0, 1);
-    
+
     RCC->APB2ENR  	|= RCC_APB2ENR_TIM15EN;                    	//Clock enable
     RCC->APB2RSTR 	|= RCC_APB2RSTR_TIM15RST;              		//Timer reset
     RCC->APB2RSTR 	&= ~RCC_APB2RSTR_TIM15RST;
-    
+
     TIM15->PSC   	= 1 - 1;                                   	//Prescaler
     TIM15->CCMR1 	|= TIM_CCMR1_OC2M_2 | TIM_CCMR1_OC2M_1;    	//PWM mode 1 (NORMAL PWM)
     TIM15->ARR   	= APB2_FREQ / PWM_FAN_FREQ;                	//Auto reload register

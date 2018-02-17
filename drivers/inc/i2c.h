@@ -11,10 +11,8 @@
 /*!****************************************************************************
 * Include
 */
-#include "stm32f3xx.h"
-#include "gpio.h"
 #include "stdint.h"
-#include "stddef.h"
+#include "stm32f3xx.h"
 #include "OSinit.h"
 
 /*!****************************************************************************
@@ -48,17 +46,17 @@
 * User typedef
 */
 typedef enum{
-    i2cUnknownState,    
+    i2cUnknownState,
     i2cFree,
     i2cTxRun,
     i2cRxRun,
     i2cDmaRefresh,
     i2cTxSuccess,
     i2cRxSuccess,
-    
+
     i2cErrTx,
     i2cErrRx,
-    
+
     i2cOk,
     i2cBusError,
     i2cAcknowledgeFailure,
@@ -72,7 +70,7 @@ typedef enum{
     i2cWithoutStop
 }i2c_stopMode_type;
 
-typedef struct{   
+typedef struct{
     uint32_t            		clockSpeed;     //[Hz]
     I2C_TypeDef         		*pI2c;
     DMA_Channel_TypeDef 		*pDmaTxDmaCh;
@@ -87,7 +85,7 @@ typedef struct{
 */
 
 /*!****************************************************************************
-* Extern viriables
+* External variables
 */
 /*
 * i2c1 memory

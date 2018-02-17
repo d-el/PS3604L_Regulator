@@ -9,6 +9,10 @@
 /*!****************************************************************************
 * Include
 */
+#include "stm32f3xx.h"
+#include "systemTSK.h"
+#include "string.h"
+#include "crc.h"
 #include "flash.h"
 
 /*!****************************************************************************
@@ -141,7 +145,7 @@ nvMem_state_type nvMem_savePrm(void *adrNvMem){
 
 /*!****************************************************************************
 * @brief
-* @param[in] - adrNvMem - Р°РґСЂРµСЃ РёСЃС‚РѕС‡РЅРёРєР° РІ flash РїР°РјСЏС‚Рё
+* @param[in] - adrNvMem
 * @retval   - nvMem_ok
 *           - nvMem_CRCError
 *           - nvMem_signatureError

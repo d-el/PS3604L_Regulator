@@ -18,10 +18,9 @@
 /*!****************************************************************************
 * Include
 */
-#include "main.h"
-#include "IQmathLib.h"
-#include "debugCore.h"
-#include "semihosting.h"
+#include "board.h"
+#include "drivers.h"
+#include "OSinit.h"
 
 /*!****************************************************************************
 * @brief    main function
@@ -31,8 +30,6 @@ void main(void){
 
     LED_ON();
     LED_ON();
-
-    //SH_SendString("Hello\n");
 
     //Great mutex, semaphore, task, start scheduler
     OSinit();

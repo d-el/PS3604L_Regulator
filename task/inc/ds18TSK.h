@@ -11,11 +11,7 @@
 /*!****************************************************************************
 * Include
 */
-#include "ds18b20.h"
-#include "OSinit.h"
-#include "oneWireUart.h"
-#include "ds18b20.h"
-#include "OSinit.h"
+#include "stdint.h"
 
 /*!****************************************************************************
 * User define
@@ -34,14 +30,14 @@ typedef enum{
 	temp_NoInit,
     temp_ErrSensor
 }temperatureState_type;
-    
+
 typedef struct{
     temperatureState_type   state;
     uint16_t                temperature;    //[X_X °C]
 }temperature_type;
 
 /*!****************************************************************************
-* Extern viriables
+* External variables
 */
 extern temperature_type   temperature;
 

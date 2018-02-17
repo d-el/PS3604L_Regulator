@@ -12,9 +12,6 @@
 * Include
 */
 #include "stm32f3xx.h"
-#include "gpio.h"
-#include "board.h"
-#include "OSinit.h"
 
 /*!****************************************************************************
 * User define

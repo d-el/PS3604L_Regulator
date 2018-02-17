@@ -9,6 +9,7 @@
 /*!****************************************************************************
 * Include
 */
+#include "stm32f3xx.h"
 #include "clock.h"
 
 /*!****************************************************************************
@@ -72,11 +73,11 @@ void clock_init2(void){
     volatile uint32_t   time;
     //uint32_t            div, mul;
     useGen_type         l_useGen;
-    
+
     //RCC->CR    = 0;
     //RCC->CFGR  = 0;
     //RCC->CFGR2 = 0;
-    
+
     /**************************************
     * Пытаемся запустить генератор HSE
     */
@@ -95,7 +96,7 @@ void clock_init2(void){
         while((RCC->CR & RCC_CR_HSIRDY) == 0);  //Ждем готовности HSI
         l_useGen = clock_useHsi;
     }
-    
+
     /**************************************
     * Включаем PLL
     * Caution: The PLL output frequency must be in the 16-24 MHz range
@@ -107,14 +108,14 @@ void clock_init2(void){
         RCC->CFGR   |=((HSE_PLL_MUL - 2) << 18);        //Множитель
         RCC->CR     |= RCC_CR_PLLON;                    //PLL ON
         while((RCC->CR & RCC_CR_PLLRDY) == 0);          //Ждем готовности HSI
-    }       
-    else{       
+    }
+    else{
         RCC->CFGR2  = HSI_PLL_PREDIV - 1;               //Делитель
         RCC->CFGR   |=((HSI_PLL_MUL - 2) << 18);        //Множитель
         RCC->CR     |= RCC_CR_PLLON;                    //PLL ON
         while((RCC->CR & RCC_CR_PLLRDY) == 0);          //Ждем готовности HSI
     }*/
-    
+
     /**************************************
     * Переключаем источник системного тактирования
     */
@@ -130,7 +131,7 @@ void clock_init2(void){
     else{
         clock.currentSysFrec = ((RCC_RC_OSCILLATOR_FREQ / 2)* mul) / div;
     }*/
-    
+
     clock.useGen = l_useGen;
     RCC->CFGR |= RCC_CFGR_SW_HSE;                           //HSE selected as system clock
     while((RCC->CFGR & RCC_CFGR_SWS) != RCC_CFGR_SWS_HSE);  //Waint for PLL used as system clock

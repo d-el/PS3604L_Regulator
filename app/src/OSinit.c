@@ -8,17 +8,14 @@
 /*!****************************************************************************
 * Include
 */
+#include "uartTSK.h"
+#include "ds18TSK.h"
 #include "OSinit.h"
-
-/*!****************************************************************************
-* Mutex
-*/
 
 /*!****************************************************************************
 * Semaphore
 */
 xSemaphoreHandle    AdcEndConversionSem;
-xSemaphoreHandle    rxRequest;
 xSemaphoreHandle    i2c1Sem;
 
 /*!****************************************************************************
@@ -30,9 +27,6 @@ void OSinit(void){
     //AdcEndConversionSem
     vSemaphoreCreateBinary(AdcEndConversionSem);
     xSemaphoreTake(AdcEndConversionSem, portMAX_DELAY);
-    //rxRequest
-    vSemaphoreCreateBinary(rxRequest);
-    xSemaphoreTake(rxRequest, portMAX_DELAY);
     //i2c1Sem
 	vSemaphoreCreateBinary(i2c1Sem);
 	xSemaphoreTake(i2c1Sem, portMAX_DELAY);

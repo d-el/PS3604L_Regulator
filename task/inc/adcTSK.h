@@ -12,11 +12,6 @@
  * Include
  */
 #include "IQmathLib.h"
-#include "specificMath.h"
-#include "adc.h"
-#include "ina226.h"
-#include "pstypes.h"
-#include "OSinit.h"
 
 /*!****************************************************************************
  * User define

@@ -1,11 +1,6 @@
-/*!****************************************************************************
-* @file     version
-* @author   d_el - Storozhenko Roman
-* @date     07.02.2018 15:40:23
-* @major    1
-* @minor    0
-* @revision 0
-* @build    420
+﻿/*!****************************************************************************
+* @file		version.h
+* @author	d_el
 */
 
 #include "stdint.h"
@@ -17,4 +12,4 @@ extern const uint32_t fwinfoBuild;
 extern const char fwinfoVersion[];
 extern const char fwinfoDate[];
 
-/***************** (C) COPYRIGHT ************** END OF FILE ******** d_el ****/
+/***************** Copyright (C) Storozhenko Roman ******* END OF FILE *******/

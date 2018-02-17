@@ -1,30 +1,17 @@
-/*!****************************************************************************
-* @file     version
-* @author   d_el - Storozhenko Roman
-* @date     07.02.2018 15:40:23
-* @major    1
-* @minor    0
-* @revision 0
-* @build    420
+﻿/*!****************************************************************************
+* @file		version.c
+* @author	d_el
 */
 
-#include "version.h"
+#include "stdint.h"
 
 const uint32_t fwinfoMajor    = 1;
 const uint32_t fwinfoMinor    = 0;
 const uint32_t fwinfoRevision = 0;
-const uint32_t fwinfoBuild    = 420;
-const char fwinfoVersion[] = {"1.0.0.420"};
-const char fwinfoDate[]    = {"07.02.2018"};
-const char fwinfoTime[]    = {"15:40:23"};
+const uint32_t fwinfoBuild    = 473;
 
-#include "stdint.h"
+const char fwinfoVersion[] = {"1.0.0.473"};
+const char fwinfoDate[] = {"2018-02-17"};
+const char fwinfoTime[] = {"21:33:11"};
 
-extern const uint32_t fwinfoMajor;
-extern const uint32_t fwinfoMinor;
-extern const uint32_t fwinfoRrevision;
-extern const uint32_t fwinfoBuild;
-extern const char fwinfoVersion[];
-extern const char fwinfoDate[];
-
-/***************** (C) COPYRIGHT ************** END OF FILE ******** d_el ****/
+/***************** Copyright (C) Storozhenko Roman ******* END OF FILE *******/

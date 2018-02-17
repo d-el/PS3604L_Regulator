@@ -11,13 +11,8 @@
 /*!****************************************************************************
 * Include
 */
-#include "uartTSK.h"
-#include "adc.h"
-#include "pwm.h"
-#include "flash.h"
-#include "board.h"
 #include "pstypes.h"
-#include "OSinit.h"
+#include "IQmathLib.h"
 
 /*!****************************************************************************
 * User define
@@ -75,7 +70,7 @@ typedef struct{
 */
 
 /*!****************************************************************************
-* Extern viriables
+* External variables
 */
 extern regulator_type      rg;
 

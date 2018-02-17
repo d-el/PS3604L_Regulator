@@ -15,11 +15,10 @@
 /*!****************************************************************************
 * Include
 */
-#include "uart.h"
-#include "crc.h"
-#include "string.h"
-#include "OSinit.h"
-#include "assert.h"
+#include "FreeRTOS.h"
+#include "task.h"
+#include "semphr.h"
+#include "stdint.h"
 
 /*!****************************************************************************
 * User define
@@ -55,8 +54,9 @@ typedef struct{
 */
 
 /*!****************************************************************************
-* Extern variables
+* External variables
 */
+extern xSemaphoreHandle rxRequest;
 
 /*!****************************************************************************
 * Macro functions

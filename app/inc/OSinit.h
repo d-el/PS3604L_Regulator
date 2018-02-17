@@ -13,8 +13,6 @@
 #include "queue.h"
 #include "semphr.h"
 #include "adcTSK.h"
-#include "uartTSK.h"
-#include "ds18TSK.h"
 #include "systemTSK.h"
 
 /*!****************************************************************************
@@ -39,7 +37,6 @@ extern xSemaphoreHandle    oneWireBusyMutex;
 * Semaphore
 */
 extern xSemaphoreHandle    AdcEndConversionSem;
-extern xSemaphoreHandle    rxRequest;
 extern xSemaphoreHandle    i2c1Sem;
 
 /*!****************************************************************************

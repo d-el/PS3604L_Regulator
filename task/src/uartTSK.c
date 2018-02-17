@@ -13,12 +13,21 @@
 /*!****************************************************************************
 * Include
 */
+#include "string.h"
+#include "assert.h"
+#include "FreeRTOS.h"
+#include "task.h"
+#include "semphr.h"
+#include "uart.h"
+#include "crc.h"
+#include "systemTSK.h"
 #include "uartTSK.h"
 
 /*!****************************************************************************
 * MEMORY
 */
 uartTsk_type				uartTsk;
+xSemaphoreHandle    		rxRequest;
 static SemaphoreHandle_t	connUartRxSem;
 
 /******************************************************************************
@@ -33,6 +42,10 @@ void uartTSK(void *pPrm){
 	BaseType_t  res;
 	uint16_t    crc;
 	uint8_t     numRx = 0;
+
+	// Create Semaphore
+	vSemaphoreCreateBinary(rxRequest);
+	assert(rxRequest != NULL);
 
 	// Create Semaphore for UART
 	vSemaphoreCreateBinary(connUartRxSem);
