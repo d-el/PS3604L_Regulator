@@ -42,7 +42,7 @@ void adcTSK(void *pPrm){
 	uint16_t 			*adcreg = &adcStct.adcreg[0];
 	uint16_t 			*adcregEnd = adcreg + ADC_NUM_CH;
 	adcTaskStct_type 	*a = &adcTaskStct;
-	regSetting_type 	*s = &rg.rgSet;
+	regSetting_type 	*s = &rg.sett;
 	adcFilt_type 		*filter = &a->adcFilt[0];
 	uint16_t 			*filtered = &a->filtered[0];
 	uint32_t 			val;

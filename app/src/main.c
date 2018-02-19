@@ -26,7 +26,7 @@
 * @brief    main function
 */
 void main(void){
-    Init_Hard();
+    hardInit();
 
     LED_ON();
     LED_ON();

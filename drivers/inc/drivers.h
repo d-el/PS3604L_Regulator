@@ -35,8 +35,7 @@
 /*!****************************************************************************
 * Prototypes for the functions
 */
-void Init_Hard(void);
-void prmInitDef(void);
+void hardInit(void);
 
 #endif //DRIVERS_H
 /*************** GNU GPL ************** END OF FILE ********* D_EL ***********/

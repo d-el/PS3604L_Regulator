@@ -16,8 +16,9 @@ _Min_Stack_Size = 0x400; /* required amount of stack */
 /* Specify the memory areas */
 MEMORY
 {
-FLASH (rx)      : ORIGIN = 0x08000000, LENGTH = 256K
-RAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 32K
+    FLASH (rx)      : ORIGIN = 0x08000000, LENGTH = 256K - 2K
+    SETFLASH (rx)   : ORIGIN = ORIGIN(FLASH) + LENGTH(FLASH), LENGTH = 2K
+    RAM (xrw)       : ORIGIN = 0x20000000, LENGTH = 32K
 }
 
 /* Define output sections */
@@ -56,6 +57,13 @@ SECTIONS
     *(.rodata*)        /* .rodata* sections (constants, strings, etc.) */
     . = ALIGN(4);
   } >FLASH
+  
+  /* System settings into FLASH (1 page (2K)) */
+  .syssettings :
+  {
+    _syssettings = .;        /* define a global symbols at syssettings */
+    . = . + 2K;
+  } >SETFLASH
 
   .ARM.extab   : { *(.ARM.extab* .gnu.linkonce.armextab.*) } >FLASH
   .ARM : {

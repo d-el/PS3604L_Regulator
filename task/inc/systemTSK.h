@@ -62,7 +62,7 @@ typedef struct{
 
 typedef struct{
     transfer_type           tf;
-    regSetting_type         rgSet;
+    regSetting_type         sett;
 }regulator_type;
 
 /*!****************************************************************************

@@ -20,6 +20,7 @@
 #include "board.h"
 #include "OSinit.h"
 #include "pstypes.h"
+#include "prmSystem.h"
 #include "systemTSK.h"
 #include "uartTSK.h"
 #include "adcTSK.h"
@@ -58,7 +59,7 @@ void systemTSK(void *pPrm){
 	TickType_t			curOffTime = xTaskGetTickCount();	//Время тока < 10%
 	TickType_t          timeOffset = xTaskGetTickCount();
     regulator_type      *reg = &rg;
-    regSetting_type     *s = &reg->rgSet; 		//Указатель на структуру с калибровками
+    regSetting_type     *s = &reg->sett; 		//Указатель на структуру с калибровками
     adcTaskStct_type    *a = &adcTaskStct;    	//Указатель на сруктуру с данными АЦП
     request_type        l_switchRequest;    	//Локальный запрос на вкл / выкл выход
     _iq                 qpwmTask;           	//Заполнение ШИМ для венитлятора
@@ -260,7 +261,7 @@ void systemTSK(void *pPrm){
 		 */
 		if(reg->tf.task.request == setSaveSettings){
 			taskENTER_CRITICAL();
-			nvMem_savePrm(nvMem.nvMemBase);
+			prm_store(SYSFLASHADR, prmFlash);
 			taskEXIT_CRITICAL();
 			reg->tf.task.request = setNone;
 		}

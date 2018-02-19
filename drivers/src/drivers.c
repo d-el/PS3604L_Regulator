@@ -21,6 +21,7 @@
 #include "flash.h"
 #include "delay.h"
 #include "drivers.h"
+#include "prmSystem.h"
 
 /*!****************************************************************************
 * MEMORY
@@ -29,7 +30,7 @@
 /*!****************************************************************************
 *
 */
-void Init_Hard(void){
+void hardInit(void){
     clock_init();
     gpio_init();
     pwmFan_init();
@@ -41,13 +42,11 @@ void Init_Hard(void){
     uart_init(uart1, BR38400);  //Connect
     uart_init(uart3, BR9600);   //1WIRE
 
-    nvMem_state_type nvMemState = nvMem_error;
-    nvMemState = nvMem_init();
-    nvMemState = nvMem_loadPrm(nvMem.nvMemBase);
-    if(nvMemState != nvMem_ok){
-        prmInitDef();
-        rg.tf.state.bit.noCalibration = 1;
-    }
+    prm_state_type res = prm_load(SYSFLASHADR, prmFlash);
+    if(res != prm_ok){
+    	prm_loadDefault(prmFlash);
+		rg.tf.state.bit.noCalibration = 1;
+	}
 }
 
 /*!****************************************************************************
@@ -75,7 +74,7 @@ void prmInitDef(void){
 		},
     };
 
-    memcpy(&rg.rgSet, &defSettings, sizeof(regSetting_type));
+    memcpy(&rg.sett, &defSettings, sizeof(regSetting_type));
 }
 
 /*************** GNU GPL ************** END OF FILE ********* D_EL ***********/
