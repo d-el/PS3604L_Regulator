@@ -27,7 +27,6 @@
 * MEMORY
 */
 uartTsk_type				uartTsk;
-xSemaphoreHandle    		rxRequest;
 static SemaphoreHandle_t	connUartRxSem;
 
 /******************************************************************************
@@ -42,10 +41,6 @@ void uartTSK(void *pPrm){
 	BaseType_t  res;
 	uint16_t    crc;
 	uint8_t     numRx = 0;
-
-	// Create Semaphore
-	vSemaphoreCreateBinary(rxRequest);
-	assert(rxRequest != NULL);
 
 	// Create Semaphore for UART
 	vSemaphoreCreateBinary(connUartRxSem);

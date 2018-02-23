@@ -39,7 +39,6 @@ void ds18TSK(void *pPrm){
     /*****************************
     * DS18B20 INIT
     */
-    //vTaskDelay(pdMS_TO_TICKS(10));
     while(1){
         resInit = ds18b20Init();
         if(resInit == 0){

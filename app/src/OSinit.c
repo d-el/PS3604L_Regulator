@@ -8,9 +8,9 @@
 /*!****************************************************************************
 * Include
 */
-#include "uartTSK.h"
-#include "ds18TSK.h"
+#include "assert.h"
 #include "OSinit.h"
+#include "systemTSK.h"
 
 /*!****************************************************************************
 * Semaphore
@@ -22,7 +22,7 @@ xSemaphoreHandle    i2c1Sem;
 *
 */
 void OSinit(void){
-    BaseType_t Result = pdTRUE;;
+    BaseType_t res;
 
     //AdcEndConversionSem
     vSemaphoreCreateBinary(AdcEndConversionSem);
@@ -31,17 +31,8 @@ void OSinit(void){
 	vSemaphoreCreateBinary(i2c1Sem);
 	xSemaphoreTake(i2c1Sem, portMAX_DELAY);
 
-
-    Result &= xTaskCreate(uartTSK,      "uartTSK",      UART_TSK_SZ_STACK,      NULL, UART_TSK_PRIO,    NULL);
-    Result &= xTaskCreate(adcTSK,       "adcTSK",       ADC_TSK_SZ_STACK,       NULL, ADC_TSK_PRIO,     NULL);
-    Result &= xTaskCreate(ds18TSK,      "ds18TSK",      DS18B_TSK_SZ_STACK,     NULL, DS18B_TSK_PRIO,   NULL);
-    Result &= xTaskCreate(systemTSK,    "systemTSK",    SYSTEM_TSK_SZ_STACK,    NULL, SYSTEM_TSK_PRIO,  NULL);
-
-    if(Result == pdTRUE){
-    }
-    else{
-        while(1);
-    }
+    res = xTaskCreate(systemTSK,    "systemTSK",    SYSTEM_TSK_SZ_STACK,    NULL, SYSTEM_TSK_PRIO,  NULL);
+    assert(res == pdTRUE);
 
     vTaskStartScheduler();
 }

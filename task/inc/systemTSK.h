@@ -13,6 +13,9 @@
 */
 #include "pstypes.h"
 #include "IQmathLib.h"
+#include "FreeRTOS.h"
+#include "task.h"
+#include "semphr.h"
 
 /*!****************************************************************************
 * User define
@@ -72,7 +75,8 @@ typedef struct{
 /*!****************************************************************************
 * External variables
 */
-extern regulator_type      rg;
+extern regulator_type rg;
+extern xSemaphoreHandle rxRequest;
 
 /*!****************************************************************************
 * Macro functions

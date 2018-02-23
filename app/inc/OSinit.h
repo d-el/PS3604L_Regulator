@@ -12,26 +12,19 @@
 #include "task.h"
 #include "queue.h"
 #include "semphr.h"
-#include "adcTSK.h"
-#include "systemTSK.h"
 
 /*!****************************************************************************
-*-------NAME--------------------size [2byte Word] */
+*-------NAME--------------------size [4 byte Word] */
 #define SYSTEM_TSK_SZ_STACK     256
 #define ADC_TSK_SZ_STACK        128
 #define UART_TSK_SZ_STACK       128
 #define DS18B_TSK_SZ_STACK      128
 /******************************************************************************
-*-------NAME--------------------size [2byte Word] */
+*-------NAME--------------------size [4 byte Word] */
 #define SYSTEM_TSK_PRIO         3
 #define ADC_TSK_PRIO            4
 #define UART_TSK_PRIO           2
 #define DS18B_TSK_PRIO          1
-
-/*!****************************************************************************
-* Mutex
-*/
-extern xSemaphoreHandle    oneWireBusyMutex;
 
 /*!****************************************************************************
 * Semaphore

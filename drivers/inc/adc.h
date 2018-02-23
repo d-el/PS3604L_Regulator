@@ -45,16 +45,14 @@ extern adcStct_type     adcStct;
 /*!****************************************************************************
 * Macro functions
 */
-#define startSampling()             TIM3->CR1 |= TIM_CR1_CEN
-#define stopSampling()              TIM3->CR1 &= ~TIM_CR1_CEN
-#define setSampleRate(x)			TIM3->ARR = (x)
 
 /*!****************************************************************************
 * Prototypes for the functions
 */
 void sdadc_init(void);
-void DMA1_Channel1_IRQHandler(void);
-void adcCalc(void);
+void startSampling(void);
+void stopSampling(void);
+void setSampleRate(uint16_t us);
 
 #endif //ADC_H
 /*************** GNU GPL ************** END OF FILE ********* D_EL ***********/

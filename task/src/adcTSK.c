@@ -1,9 +1,9 @@
 ﻿/*!****************************************************************************
- * @file    		adcTSK.c
- * @author  		Storozhenko Roman - D_EL
+ * @file			adcTSK.c
+ * @author			Storozhenko Roman - D_EL
  * @version 		V1.0.0
- * @date   		 07-01-2015
- * @copyright 	GNU Public License
+ * @date			07-01-2015
+ * @copyright		GNU Public License
  */
 
 /*!****************************************************************************
@@ -14,6 +14,7 @@
 #include "ina226.h"
 #include "pstypes.h"
 #include "adcTSK.h"
+#include "systemTSK.h"
 
 /*!****************************************************************************
  * Local function declaration

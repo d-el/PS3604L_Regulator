@@ -28,10 +28,6 @@
 void main(void){
     hardInit();
 
-    LED_ON();
-    LED_ON();
-
-    //Great mutex, semaphore, task, start scheduler
     OSinit();
     while(1);
 }

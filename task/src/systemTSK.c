@@ -1,14 +1,15 @@
 ﻿/*!****************************************************************************
-* @file    		systemTSK.c
-* @author  		Storozhenko Roman - D_EL
-* @version		 V1.0
-* @date    		14-09-2015
-* @copyright 	GNU Public License
+* @file			systemTSK.c
+* @author		Storozhenko Roman - D_EL
+* @version		V1.0
+* @date			14-09-2015
+* @copyright	GNU Public License
 */
 
 /*!****************************************************************************
 * Include
 */
+#include "assert.h"
 #include "FreeRTOS.h"
 #include "task.h"
 #include "semphr.h"
@@ -29,53 +30,61 @@
 /*!****************************************************************************
 * Memory
 */
+xSemaphoreHandle	rxRequest;
 uint16_t pwmk;
-regulator_type      rg;
-uint16_t            base[] = {
-    4095
+regulator_type		rg;
+uint16_t			base[] = {
+	4095
 };
 
 /*!****************************************************************************
-* @brief    main output ON
+* @brief	main output ON
 */
 static inline void switchON(void){
-    gppin_reset(GP_ON_OFF);
-    rg.tf.state.bit.switchIsON = 1;
+	gppin_reset(GP_ON_OFF);
+	rg.tf.state.bit.switchIsON = 1;
 }
 
 /*!****************************************************************************
-* @brief    main output OFF
+* @brief	main output OFF
 */
 static inline void switchOFF(void){
-    gppin_set(GP_ON_OFF);
-    rg.tf.state.bit.switchIsON = 0;
+	gppin_set(GP_ON_OFF);
+	rg.tf.state.bit.switchIsON = 0;
 }
 
 /*!****************************************************************************
 *
 */
 void systemTSK(void *pPrm){
-	BaseType_t  		osRes;
+	BaseType_t			res;
 	TickType_t			curOffTime = xTaskGetTickCount();	//Время тока < 10%
-	TickType_t          timeOffset = xTaskGetTickCount();
-    regulator_type      *reg = &rg;
-    regSetting_type     *s = &reg->sett; 		//Указатель на структуру с калибровками
-    adcTaskStct_type    *a = &adcTaskStct;    	//Указатель на сруктуру с данными АЦП
-    request_type        l_switchRequest;    	//Локальный запрос на вкл / выкл выход
-    _iq                 qpwmTask;           	//Заполнение ШИМ для венитлятора
-    _iq                 qTask, qdac;
+	TickType_t			timeOffset = xTaskGetTickCount();
+	regulator_type		*reg = &rg;
+	regSetting_type		*s = &reg->sett;		//Указатель на структуру с калибровками
+	adcTaskStct_type	*a = &adcTaskStct;		//Указатель на сруктуру с данными АЦП
+	request_type		l_switchRequest = setSwitchOff;		//Локальный запрос на вкл / выкл выход
+	_iq					qpwmTask;				//Заполнение ШИМ для венитлятора
+	_iq					qTask, qdac;
+	uint16_t			idac, udac;
 
-    uint16_t            idac, udac;
+	// Create Semaphore
+	vSemaphoreCreateBinary(rxRequest);
+	assert(rxRequest != NULL);
 
-    l_switchRequest     = setSwitchOff;
+	res = pdTRUE;
+	res &= xTaskCreate(uartTSK,		 "uartTSK",		 UART_TSK_SZ_STACK,		 NULL, UART_TSK_PRIO,	 NULL);
+	res &= xTaskCreate(adcTSK,		 "adcTSK",		 ADC_TSK_SZ_STACK,		 NULL, ADC_TSK_PRIO,	 NULL);
+	res &= xTaskCreate(ds18TSK,		 "ds18TSK",		 DS18B_TSK_SZ_STACK,	 NULL, DS18B_TSK_PRIO,	 NULL);
+	assert(res == pdTRUE);
 
-    while(1){
-    	osRes = xSemaphoreTake(rxRequest, pdMS_TO_TICKS(MAX_WAIT_RxRequest));
+	while(1){
+		res = xSemaphoreTake(rxRequest, pdMS_TO_TICKS(MAX_WAIT_RxRequest));
 
-        /**************************************
-        * Вызов периодических функций
-        */
-    	static uint8_t ledCount = 0;
+		/**************************************
+		* Вызов периодических функций
+		*/
+		static uint8_t ledCount = 0;
 		if(ledCount++ == 100){
 			LED_ON();
 			ledCount = 0;
@@ -83,87 +92,87 @@ void systemTSK(void *pPrm){
 		if(ledCount == 10){
 			LED_OFF();
 		}
-		if((ledCount == 20)&&(osRes == pdTRUE)){
+		if((ledCount == 20)&&(res == pdTRUE)){
 			LED_ON();
 		}
 		if(ledCount == 30){
 			LED_OFF();
 		}
 
-        /**************************************
-        * Анализ датчика температуры линейного регулятора
-        */
-        if(temperature.state == temp_Ok){
-            if(temperature.temperature > (TEMP_OFF * 10)){
-                reg->tf.state.bit.ovfLinearRegTemper = 1;        //Превышение температуры линейного стабилизатора
-            }else{
-                reg->tf.state.bit.ovfLinearRegTemper = 0;
-            }
-            reg->tf.state.bit.errorLinearRegTemperSens = 0;
-        }
-        else{
-            reg->tf.state.bit.errorLinearRegTemperSens = 1;
-        }
+		/**************************************
+		* Анализ датчика температуры линейного регулятора
+		*/
+		if(temperature.state == temp_Ok){
+			if(temperature.temperature > (TEMP_OFF * 10)){
+				reg->tf.state.bit.ovfLinearRegTemper = 1;		 //Превышение температуры линейного стабилизатора
+			}else{
+				reg->tf.state.bit.ovfLinearRegTemper = 0;
+			}
+			reg->tf.state.bit.errorLinearRegTemperSens = 0;
+		}
+		else{
+			reg->tf.state.bit.errorLinearRegTemperSens = 1;
+		}
 
-        /**************************************
-        * Проверяем на режим ограничения тока
-        */
-        if(reg->tf.state.bit.switchIsON != 0){
-           reg->tf.state.bit.modeIlim = MODE_IS_CC();
-        }else{
-            reg->tf.state.bit.modeIlim = 0;
-        }
+		/**************************************
+		* Проверяем на режим ограничения тока
+		*/
+		if(reg->tf.state.bit.switchIsON != 0){
+		   reg->tf.state.bit.modeIlim = MODE_IS_CC();
+		}else{
+			reg->tf.state.bit.modeIlim = 0;
+		}
 
-        /**************************************
-        * Перекладываем значения с модуля измерителя
-        */
-		reg->tf.meas.adcu 			= a->filtered[CH_UADC];
-		reg->tf.meas.adci 			= a->filtered[CH_IADC];
-		reg->tf.meas.u 				= IQtoInt(a->voltage, 1000000);
-		reg->tf.meas.i 				= IQtoInt(a->current, 1000000);
-        reg->tf.meas.resistance      = IQNtoInt(a->resistens, 1, 14);
-        reg->tf.meas.power          = IQNtoInt(a->outPower, 1000, 14);
-        reg->tf.meas.uin            = IQtoInt(a->udc, 1000);
-        reg->tf.meas.temperatureLin = temperature.temperature;
-        reg->tf.meas.capacity       = a->capacity;
-        reg->tf.state.bit.reverseVoltage = a->reverseVoltage;
-        reg->tf.state.bit.lowInputVoltage = a->lowInputVoltage;
+		/**************************************
+		* Перекладываем значения с модуля измерителя
+		*/
+		reg->tf.meas.adcu			= a->filtered[CH_UADC];
+		reg->tf.meas.adci			= a->filtered[CH_IADC];
+		reg->tf.meas.u				= IQtoInt(a->voltage, 1000000);
+		reg->tf.meas.i				= IQtoInt(a->current, 1000000);
+		reg->tf.meas.resistance		= IQNtoInt(a->resistens, 1, 14);
+		reg->tf.meas.power			= IQNtoInt(a->outPower, 1000, 14);
+		reg->tf.meas.uin			= IQtoInt(a->udc, 1000);
+		reg->tf.meas.temperatureLin = temperature.temperature;
+		reg->tf.meas.capacity		= a->capacity;
+		reg->tf.state.bit.reverseVoltage = a->reverseVoltage;
+		reg->tf.state.bit.lowInputVoltage = a->lowInputVoltage;
 
-        if(reg->tf.state.bit.switchIsON != 0){
-            reg->tf.meas.time = (xTaskGetTickCount() - timeOffset) / configTICK_RATE_HZ;
-        }
+		if(reg->tf.state.bit.switchIsON != 0){
+			reg->tf.meas.time = (xTaskGetTickCount() - timeOffset) / configTICK_RATE_HZ;
+		}
 
-        /**************************************
-        * Регулятор вентилятора
-        */
-        qpwmTask = iq_Fy_x1x2y1y2x(_IQ(MIN_TEMP), _IQ(MAX_TEMP),
-                                   _IQ(COOLER_PWM_START), _IQ(1),
-                                   (uint32_t)(((uint64_t)temperature.temperature << 24) / 10)
-                                   );
-        if(qpwmTask < _IQ(COOLER_PWM_START)){
-            qpwmTask = _IQ(COOLER_PWM_START);
-        }else if(qpwmTask > _IQ(1)){
-            qpwmTask = _IQ(1);
-        }
+		/**************************************
+		* Регулятор вентилятора
+		*/
+		qpwmTask = iq_Fy_x1x2y1y2x(_IQ(MIN_TEMP), _IQ(MAX_TEMP),
+								   _IQ(COOLER_PWM_START), _IQ(1),
+								   (uint32_t)(((uint64_t)temperature.temperature << 24) / 10)
+								   );
+		if(qpwmTask < _IQ(COOLER_PWM_START)){
+			qpwmTask = _IQ(COOLER_PWM_START);
+		}else if(qpwmTask > _IQ(1)){
+			qpwmTask = _IQ(1);
+		}
 
-        if(temperature.temperature > (MIN_TEMP * 10)){
-        	pwmk = IQtoInt(qpwmTask, 1000);
-        	FanPwmSet(pwmk);
-        }
-        if(temperature.temperature < ((MIN_TEMP - H_TEMP) * 10)){
-        	FanPwmSet(0);
-        }
+		if(temperature.temperature > (MIN_TEMP * 10)){
+			pwmk = IQtoInt(qpwmTask, 1000);
+			FanPwmSet(pwmk);
+		}
+		if(temperature.temperature < ((MIN_TEMP - H_TEMP) * 10)){
+			FanPwmSet(0);
+		}
 
-        /**************************************
-        * Рассчет значения ЦАП
-        */
-        switch(reg->tf.task.mode){
-        	case mode_overcurrentShutdown:
-        	case mode_limitation:
-        	case mode_timeShutdown:
-        	case mode_lowCurrentShutdown:
-        		//Calc idac
-        		qTask = IntToIQ(reg->tf.task.i, 1000000);
+		/**************************************
+		* Рассчет значения ЦАП
+		*/
+		switch(reg->tf.task.mode){
+			case mode_overcurrentShutdown:
+			case mode_limitation:
+			case mode_timeShutdown:
+			case mode_lowCurrentShutdown:
+				//Calc idac
+				qTask = IntToIQ(reg->tf.task.i, 1000000);
 				if(qTask == 0){
 					qdac = 0;
 				}
@@ -202,59 +211,59 @@ void systemTSK(void *pPrm){
 				}
 				break;
 
-        	case mode_raw:
-        		if(reg->tf.task.dacu <= base[BASE_DAC]){
+			case mode_raw:
+				if(reg->tf.task.dacu <= base[BASE_DAC]){
 					udac = reg->tf.task.dacu;
 				}else{
 					udac = base[BASE_DAC];
 				}
-        		if(reg->tf.task.daci <= base[BASE_DAC]){
+				if(reg->tf.task.daci <= base[BASE_DAC]){
 					idac = reg->tf.task.daci;
 				}else{
 					idac = base[BASE_DAC];
 				}
-        		break;
+				break;
 
-        	case mode_off:
-        	default:
-        		idac = udac = 0;
-        		if(reg->tf.state.bit.switchIsON != 0){
+			case mode_off:
+			default:
+				idac = udac = 0;
+				if(reg->tf.state.bit.switchIsON != 0){
 					l_switchRequest = setSwitchOff;
 				}
 				break;
-        }
+		}
 
-        /**************************************
-         *Setting DAC value
-         */
-        setDacI(idac);
-        setDacU(udac);
-        //setDacU(iq_filtr(vTaskCumul, udac, VTASK_FILTER_K));
+		/**************************************
+		 *Setting DAC value
+		 */
+		setDacI(idac);
+		setDacU(udac);
+		//setDacU(iq_filtr(vTaskCumul, udac, VTASK_FILTER_K));
 
-        if(reg->tf.task.mode == mode_overcurrentShutdown){
-        	irqLimitOn();
-        }
-        else{
-        	irqLimitOff();
-        }
+		if(reg->tf.task.mode == mode_overcurrentShutdown){
+			irqLimitOn();
+		}
+		else{
+			irqLimitOff();
+		}
 
-        /**************************************
-         * Обработка запросов сохранения точки калибровки
-         */
-        if((reg->tf.task.request >= setSavePointU0)&&(reg->tf.task.request <= setSavePointU3)){
-			s->pU[reg->tf.task.request - setSavePointU0].qu  = IntToIQ(reg->tf.task.u, 1000000);
+		/**************************************
+		 * Обработка запросов сохранения точки калибровки
+		 */
+		if((reg->tf.task.request >= setSavePointU0)&&(reg->tf.task.request <= setSavePointU3)){
+			s->pU[reg->tf.task.request - setSavePointU0].qu	 = IntToIQ(reg->tf.task.u, 1000000);
 			s->pU[reg->tf.task.request - setSavePointU0].adc = a->filtered[CH_UADC];
 			s->pU[reg->tf.task.request - setSavePointU0].dac = reg->tf.task.dacu;
 		}
-        if((reg->tf.task.request >= setSavePointI0)&&(reg->tf.task.request <= setSavePointI3)){
-			s->pI[reg->tf.task.request - setSavePointI0].qi  = IntToIQ(reg->tf.task.i, 1000000);
+		if((reg->tf.task.request >= setSavePointI0)&&(reg->tf.task.request <= setSavePointI3)){
+			s->pI[reg->tf.task.request - setSavePointI0].qi	 = IntToIQ(reg->tf.task.i, 1000000);
 			s->pI[reg->tf.task.request - setSavePointI0].adc = a->filtered[CH_IADC];
 			s->pI[reg->tf.task.request - setSavePointI0].dac = reg->tf.task.daci;
 
 			s->pIEx[reg->tf.task.request - setSavePointI0].qi  = IntToIQ(reg->tf.task.i, 1000000);
 			s->pIEx[reg->tf.task.request - setSavePointI0].adc = a->adcIna226;
 			s->pIEx[reg->tf.task.request - setSavePointI0].dac = reg->tf.task.daci;
-        }
+		}
 
 		/**************************************
 		 * Обработка запроса на сохранение калибровочной информации
@@ -307,38 +316,38 @@ void systemTSK(void *pPrm){
 			l_switchRequest = setSwitchOff;
 		}
 
-        /**************************************
-         * Запросы на включение / отключение по каналу управления
-         */
-        if(reg->tf.task.request == setSwitchOn){
-            l_switchRequest = setSwitchOn;
-            reg->tf.task.request = setNone;
-        }
-        if(reg->tf.task.request == setSwitchOff){
-            l_switchRequest = setSwitchOff;
-            reg->tf.task.request = setNone;
-        }
+		/**************************************
+		 * Запросы на включение / отключение по каналу управления
+		 */
+		if(reg->tf.task.request == setSwitchOn){
+			l_switchRequest = setSwitchOn;
+			reg->tf.task.request = setNone;
+		}
+		if(reg->tf.task.request == setSwitchOff){
+			l_switchRequest = setSwitchOff;
+			reg->tf.task.request = setNone;
+		}
 
-        /**************************************
-         * Включение / отключение
-         */
-        if(l_switchRequest == setSwitchOn){
-            if(reg->tf.state.bit.switchIsON == 0){
-                reg->tf.state.bit.ovfCurrent = 0;
-                setDacU(0);
-                switchON();
-            }
-            timeOffset = xTaskGetTickCount();
-            l_switchRequest = setNone;
-        }
-        if(l_switchRequest == setSwitchOff){
-            if(reg->tf.state.bit.switchIsON != 0){
-                setDacU(0);
-                switchOFF();
-            }
-            l_switchRequest = setNone;
-        }
-    }
+		/**************************************
+		 * Включение / отключение
+		 */
+		if(l_switchRequest == setSwitchOn){
+			if(reg->tf.state.bit.switchIsON == 0){
+				reg->tf.state.bit.ovfCurrent = 0;
+				setDacU(0);
+				switchON();
+			}
+			timeOffset = xTaskGetTickCount();
+			l_switchRequest = setNone;
+		}
+		if(l_switchRequest == setSwitchOff){
+			if(reg->tf.state.bit.switchIsON != 0){
+				setDacU(0);
+				switchOFF();
+			}
+			l_switchRequest = setNone;
+		}
+	}
 }
 
 /*************** GNU GPL ************** END OF FILE ********* D_EL ***********/

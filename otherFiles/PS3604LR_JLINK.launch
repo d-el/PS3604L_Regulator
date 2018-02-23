@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <launchConfiguration type="ilg.gnuarmeclipse.debug.gdbjtag.jlink.launchConfigurationType">
+<stringAttribute key="bad_container_name" value="\PS3604LR\otherFi"/>
+<stringAttribute key="ilg.gnuarmeclipse.debug.gdbjtag.PERIPHERALS" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;&#13;&#10;&lt;peripherals&gt;&#13;&#10;&lt;peripheral name=&quot;TIM3&quot;/&gt;&#13;&#10;&lt;/peripherals&gt;&#13;&#10;"/>
 <booleanAttribute key="ilg.gnuarmeclipse.debug.gdbjtag.jlink.doConnectToRunning" value="false"/>
 <booleanAttribute key="ilg.gnuarmeclipse.debug.gdbjtag.jlink.doContinue" value="false"/>
 <booleanAttribute key="ilg.gnuarmeclipse.debug.gdbjtag.jlink.doDebugInRam" value="false"/>
@@ -12,7 +14,7 @@
 <booleanAttribute key="ilg.gnuarmeclipse.debug.gdbjtag.jlink.doGdbServerVerifyDownload" value="true"/>
 <booleanAttribute key="ilg.gnuarmeclipse.debug.gdbjtag.jlink.doSecondReset" value="true"/>
 <booleanAttribute key="ilg.gnuarmeclipse.debug.gdbjtag.jlink.doStartGdbServer" value="true"/>
-<booleanAttribute key="ilg.gnuarmeclipse.debug.gdbjtag.jlink.enableFlashBreakpoints" value="true"/>
+<booleanAttribute key="ilg.gnuarmeclipse.debug.gdbjtag.jlink.enableFlashBreakpoints" value="false"/>
 <booleanAttribute key="ilg.gnuarmeclipse.debug.gdbjtag.jlink.enableSemihosting" value="true"/>
 <booleanAttribute key="ilg.gnuarmeclipse.debug.gdbjtag.jlink.enableSemihostingIoclientGdbClient" value="true"/>
 <booleanAttribute key="ilg.gnuarmeclipse.debug.gdbjtag.jlink.enableSemihostingIoclientTelnet" value="true"/>
@@ -63,13 +65,12 @@
 <booleanAttribute key="org.eclipse.cdt.dsf.gdb.UPDATE_THREADLIST_ON_SUSPEND" value="false"/>
 <intAttribute key="org.eclipse.cdt.launch.ATTR_BUILD_BEFORE_LAUNCH_ATTR" value="2"/>
 <stringAttribute key="org.eclipse.cdt.launch.COREFILE_PATH" value=""/>
-<stringAttribute key="org.eclipse.cdt.launch.DEBUGGER_REGISTER_GROUPS" value=""/>
-<stringAttribute key="org.eclipse.cdt.launch.PROGRAM_NAME" value="build\regulator.elf"/>
-<stringAttribute key="org.eclipse.cdt.launch.PROJECT_ATTR" value="Regulator"/>
+<stringAttribute key="org.eclipse.cdt.launch.PROGRAM_NAME" value="build\PS3604LR.elf"/>
+<stringAttribute key="org.eclipse.cdt.launch.PROJECT_ATTR" value="PS3604LR"/>
 <booleanAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_AUTO_ATTR" value="true"/>
 <stringAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_ID_ATTR" value="ilg.gnuarmeclipse.managedbuild.cross.toolchain.base.1554720691"/>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
-<listEntry value="/Regulator"/>
+<listEntry value="/PS3604LR"/>
 </listAttribute>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
 <listEntry value="4"/>
