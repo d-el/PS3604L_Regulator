@@ -9,7 +9,7 @@ INCLUDES := \
 	-I cm4/Device/ST/STM32F3xx/Include \
 	-I cm4/Include \
 	-I drivers/inc \
-	-I FreeRTOS/inc \
+	-I freertos/inc \
 	-I lib/inc \
 	-I system/inc \
 	-I task/inc \
