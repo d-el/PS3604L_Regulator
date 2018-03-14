@@ -33,12 +33,12 @@
  * Macro functions
  */
 void println(const char *fmt, ...);
-void print(const char *fmt, ...);
+void printp(const char *fmt, ...);
 
 #ifdef NDEBUG           /* required by ANSI standard */
-#	define print(e) ((void)0)
+#	define printp(e) ((void)0)
 #else
-#	define print l_print
+#	define printp l_print
 #endif /* !NDEBUG */
 
 #ifdef NDEBUG           /* required by ANSI standard */
@@ -53,7 +53,7 @@ void print(const char *fmt, ...);
 #	define printdmsg(debug, message) \
 		do { \
 			if(debug){ \
-				print message; \
+				printp message; \
 			} \
 		}while(0);
 #endif /* !NDEBUG */
