@@ -22,8 +22,6 @@ CPUFLAGS := \
 	-mcpu=cortex-m4 -mthumb \
 	-mfloat-abi=hard \
 	-mfpu=fpv4-sp-d16 \
-	-ffunction-sections \
-	-fdata-sections \
 	-DSTM32F373xC
 
 CCFLAGS := \
@@ -31,6 +29,8 @@ CCFLAGS := \
 	-std=gnu11 \
 	-g3 -O2 \
 	-fmessage-length=0 \
+	-ffunction-sections \
+	-fdata-sections \
 	-fsigned-char \
 	-fsingle-precision-constant \
 	-Wfloat-equal \
