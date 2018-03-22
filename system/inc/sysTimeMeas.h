@@ -13,13 +13,12 @@
  * Include
  */
 #include "stm32f3xx.h"
-#include "board.h"
 
 /*!****************************************************************************
  * Define
  */
 #define NUMBER_MEASURES		(8)
-#define CORE_FREQUENCY		(SYSTEM_FREQ)
+#define CORE_FREQUENCY		(24000000)
 
 /*!****************************************************************************
  * Enumeration
