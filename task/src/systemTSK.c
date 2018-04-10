@@ -26,6 +26,7 @@
 #include "uartTSK.h"
 #include "adcTSK.h"
 #include "ds18TSK.h"
+#include "printp.h"
 
 /*!****************************************************************************
 * Memory
@@ -67,6 +68,8 @@ void systemTSK(void *pPrm){
 	_iq					qpwmTask;				//Заполнение ШИМ для венитлятора
 	_iq					qTask, qdac;
 	uint16_t			idac, udac;
+
+	print_init(stdOut_semihost);
 
 	// Create Semaphore
 	vSemaphoreCreateBinary(rxRequest);
