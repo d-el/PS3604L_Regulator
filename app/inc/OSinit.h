@@ -29,8 +29,8 @@
 /*!****************************************************************************
 * Semaphore
 */
-extern xSemaphoreHandle    AdcEndConversionSem;
-extern xSemaphoreHandle    i2c1Sem;
+extern SemaphoreHandle_t    AdcEndConversionSem;
+extern SemaphoreHandle_t    i2c1Sem;
 
 /*!****************************************************************************
 * Prototypes for the functions in OSinit.c

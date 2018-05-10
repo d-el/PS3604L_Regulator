@@ -1,0 +1,19 @@
+HISTORY
+
+(git master)
+
+  * [Enter new changes just after this line - do not remove this line]
+  
+(UNSTABLE-1.0.2)
+  
+  ++ New features:
+  2018-05-10
+  * FreeRTOSConfig.h: refactor
+  * sysTimeMeas.c, sysTimeMeas.h: copied from PS3604LF
+  
+(STABLE-1.0.1)
+  
+  ++ New features:
+  
+  2018-04-27:
+  * debugCore.c: added print SHCSR

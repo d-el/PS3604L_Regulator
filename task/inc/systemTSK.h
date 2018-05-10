@@ -76,7 +76,7 @@ typedef struct{
 * External variables
 */
 extern regulator_type rg;
-extern xSemaphoreHandle rxRequest;
+extern SemaphoreHandle_t rxRequest;
 
 /*!****************************************************************************
 * Macro functions

@@ -31,7 +31,7 @@
 /*!****************************************************************************
 * Memory
 */
-xSemaphoreHandle	rxRequest;
+SemaphoreHandle_t	rxRequest;
 uint16_t pwmk;
 regulator_type		rg;
 uint16_t			base[] = {

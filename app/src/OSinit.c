@@ -15,8 +15,8 @@
 /*!****************************************************************************
 * Semaphore
 */
-xSemaphoreHandle    AdcEndConversionSem;
-xSemaphoreHandle    i2c1Sem;
+SemaphoreHandle_t    AdcEndConversionSem;
+SemaphoreHandle_t    i2c1Sem;
 
 /*!****************************************************************************
 *
