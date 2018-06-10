@@ -12,6 +12,7 @@
 #include "string.h"
 #include "ds18b20.h"
 #include "oneWireUart.h"
+#include "crc.h"
 #include "ds18TSK.h"
 
 /*!****************************************************************************
@@ -62,7 +63,7 @@ void ds18TSK(void *pPrm){
             ow_write(bff, 1);
 
             ow_read(bff, 9);
-            crc = ow_crc8(bff, 9);
+            crc = crc8Calc(&crc1Wire, bff, 9);
 
             if(crc == 0){
             	errorcnt = 0;

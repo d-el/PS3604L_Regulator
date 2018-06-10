@@ -61,9 +61,10 @@ INCLUDES := \
 	-I lib/inc \
 	-I system/inc \
 	-I task/inc \
+	-I utils/inc \
 	-I system/inc
 
-LDFILES := -T ldscript/STM32F373CC_FLASH.ld
+LDFILES	:= -T ldscript/STM32F373CC_FLASH.ld
 LIBS	:= lib/IQmathLib-cm4.a
 
 CPUFLAGS := \
@@ -72,9 +73,7 @@ CPUFLAGS := \
 	-mfpu=fpv4-sp-d16 \
 	-DSTM32F373xC
 
-CCFLAGS := \
-	$(CPUFLAGS) \
-	-std=gnu11 \
+COMMONFLAGS := \
 	-g3 -O2 \
 	-fmessage-length=0 \
 	-ffunction-sections \
@@ -85,13 +84,26 @@ CCFLAGS := \
 	-Wuninitialized \
 	-Wextra
 
+CCFLAGS := \
+	$(CPUFLAGS) \
+	$(COMMONFLAGS) \
+	-std=gnu11
+
+CPPFLAGS := \
+	$(CPUFLAGS) \
+	$(COMMONFLAGS) \
+	-std=c++1y \
+	-fno-rtti \
+	-fno-exceptions
+
 LDFLAGS := \
 	$(CPUFLAGS) \
 	$(LDFILES) \
-	-Wl,--gc-sections \
 	-Wl,-Map="$(ODIR)/$(TARGET).map" \
+	-Wl,--gc-sections \
 	-Xlinker --gc-sections --specs=nano.specs \
-	-Wl,--print-memory-usage
+	-Wl,--print-memory-usage \
+	-Wl,--undefined=uxTopUsedPriority
 
 #******************************************************************************
 # C File
@@ -101,7 +113,8 @@ CSRCS := \
 	$(shell find drivers -maxdepth 3 -type f -name "*.c") \
 	$(shell find freertos -maxdepth 3 -type f -name "*.c") \
 	$(shell find system -maxdepth 3 -type f -name "*.c") \
-	$(shell find task -maxdepth 3 -type f -name "*.c")
+	$(shell find task -maxdepth 3 -type f -name "*.c") \
+	$(shell find utils -maxdepth 3 -type f -name "*.c")
 
 #******************************************************************************
 # CPP File
@@ -109,7 +122,7 @@ CPPSRCS :=
 
 #******************************************************************************
 # ASM File (*.S)
-ASRCS := $(shell find system -maxdepth 3 -type f -name "*.S" )
+ASRCS :=
 
 #******************************************************************************
 # ASM File (*.s)
@@ -128,7 +141,7 @@ DEPS :=	$(CSRCS:%.c=$(OBJODIR)/%.d) \
 		$(ASRCS:%.S=$(OBJODIR)/%.d)
 
 CFLAGS = $(CCFLAGS) $(INCLUDES)
-DFLAGS = $(CCFLAGS) $(INCLUDES)
+CPFLAGS = $(CPPFLAGS) $(INCLUDES)
 
 #******************************************************************************
 # Targets
@@ -142,7 +155,7 @@ prebuild:
 	@echo ' '
 
 mainbuild: prebuild
-	$(Q)$(MAKE) hex
+	$(Q)$(MAKE) robjcopy
 
 postbuild: mainbuild
 	@echo 'Print Size:'
@@ -154,7 +167,7 @@ elf: $(OBJS)
 	$(Q)$(LD) $(LDFLAGS) $(OBJS) $(LIBS) -o $(ODIR)/$(TARGET).elf
 	@echo ' '
 	
-hex: elf
+robjcopy: elf
 	@echo [OBJCOPY] $@
 	$(Q)$(OBJCOPY) -O ihex $(ODIR)/$(TARGET).elf $(ODIR)/$(TARGET).hex
 	@echo ' '
@@ -170,7 +183,7 @@ disasm: elf
 
 PHONY += listc
 listc:
-	@echo $(CSRCS) $(CPPSRCS)
+	@echo $(CSRCS) $(CPPSRCS) $(CASRCS)
 
 ifneq ($(MAKECMDGOALS),clean)
 ifneq ($(MAKECMDGOALS),disasm)
@@ -189,7 +202,7 @@ $(OBJODIR)/%.o: %.c
 $(OBJODIR)/%.o: %.cpp
 	@echo [CPP] $<
 	$(Q)mkdir -p $(dir $@)
-	$(Q)$(CC) -MT $@ -MMD -MP -MF $(OBJODIR)/$*.Td $(CFLAGS) -c -o $@ $<
+	$(Q)$(CC) -MT $@ -MMD -MP -MF $(OBJODIR)/$*.Td $(CPFLAGS) -c -o $@ $<
 	$(Q)mv -f $(OBJODIR)/$*.Td $(OBJODIR)/$*.d && touch $@
 
 $(OBJODIR)/%.o: %.s
