@@ -9,6 +9,10 @@
 /*!****************************************************************************
  * Include
  */
+#include "FreeRTOS.h"
+#include "task.h"
+#include "queue.h"
+#include "semphr.h"
 #include "specificMath.h"
 #include "adc.h"
 #include "ina226.h"
@@ -21,6 +25,7 @@
  */
 static inline uint16_t movingAverageFilter(adcFilt_type *f, uint16_t v);
 static inline void adcTaskStctInit(void);
+static void i2c1TC_Hook(i2c_type *i2cx);
 
 /*!****************************************************************************
  * MEMORY
@@ -33,6 +38,9 @@ adcTaskStct_type adcTaskStct = {
 	},
 	.externalSensorOk = internalCurrentSensor,
 };
+
+SemaphoreHandle_t    AdcEndConversionSem;
+SemaphoreHandle_t    i2c1Sem;
 
 /*!****************************************************************************
  * @brief
@@ -49,6 +57,13 @@ void adcTSK(void *pPrm){
 	uint32_t 			val;
 	_iq 				qtemp;
 	uint8_t 			thinningCnt = 0;
+
+    //AdcEndConversionSem
+    vSemaphoreCreateBinary(AdcEndConversionSem);
+    xSemaphoreTake(AdcEndConversionSem, portMAX_DELAY);
+    //i2c1Sem
+	vSemaphoreCreateBinary(i2c1Sem);
+	xSemaphoreTake(i2c1Sem, portMAX_DELAY);
 
 	adcTaskStctInit();
 
@@ -258,6 +273,18 @@ static inline void adcTaskStctInit(void){
 			adcTaskStct.adcFilt[ch].MA_filterMas[i] = adcTaskStct.adcFilt[ch].adcDefVal;
 		}
 	}
+}
+
+/*!****************************************************************************
+ * @brief	I2C callback
+ */
+static void i2c1TC_Hook(i2c_type *i2cx){
+    BaseType_t  xHigherPriorityTaskWoken;
+    xHigherPriorityTaskWoken = pdFALSE;
+    xSemaphoreGiveFromISR(i2c1Sem, &xHigherPriorityTaskWoken);
+    if (xHigherPriorityTaskWoken != pdFALSE){
+        portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
+    }
 }
 
 /*!****************************************************************************

@@ -1,7 +1,7 @@
 /*!****************************************************************************
 * @file    		i2c.c
 * @author  		Storozhenko Roman - D_EL
-* @version 		V1.1
+* @version 		V1.2
 * @date    		1-06-2015
 * @copyright 	GNU Public License
 */
@@ -175,6 +175,13 @@ void i2c_reInit(i2c_type *i2cx){
 }
 
 /*!****************************************************************************
+ * @brief	Set callback I2C
+ */
+void i2c_setCallback(i2c_type *i2cx, i2cCallback_type tcHook){
+	i2cx->tcHook = tcHook;
+}
+
+/*!****************************************************************************
 *
 */
 void i2c_write(i2c_type *i2cx, void *src, uint16_t len, uint8_t slaveAdr, i2c_stopMode_type stopMode){
@@ -215,7 +222,7 @@ void i2c_read(i2c_type *i2cx, void *dst, uint16_t len, uint8_t slaveAdr){
     i2cx->pI2c->CR2	|= I2C_CR2_AUTOEND;						//Automatic end mode: a STOP condition is automatically sent when NBYTES data are transferred
     i2cx->pI2c->CR1	&= ~I2C_CR1_TXIE;						//TX interrupt disable
 
-    i2cx->pI2c->CR2 	|= I2C_CR2_RD_WRN;						//Master requests a read transfer
+    i2cx->pI2c->CR2 	|= I2C_CR2_RD_WRN;					//Master requests a read transfer
 
     i2cx->pI2c->CR2	&= ~I2C_CR2_NBYTES;
     i2cx->pI2c->CR2	|= (len) << I2C_CR2_NBYTES_Pos;			//Number of bytes
@@ -233,7 +240,22 @@ void i2c_read(i2c_type *i2cx, void *dst, uint16_t len, uint8_t slaveAdr){
 */
 void i2cEventHendler(i2c_type *i2cx){
     if((i2cx->pI2c->ISR & I2C_ISR_STOPF) != 0){
+    	if(i2cx->state == i2cTxRun){
+    		i2cx->state = i2cTxSuccess;
+    	}
+    	if(i2cx->state == i2cRxRun){
+    		i2cx->state = i2cRxSuccess;
+		}
+    	if(i2cx->tcHook != NULL){				//Call hook
+			i2cx->tcHook(i2cx);
+		}
+    	i2cx->pI2c->ICR = I2C_ICR_STOPCF;
+    }
+    else if((i2cx->pI2c->ISR & I2C_ISR_TXE) != 0){
     	i2cx->state = i2cTxSuccess;
+    	if(i2cx->tcHook != NULL){				//Call hook
+			i2cx->tcHook(i2cx);
+		}
     	i2cx->pI2c->ICR = I2C_ICR_STOPCF;
     }
 }
@@ -250,25 +272,7 @@ void i2cErrorHendler(i2c_type *i2cx){
 */
 #if (I2C1_USE > 0)
 void I2C1_EV_IRQHandler(void){
-    if((i2c1->pI2c->ISR & I2C_ISR_STOPF) != 0){
-    	if(i2c1->state == i2cTxRun){
-    		i2c1->state = i2cTxSuccess;
-    	}
-    	if(i2c1->state == i2cRxRun){
-			i2c1->state = i2cRxSuccess;
-		}
-		#if (I2C1_TC_HOOK > 0)
-    	i2c1TC_Hook();
-		#endif //I2C1_TC_HOOK
-    	i2c1->pI2c->ICR = I2C_ICR_STOPCF;
-    }
-    else if((i2c1->pI2c->ISR & I2C_ISR_TXE) != 0){
-    	i2c1->state = i2cTxSuccess;
-		#if (I2C1_TC_HOOK > 0)
-    	i2c1TC_Hook();
-		#endif //I2C1_TC_HOOK
-    	i2c1->pI2c->ICR = I2C_ICR_STOPCF;
-    }
+	i2cEventHendler(i2c1);
 }
 void I2C1_ER_IRQHandler(void){
     i2cErrorHendler(i2c1);
@@ -284,25 +288,7 @@ void DMA1_Channel5_IRQHandler(void){   			//RX
 */
 #if (I2C2_USE > 0)
 void I2C2_EV_IRQHandler(void){
-    if((i2c2->pI2c->ISR & I2C_ISR_STOPF) != 0){
-    	if(i2c2->state == i2cTxRun){
-    		i2c2->state = i2cTxSuccess;
-    	}
-    	if(i2c2->state == i2cRxRun){
-			i2c2->state = i2cRxSuccess;
-		}
-		#if (I2C2_TC_HOOK > 0)
-    	i2c2TC_Hook();
-		#endif //I2C2_TC_HOOK
-    	i2c2->pI2c->ICR = I2C_ICR_STOPCF;
-    }
-    else if((i2c2->pI2c->ISR & I2C_ISR_TXE) != 0){
-    	i2c2->state = i2cTxSuccess;
-		#if (I2C2_TC_HOOK > 0)
-    	i2c2TC_Hook();
-		#endif //I2C2_TC_HOOK
-    	i2c2->pI2c->ICR = I2C_ICR_STOPCF;
-    }
+	i2cEventHendler(i2c2);
 }
 void I2C2_ER_IRQHandler(void){
     i2cErrorHendler(i2c2);
@@ -312,6 +298,5 @@ void DMA1_Channel5_IRQHandler(void){   //RX
     i2c2Sct.state = i2cRxSuccess;
 }
 #endif
-
 
 /*************** GNU GPL ************** END OF FILE ********* D_EL ***********/

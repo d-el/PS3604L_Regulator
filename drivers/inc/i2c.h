@@ -1,7 +1,7 @@
 /*!****************************************************************************
 * @file    		i2c.h
 * @author  		Storozhenko Roman - D_EL
-* @version 		V1.0
+* @version 		V1.2
 * @date    		22.11.2015
 * @copyright 	GNU Public License
 */
@@ -70,15 +70,18 @@ typedef enum{
     i2cWithoutStop
 }i2c_stopMode_type;
 
-typedef struct{
+typedef struct i2cStruct{
     uint32_t            		clockSpeed;     //[Hz]
     I2C_TypeDef         		*pI2c;
     DMA_Channel_TypeDef 		*pDmaTxDmaCh;
     DMA_Channel_TypeDef 		*pDmaRxDmaCh;
+    void (*tcHook)(struct i2cStruct *i2cx);
     uint8_t             		slaveAdr;
     i2c_stopMode_type   		stopMode;
     volatile i2cState_type   	state;
 }i2c_type;
+
+typedef void (*i2cCallback_type)(i2c_type *i2cx);
 
 /*!****************************************************************************
 * User enum
@@ -118,20 +121,13 @@ extern uint8_t         i2c3RxBff[I2C3_RxBffSz];
 /*!****************************************************************************
 * Macro functions
 */
-static inline void i2c1TC_Hook(void){
-    BaseType_t  xHigherPriorityTaskWoken;
-    xHigherPriorityTaskWoken = pdFALSE;
-    xSemaphoreGiveFromISR(i2c1Sem, &xHigherPriorityTaskWoken);
-    if (xHigherPriorityTaskWoken != pdFALSE){
-        portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
-    }
-}
 
 /*!****************************************************************************
 * Prototypes for the functions
 */
 void i2c_init(i2c_type *i2cx);
 void i2c_reInit(i2c_type *i2cx);
+void i2c_setCallback(i2c_type *i2cx, i2cCallback_type tcHook);
 void i2c_write(i2c_type *i2cx, void *src, uint16_t len, uint8_t slaveAdr, i2c_stopMode_type stopMode);
 void i2c_read(i2c_type *i2cx, void *dst, uint16_t len, uint8_t slaveAdr);
 
