@@ -17,8 +17,8 @@
 /*!****************************************************************************
 * User define
 */
-#define OW_UART     		(uart3)
-#define OW_TIMEOUT     		(100)		//[ms]
+#define OW_UART     		(uart2)
+#define OW_TIMEOUT     		(500)		//[ms]
 
 /*!****************************************************************************
 * User enum
@@ -29,12 +29,13 @@
 */
 typedef enum{
     owOk,               //Устройство обнаружено
-    owNotFound,         //Не обнаружено
-    owShortCircle,      //к.з. на линии
+    owNotFound,
+    owShortCircle,
 	owTimeOut,
-    owSearchLast,       //Найден последний адрес
-    owSearchFinished,   //Поиск остановлен, последний адрес был найден в предыдущий раз
-    owSearchError
+    owSearchLast,
+    owSearchFinished,
+    owSearchError,
+	owUartTimeout
 }owSt_type;
 
 /*!****************************************************************************
@@ -52,8 +53,8 @@ void ow_init(void);
 void ow_setOutHi(void);
 void ow_setOutOpenDrain(void);
 owSt_type ow_reset(void);
-void ow_write(const void *src, uint8_t len);
-void ow_read(void *dst, uint8_t len);
+owSt_type ow_write(const void *src, uint8_t len);
+owSt_type ow_read(void *dst, uint8_t len);
 uint8_t ow_crc8(uint8_t *mas, uint8_t n);
 
 #endif //oneWireUart_H

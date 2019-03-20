@@ -9,7 +9,7 @@
 /*!****************************************************************************
 * Include
 */
-#include "assert.h"
+#include <assert.h>
 #include "FreeRTOS.h"
 #include "task.h"
 #include "semphr.h"
@@ -148,24 +148,28 @@ void systemTSK(void *pPrm){
 		/**************************************
 		* Регулятор вентилятора
 		*/
-		qpwmTask = iq_Fy_x1x2y1y2x(_IQ(MIN_TEMP), _IQ(MAX_TEMP),
-								   _IQ(COOLER_PWM_START), _IQ(1),
-								   (uint32_t)(((uint64_t)temperature.temperature << 24) / 10)
-								   );
-		if(qpwmTask < _IQ(COOLER_PWM_START)){
-			qpwmTask = _IQ(COOLER_PWM_START);
-		}else if(qpwmTask > _IQ(1)){
-			qpwmTask = _IQ(1);
-		}
+		if(temperature.state == temp_Ok){
+			qpwmTask = iq_Fy_x1x2y1y2x(_IQ(MIN_TEMP), _IQ(MAX_TEMP),
+									   _IQ(COOLER_PWM_START), _IQ(1),
+									   (uint32_t)(((uint64_t)temperature.temperature << 24) / 10)
+									   );
+			if(qpwmTask < _IQ(COOLER_PWM_START)){
+				qpwmTask = _IQ(COOLER_PWM_START);
+			}else if(qpwmTask > _IQ(1)){
+				qpwmTask = _IQ(1);
+			}
 
-		if(temperature.temperature > (MIN_TEMP * 10)){
-			pwmk = IQtoInt(qpwmTask, 1000);
-			FanPwmSet(pwmk);
+			if(temperature.temperature > (MIN_TEMP * 10)){
+				pwmk = IQtoInt(qpwmTask, 1000);
+				FanPwmSet(pwmk);
+			}
+			if(temperature.temperature < ((MIN_TEMP - H_TEMP) * 10)){
+				FanPwmSet(0);
+			}
 		}
-		if(temperature.temperature < ((MIN_TEMP - H_TEMP) * 10)){
-			FanPwmSet(0);
+		else{
+			FanPwmSet(1000);
 		}
-
 		/**************************************
 		* Рассчет значения ЦАП
 		*/

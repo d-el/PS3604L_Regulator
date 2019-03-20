@@ -44,25 +44,13 @@ CROSS_COMPILE ?= arm-none-eabi-
 AS		= $(CROSS_COMPILE)gcc
 LD		= $(CROSS_COMPILE)gcc
 CC		= $(CROSS_COMPILE)gcc
-CPP		= $(CC) -E
+CXX		= $(CC)
 AR		= $(CROSS_COMPILE)ar
 NM		= $(CROSS_COMPILE)nm
 STRIP	= $(CROSS_COMPILE)strip
 OBJCOPY	= $(CROSS_COMPILE)objcopy
 OBJDUMP	= $(CROSS_COMPILE)objdump
 SIZE	= $(CROSS_COMPILE)size
-
-INCLUDES := \
-	-I app/inc	\
-	-I cm4/Device/ST/STM32F3xx/Include \
-	-I cm4/Include \
-	-I drivers/inc \
-	-I freertos/inc \
-	-I lib/inc \
-	-I system/inc \
-	-I task/inc \
-	-I utils/inc \
-	-I system/inc
 
 LDFILES	:= -T ldscript/STM32F373CC_FLASH.ld
 LIBS	:= lib/IQmathLib-cm4.a
@@ -74,7 +62,7 @@ CPUFLAGS := \
 	-DSTM32F373xC
 
 COMMONFLAGS := \
-	-g3 -O2 \
+	-g3 -O0 \
 	-fmessage-length=0 \
 	-ffunction-sections \
 	-fdata-sections \
@@ -104,6 +92,20 @@ LDFLAGS := \
 	-Xlinker --gc-sections --specs=nano.specs \
 	-Wl,--print-memory-usage \
 	-Wl,--undefined=uxTopUsedPriority
+
+#******************************************************************************
+# Include dir
+	INCLUDES := \
+	-I app/inc	\
+	-I cm4/Device/ST/STM32F3xx/Include \
+	-I cm4/Include \
+	-I drivers/inc \
+	-I freertos/inc \
+	-I lib/inc \
+	-I system/inc \
+	-I task/inc \
+	-I utils/inc \
+	-I system/inc
 
 #******************************************************************************
 # C File
@@ -200,9 +202,9 @@ $(OBJODIR)/%.o: %.c
 	$(Q)mv -f $(OBJODIR)/$*.Td $(OBJODIR)/$*.d && touch $@
 
 $(OBJODIR)/%.o: %.cpp
-	@echo [CPP] $<
+	@echo [CXX] $<
 	$(Q)mkdir -p $(dir $@)
-	$(Q)$(CC) -MT $@ -MMD -MP -MF $(OBJODIR)/$*.Td $(CPFLAGS) -c -o $@ $<
+	$(Q)$(CXX) -MT $@ -MMD -MP -MF $(OBJODIR)/$*.Td $(CPFLAGS) -c -o $@ $<
 	$(Q)mv -f $(OBJODIR)/$*.Td $(OBJODIR)/$*.d && touch $@
 
 $(OBJODIR)/%.o: %.s
@@ -220,3 +222,6 @@ $(OBJODIR)/%.o: %.S
 # Declare the contents of the .PHONY variable as phony.  We keep that
 # information in a variable so we can use it in if_changed and friends.
 .PHONY: $(PHONY)
+
+# Set default target
+.DEFAULT_GOAL:= all

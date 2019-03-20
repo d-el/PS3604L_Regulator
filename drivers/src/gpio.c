@@ -20,10 +20,10 @@
 * MEMORY
 */
 pinMode_type   const pinsMode[] = {
-	/*0 */  makepin(GPIOB,  14,  	outPushPull,				pullDisable,	0,  0),  //LED
-	/*1 */  makepin(GPIOB,  9,  	outOpenDrain,				pullDisable,	1,  0),  //ON_OFF
+	/*0 */  makepin(GPIOF,  6,  	outPushPull,				pullDisable,	0,  0),  //LED
+	/*1 */  makepin(GPIOB,  5,  	outOpenDrain,				pullDisable,	1,  0),  //ON_OFF
 	/*2 */  makepin(GPIOA,  0,  	digitalInput,   			pullDisable,	0,  0),  //CC_CV
-	/*3 */  makepin(GPIOD,  8,  	alternateFunctionOpenDrain,	pullDisable,	1,  0),  //DS18B20
+	/*3 */  makepin(GPIOB,  3,  	alternateFunctionOpenDrain,	pullDisable,	1,  7),  //DS18B20
 };
 static const uint32_t pinNum = sizeof(pinsMode) / sizeof(pinMode_type);
 

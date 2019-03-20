@@ -10,8 +10,8 @@
 /*!****************************************************************************
 * Include
 */
-#include "assert.h"
-#include "string.h"
+#include <assert.h>
+#include <string.h>
 #include "uart.h"
 #include "gpio.h"
 #include "oneWireUart.h"
@@ -25,12 +25,9 @@ static SemaphoreHandle_t oneWireUartSem;
  * @brief	uart RX callback
  */
 static void uartRxHook(uart_type *puart){
-	BaseType_t xHigherPriorityTaskWoken;
-	xHigherPriorityTaskWoken = pdFALSE;
+	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 	xSemaphoreGiveFromISR(oneWireUartSem, &xHigherPriorityTaskWoken);
-	if(xHigherPriorityTaskWoken != pdFALSE){
-		portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
-	}
+	portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
 }
 
 /*!****************************************************************************
@@ -48,8 +45,8 @@ void ow_init(void){
 * @brief    Set One Wire pin to push-pull output
 */
 void ow_setOutHi(void){
-	gppin_init(pinsMode[GP_DS18B20].p, pinsMode[GP_DS18B20].npin, alternateFunctionPushPull,
-			pullDisable, pinsMode[GP_DS18B20].iniState, 0);
+	gppin_init(pinsMode[GP_DS18B20].p, pinsMode[GP_DS18B20].npin, outPushPull,
+			pinsMode[GP_DS18B20].pull, 1, 0);
 }
 
 /*!****************************************************************************
@@ -57,7 +54,7 @@ void ow_setOutHi(void){
 */
 void ow_setOutOpenDrain(void){
 	gppin_init(pinsMode[GP_DS18B20].p, pinsMode[GP_DS18B20].npin, pinsMode[GP_DS18B20].mode,
-			pullDisable, pinsMode[GP_DS18B20].iniState, UART1_PINAFRX);
+			pinsMode[GP_DS18B20].pull, pinsMode[GP_DS18B20].iniState, pinsMode[GP_DS18B20].nAF);
 }
 
 /*!****************************************************************************
@@ -66,7 +63,7 @@ void ow_setOutOpenDrain(void){
 * @retval   owSt_type
 */
 owSt_type ow_reset(void){
-    BaseType_t  res __attribute((unused));
+    BaseType_t  res;
 
     if(gppin_get(GP_DS18B20) == 0){
         return owShortCircle;       //Check on the Short Circle bus
@@ -74,11 +71,12 @@ owSt_type ow_reset(void){
 
     uart_setBaud(OW_UART, BR9600);
     OW_UART->pTxBff[0] = 0xF0;
-    res = xSemaphoreTake(oneWireUartSem, pdMS_TO_TICKS(OW_TIMEOUT));
-
     uart_read(OW_UART, OW_UART->pRxBff, 1);
     uart_write(OW_UART, OW_UART->pTxBff, 1);
     res = xSemaphoreTake(oneWireUartSem, pdMS_TO_TICKS(OW_TIMEOUT));
+    if(res != pdTRUE){
+		return owUartTimeout;
+	}
 
     if(((OW_UART->pRxBff[0] >= 0x90)&&(OW_UART->pRxBff[0] <= 0xE0))||(OW_UART->pRxBff[0] == 0)){
         return owOk;
@@ -93,7 +91,7 @@ owSt_type ow_reset(void){
 * @param  len - number bytes for transmit
 * @retval None
 */
-void ow_write(const void *src, uint8_t len){
+owSt_type ow_write(const void *src, uint8_t len){
     uint8_t *pSrc       = (uint8_t*)src;
     uint8_t *pSrcEnd    = pSrc + len;
     uint8_t *pBff       = OW_UART->pTxBff;
@@ -113,7 +111,11 @@ void ow_write(const void *src, uint8_t len){
     uart_setBaud(OW_UART, BR115200);
     uart_read(OW_UART, OW_UART->pRxBff, byteTrans);
     uart_write(OW_UART, OW_UART->pTxBff, byteTrans);
-    xSemaphoreTake(oneWireUartSem, pdMS_TO_TICKS(OW_TIMEOUT));
+    BaseType_t res = xSemaphoreTake(oneWireUartSem, pdMS_TO_TICKS(OW_TIMEOUT));
+    if(res != pdTRUE){
+    	return owUartTimeout;
+    }
+    return owOk;
 }
 
 /*!***************************************************************************
@@ -122,8 +124,8 @@ void ow_write(const void *src, uint8_t len){
 * @param  len - number bytes for receive
 * @retval None
 */
-void ow_read(void *dst, uint8_t len){
-	BaseType_t  res __attribute((unused));
+owSt_type ow_read(void *dst, uint8_t len){
+	BaseType_t  res;
     uint8_t 	*pDst       = dst;
     uint8_t 	*pDstEnd    = pDst + len;
     uint8_t 	*pBff       = OW_UART->pRxBff;
@@ -136,15 +138,22 @@ void ow_read(void *dst, uint8_t len){
     uart_write(OW_UART, OW_UART->pTxBff, byteTrans);
     res = xSemaphoreTake(oneWireUartSem, pdMS_TO_TICKS(OW_TIMEOUT));
 
-    while(pDst < pDstEnd){
-        *pDst = 0;
-        for(mask = 1; mask != 0; mask <<= 1){
-            if(*pBff++ == 0xFF){
-                *pDst |= mask;     //Read '1'
-            }
-        }
-        pDst++;
+    if(res == pdTRUE){
+		while(pDst < pDstEnd){
+			*pDst = 0;
+			for(mask = 1; mask != 0; mask <<= 1){
+				if(*pBff++ == 0xFF){
+					*pDst |= mask;     //Read '1'
+				}
+			}
+			pDst++;
+		}
     }
+    else{
+    	return owUartTimeout;
+    }
+
+    return owOk;
 }
 
 /*!***************************************************************************

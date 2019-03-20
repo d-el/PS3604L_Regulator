@@ -141,9 +141,9 @@ void prm_setVal(const prmHandle_type *const prmHandle, const prmval_type *const 
  * @brief	Load to all parameters default value
  */
 void prm_loadDefault(prmNvSave_type prmNvSave){
-	for(uint32_t iterator = 0; iterator < prmHandleLen; iterator++){
-		if(prmh[iterator].save == prmNvSave){
-			prm_setVal(&prmh[iterator], &prmh[iterator].def);
+	for(uint32_t i = 0; i < prmHandleLen; i++){
+		if(prmh[i].save == prmNvSave){
+			prm_setVal(&prmh[i], &prmh[i].def);
 		}
 	}
 }

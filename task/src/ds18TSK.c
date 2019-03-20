@@ -9,11 +9,12 @@
 /*!****************************************************************************
 * Include
 */
-#include "string.h"
+#include <string.h>
 #include "ds18b20.h"
 #include "oneWireUart.h"
 #include "crc.h"
 #include "ds18TSK.h"
+#include "uart.h"
 
 /*!****************************************************************************
 * MEMORY
@@ -26,79 +27,76 @@ temperature_type   temperature;
 * @retval
 */
 void ds18TSK(void *pPrm){
-    uint16_t    scratchpad;
-    uint8_t     bff[9];
-    uint8_t     crc;
-    uint8_t     resInit;
-    uint8_t		errorcnt = 0;
-    owSt_type   st;
+    uint8_t errorcnt = 0;
 
     ow_init();
-
     temperature.state = temp_Ok;
 
     /*****************************
     * DS18B20 INIT
     */
     while(1){
-        resInit = ds18b20Init();
-        if(resInit == 0){
+    	ds18b20state_type resInit = ds18b20Init();
+    	vTaskDelay(pdMS_TO_TICKS(1000));
+        if(resInit == ds18b20st_ok){
         	temperature.state = temp_Ok;
         	break;
         }
         else{
         	temperature.state = temp_NoInit;
         }
-        vTaskDelay(pdMS_TO_TICKS(1000));
     }
-    vTaskDelay(pdMS_TO_TICKS(1000));	//Wait for converting
 
     while(1){
     	ow_setOutOpenDrain();
-        st = ow_reset();
-        if(st == owOk){
-            bff[0] = SKIP_ROM;
-            ow_write(bff, 1);
-            bff[0] = READ_SCRATCHPAD;
-            ow_write(bff, 1);
+    	owSt_type st = ow_reset();
+        if(st != owOk)
+			goto error;
 
-            ow_read(bff, 9);
-            crc = crc8Calc(&crc1Wire, bff, 9);
+        uint8_t bff[9];
+		bff[0] = SKIP_ROM;
+		st = ow_write(bff, 1);
+		if(st != owOk)
+			goto error;
 
-            if(crc == 0){
-            	errorcnt = 0;
-                scratchpad = bff[1];
-                scratchpad <<= 8;
-                scratchpad |= bff[0];
-                temperature.temperature = (scratchpad * 10 + (16/2)) / 16;   //Деление с округлением
-                temperature.state = temp_Ok;
-            }
-            else{
-            	if(errorcnt < DS18_MAX_ERROR){
-            		errorcnt++;
-            	}else{
-            		temperature.state = temp_ErrSensor;
-            	}
-            }
+		bff[0] = READ_SCRATCHPAD;
+		st = ow_write(bff, 1);
+		if(st != owOk)
+			goto error;
 
-            st =  ow_reset();
-            bff[0] = SKIP_ROM;
-            ow_write(bff, 1);
-            bff[0] = CONVERT_T;
-            ow_write(bff, 1);
-        }
-        else{
-        	if(errorcnt < DS18_MAX_ERROR){
+		st = ow_read(bff, 9);
+		if(st != owOk)
+			goto error;
+
+		uint8_t crc = crc8Calc(&crc1Wire, bff, 9);
+		if(crc != 0)
+			goto error;
+
+		uint16_t scratchpad = bff[1];
+		scratchpad <<= 8;
+		scratchpad |= bff[0];
+		temperature.temperature = (scratchpad * 10 + (16/2)) / 16;   //Division with rounding
+		temperature.state = temp_Ok;
+		errorcnt = 0;
+
+		st =  ow_reset();
+		bff[0] = SKIP_ROM;
+		ow_write(bff, 1);
+		bff[0] = CONVERT_T;
+		ow_write(bff, 1);
+
+        ow_setOutHi();
+        memset(bff, 0, 9);
+        vTaskDelay(pdMS_TO_TICKS(1000));
+        continue;
+
+        error:
+			if(errorcnt < DS18_MAX_ERROR){
 				errorcnt++;
 			}else{
 				temperature.state = temp_ErrSensor;
 			}
-        }
-
-        ow_setOutHi();
-        memset(bff, 0, 9);
-        vTaskDelay(pdMS_TO_TICKS(1000));	//Wait for converting
-    }
+	}
 }
 
 

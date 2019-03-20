@@ -9,7 +9,7 @@
 /*!****************************************************************************
 * Include
 */
-#include "string.h"
+#include <string.h>
 #include "board.h"
 #include "clock.h"
 #include "uart.h"
@@ -39,7 +39,7 @@ void hardInit(void){
     externalInterrupt_CcCv_init();
     i2c_init(i2c1);
     uart_init(uart1, BR38400);  //Connect
-    uart_init(uart3, BR9600);   //1WIRE
+    uart_init(uart2, BR9600);   //1WIRE
 
     prm_state_type res = prm_load(SYSFLASHADR, prmFlash);
     if(res != prm_ok){

@@ -32,9 +32,9 @@ typedef struct{
 * User enum
 */
 enum{
-    CH_UADC,
 	CH_UINADC,
     CH_IADC,
+	CH_UADC,
 };
 
 /*!****************************************************************************

@@ -25,7 +25,7 @@
 #define MAX_WAIT_RxRequest  (20)        ///<[ms]
 
 #define COOLER_PWM_START    (0.3)       ///<[k PWM]
-#define MIN_TEMP            (40.0)      ///<[°C]
+#define MIN_TEMP            (38.0)      ///<[°C]
 #define MAX_TEMP            (60.0)      ///<[°C]
 #define TEMP_OFF            (60.0)      ///<[°C]
 #define H_TEMP              (5.0)       ///<[°C]

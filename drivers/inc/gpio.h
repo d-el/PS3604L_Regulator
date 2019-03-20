@@ -12,7 +12,7 @@
 /*!****************************************************************************
 * Include
 */
-#include "stdint.h"
+#include <stdint.h>
 #include "stm32f3xx.h"
 #include "bitbanding.h"
 

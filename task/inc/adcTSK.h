@@ -20,9 +20,10 @@
 #define MA_FILTER_MAX_WITH          (128)
 
 #define AdcVref                     3.3         //[V]
-#define UDC_Rh                      20          //[kOhm]
-#define UDC_Rl                      1           //[kOhm]
-#define MIN_VIN_VOLTAGE				36.0		//[V]
+#define UDC_Rh                      47          //[kOhm]
+#define UDC_Rl                      2           //[kOhm]
+#warning
+#define MIN_VIN_VOLTAGE				10.0		//[V]
 #define REVERSE_VOLTAGE_THRESHOLD	10			//[adc lsb with oversampling]
 
 /*!****************************************************************************
