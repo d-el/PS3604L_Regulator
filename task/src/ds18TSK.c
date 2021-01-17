@@ -10,11 +10,14 @@
 * Include
 */
 #include <string.h>
-#include "ds18b20.h"
-#include "oneWireUart.h"
-#include "crc.h"
+#include <FreeRTOS.h>
+#include <task.h>
+#include <semphr.h>
+#include <ds18b20.h>
+#include <oneWireUart.h>
+#include <crc.h>
+#include <uart.h>
 #include "ds18TSK.h"
-#include "uart.h"
 
 /*!****************************************************************************
 * MEMORY
@@ -27,7 +30,10 @@ temperature_type   temperature;
 * @retval
 */
 void ds18TSK(void *pPrm){
+	(void)pPrm;
     uint8_t errorcnt = 0;
+
+    uart_init(uart2, 9600);   //1WIRE
 
     ow_init();
     temperature.state = temp_Ok;
@@ -36,24 +42,35 @@ void ds18TSK(void *pPrm){
     * DS18B20 INIT
     */
     while(1){
-    	ds18b20state_type resInit = ds18b20Init();
-    	vTaskDelay(pdMS_TO_TICKS(1000));
-        if(resInit == ds18b20st_ok){
-        	temperature.state = temp_Ok;
-        	break;
-        }
-        else{
-        	temperature.state = temp_NoInit;
-        }
+		ds18b20state_type resInit = ds18b20Init();
+		if(resInit == ds18b20st_ok){
+			temperature.state = temp_Ok;
+			break;
+		}
+		else{
+			temperature.state = temp_NoInit;
+			vTaskDelay(pdMS_TO_TICKS(1000));
+		}
     }
 
     while(1){
+    	uint8_t bff[9];
+
+    	owSt_type st =  ow_reset();
+		bff[0] = SKIP_ROM;
+		ow_write(bff, 1);
+		bff[0] = CONVERT_T;
+		ow_write(bff, 1);
+
+		ow_setOutHi();
+		memset(bff, 0, 9);
+		vTaskDelay(pdMS_TO_TICKS(1000));
+
     	ow_setOutOpenDrain();
-    	owSt_type st = ow_reset();
+    	st = ow_reset();
         if(st != owOk)
 			goto error;
 
-        uint8_t bff[9];
 		bff[0] = SKIP_ROM;
 		st = ow_write(bff, 1);
 		if(st != owOk)
@@ -79,15 +96,6 @@ void ds18TSK(void *pPrm){
 		temperature.state = temp_Ok;
 		errorcnt = 0;
 
-		st =  ow_reset();
-		bff[0] = SKIP_ROM;
-		ow_write(bff, 1);
-		bff[0] = CONVERT_T;
-		ow_write(bff, 1);
-
-        ow_setOutHi();
-        memset(bff, 0, 9);
-        vTaskDelay(pdMS_TO_TICKS(1000));
         continue;
 
         error:

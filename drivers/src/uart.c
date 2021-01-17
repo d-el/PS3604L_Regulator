@@ -15,8 +15,8 @@
  */
 #include <stdio.h>
 #include "gpio.h"
-#include "OSinit.h"
 #include "uart.h"
+#include "board.h"
 
 /*!****************************************************************************
  * uart1 memory
@@ -48,21 +48,10 @@ uint8_t uart3TxBff[UART3_TxBffSz];
 uint8_t uart3RxBff[UART3_RxBffSz];
 #endif //UART3_USE
 
-#define uartMakeMantissa(baud)		(UART_FREQ / 16 / (baud))
-#define uartMakeFraction(baud)		(((UART_FREQ + (baud) / 2)	/ (baud)) - (uartMakeMantissa(baud) * 16))
-#define uartMakeBrr(baud)			(uartMakeMantissa(baud) << USART_BRR_DIV_MANTISSA_Pos | uartMakeFraction(baud))
-
-uint16_t usartBaudRateDiv[] = {
-	uartMakeBrr(9600),
-	uartMakeBrr(38400),
-	uartMakeBrr(57600),
-	uartMakeBrr(115200),
-};
-
 /*!****************************************************************************
  * @brief
  */
-void uart_init(uart_type *uartx, uartBaudRate_type baudRate){
+void uart_init(uart_type *uartx, uint32_t baudRate){
 	#if(UART1_USE > 0)
 	if(uartx == uart1){
 		/************************************************
@@ -79,7 +68,7 @@ void uart_init(uart_type *uartx, uartBaudRate_type baudRate){
 		uartx->dmaIfcrRx		= &DMA1->IFCR;
 		uartx->dmaIfcrMaskTx	= DMA_IFCR_CTCIF4;
 		uartx->dmaIfcrMaskRx	= DMA_IFCR_CTCIF5;
-
+		uartx->frequency		= APB2_FREQ;
 		#if(UART1_RX_IDLE_LINE_MODE > 0)
 		uartx->rxIdleLineMode = 1;
 		#endif
@@ -138,6 +127,7 @@ void uart_init(uart_type *uartx, uartBaudRate_type baudRate){
 		uartx->dmaIfcrMaskTx	= DMA_IFCR_CTCIF7;
 		uartx->dmaIfcrMaskRx	= DMA_IFCR_CTCIF6;
 		#endif
+		uartx->frequency		= APB1_FREQ;
 
 		/************************************************
 		 * IO
@@ -193,7 +183,7 @@ void uart_init(uart_type *uartx, uartBaudRate_type baudRate){
 		uartx->dmaIfcrRx		= &DMA1->IFCR;
 		uartx->dmaIfcrMaskTx	= DMA_IFCR_CTCIF2;
 		uartx->dmaIfcrMaskRx	= DMA_IFCR_CTCIF3;
-
+		uartx->frequency		= APB1_FREQ;
 		#if (UART3_RX_IDLE_LINE_MODE > 0)
 		uartx->rxIdleLineMode = 1;
 		#endif
@@ -244,7 +234,7 @@ void uart_init(uart_type *uartx, uartBaudRate_type baudRate){
 	uartx->pUart->CR1 &= ~USART_CR1_M;										//8bit
 	uartx->pUart->CR2 &= ~USART_CR2_STOP;									//1 stop bit
 
-	uartx->pUart->BRR = usartBaudRateDiv[baudRate];							//Baud rate
+	uart_setBaud(uartx, baudRate);											//Baud rate
 	if(uartx->dmaMode > 0){
 		uartx->pUart->CR3 |= USART_CR3_DMAT;								//DMA enable transmitter
 		uartx->pUart->CR3 |= USART_CR3_DMAR;								//DMA enable receiver
@@ -257,9 +247,8 @@ void uart_init(uart_type *uartx, uartBaudRate_type baudRate){
 		uartx->pUart->CR1 |= USART_CR1_IDLEIE;
 	}
 	if(uartx->dmaMode == 0){
-		uartx->pUart->RQR = USART_RQR_RXFRQ /*| USART_RQR_TXFRQ*/;
+		uartx->pUart->RQR = USART_RQR_RXFRQ;
 		uartx->pUart->CR1 |= USART_CR1_RXNEIE;
-//		uartx->pUart->CR1 |= USART_CR1_TXEIE;
 	}
 	uartx->pUart->CR1 |= USART_CR1_TCIE;									//Enable the interrupt transfer complete
 
@@ -280,7 +269,7 @@ void uart_init(uart_type *uartx, uartBaudRate_type baudRate){
 		uartx->pUartTxDmaCh->CCR &= ~DMA_CCR_TCIE;									//Transfer complete interrupt disable
 		uartx->pUartTxDmaCh->CNDTR = 0;												//Number of data
 		uartx->pUartTxDmaCh->CPAR = (uint32_t) &(uartx->pUart->TDR);				//Peripheral address
-		uartx->pUartTxDmaCh->CMAR = (uint32_t) NULL;									//Memory address
+		uartx->pUartTxDmaCh->CMAR = (uint32_t) NULL;								//Memory address
 
 		//DMA Channel USART RX
 		uartx->pUartRxDmaCh->CCR = 0;
@@ -333,9 +322,9 @@ void uart_deinit(uart_type *uartx){
 /*!****************************************************************************
  * @brief	 transfer data buffer
  */
-void uart_setBaud(uart_type *uartx, uartBaudRate_type baudRate){
-	if((uartx->baudRate != baudRate)&&(baudRate < BR_NUMBER)){
-		uartx->pUart->BRR = usartBaudRateDiv[baudRate];
+void uart_setBaud(uart_type *uartx, uint32_t baudRate){
+	if(uartx->baudRate != baudRate){
+		uartx->pUart->BRR = uartx->frequency / baudRate;
 		uartx->baudRate = baudRate;
 	}
 }
@@ -373,8 +362,8 @@ void uart_write(uart_type *uartx, void *src, uint16_t len){
  * @brief
  */
 void uart_read(uart_type *uartx, void *dst, uint16_t len){
-//	uartx->pUart->ICR = 0xFFFFFFFFU;											//Clear all flags
-//	(void) uartx->pUart->RDR;
+	uartx->pUart->ICR = 0xFFFFFFFFU;											//Clear all flags
+	(void) uartx->pUart->RDR;
 	(void) uartx->pUart->RDR;
 	uartx->pUart->RQR = USART_RQR_RXFRQ;
 

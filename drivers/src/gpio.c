@@ -11,6 +11,7 @@
 /*!****************************************************************************
 * Include
 */
+#include <stddef.h>
 #include "stm32f3xx.h"
 #include "bitbanding.h"
 #include "board.h"
@@ -27,14 +28,17 @@ pinMode_type   const pinsMode[] = {
 };
 static const uint32_t pinNum = sizeof(pinsMode) / sizeof(pinMode_type);
 
+static gpioCallback_type gpioCallback;
+
 /*!****************************************************************************
 * @brief    interrupt handler CC_CV
 */
 void EXTI0_IRQHandler(void){
 	SWITCH_OFF();
-	//rg.tf.state.bit.switchIsON = 0;
-	//rg.tf.state.bit.ovfCurrent = 1;
 	EXTI->PR    |= EXTI_PR_PR0;     //Pending
+	if(gpioCallback != NULL){
+		gpioCallback(NULL);
+	}
 }
 
 /*!****************************************************************************
@@ -50,6 +54,10 @@ void irqLimitOn(void){
 
 void irqLimitOff(void){
 	EXTI->IMR &= ~EXTI_IMR_MR0;	//Interrupt request from Line x is masked
+}
+
+void irqSetCallback(gpioCallback_type callback){
+	gpioCallback = callback;
 }
 
 /*!****************************************************************************

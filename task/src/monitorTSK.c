@@ -13,12 +13,12 @@
 /*!****************************************************************************
  * Include
  */
-#include "string.h"
-#include "FreeRTOS.h"
-#include "task.h"
-#include "portable.h"
-#include "printp.h"
-#include "sysTimeMeas.h"
+#include <string.h>
+#include <FreeRTOS.h>
+#include <task.h>
+#include <portable.h>
+#include <printp.h>
+#include <sysTimeMeas.h>
 
 /*!****************************************************************************
  * MEMORY
@@ -62,6 +62,7 @@ uint32_t load;
  * @brief
  */
 void monitorTSK(void *pPrm){
+	(void)pPrm;
 		static const char *stateToChar[] = {
 		"Running",		/* A task is querying the state of itself, so must be running. */
 		"Ready",		/* The task being queried is in a read or pending ready list. */
@@ -129,6 +130,7 @@ void monitorTSK(void *pPrm){
  *
  */
 void vApplicationStackOverflowHook(TaskHandle_t xTask, signed char *pcTaskName){
+	(void)xTask;
 	printp("[OS] Stack Overflow on %s\n", pcTaskName);
 	while(1);
 }

@@ -1,155 +1,231 @@
 ﻿/*!****************************************************************************
-* @file			systemTSK.c
-* @author		Storozhenko Roman - D_EL
-* @version		V1.0
-* @date			14-09-2015
-* @copyright	GNU Public License
-*/
+ * @file		systemTSK.c
+ * @author		Storozhenko Roman - D_EL
+ * @version		V1.0
+ * @date		14-09-2015
+ * @copyright 	The MIT License (MIT). Copyright (c) 2020 Storozhenko Roman
+ */
 
 /*!****************************************************************************
 * Include
 */
 #include <assert.h>
-#include "FreeRTOS.h"
-#include "task.h"
-#include "semphr.h"
-#include "IQmathLib.h"
-#include "specificMath.h"
-#include "adc.h"
-#include "pwm.h"
-#include "flash.h"
-#include "board.h"
-#include "OSinit.h"
-#include "pstypes.h"
-#include "prmSystem.h"
+#include <FreeRTOS.h>
+#include <task.h>
+#include <semphr.h>
+#include <IQmathLib.h>
+#include <specificMath.h>
+#include <adc.h>
+#include <pwm.h>
+#include <flash.h>
+#include <board.h>
+#include <prmSystem.h>
+#include <printp.h>
+#include <prmSystem.h>
 #include "systemTSK.h"
-#include "uartTSK.h"
+#include "modbusTSK.h"
 #include "adcTSK.h"
 #include "ds18TSK.h"
-#include "printp.h"
+
+/*-------NAME--------------------size [4 byte Word] */
+#define ADC_TSK_SZ_STACK        512
+#define UART_TSK_SZ_STACK       512
+#define DS18B_TSK_SZ_STACK      512
+/*-------NAME--------------------size [4 byte Word] */
+
+#define ADC_TSK_PRIO            4
+#define UART_TSK_PRIO           2
+#define DS18B_TSK_PRIO          1
 
 /*!****************************************************************************
 * Memory
 */
-SemaphoreHandle_t	rxRequest;
-uint16_t pwmk;
-regulator_type		rg;
-uint16_t			base[] = {
+typedef enum {
+	setNone,
+	setSwitchOn,
+	setSwitchOff,
+	setSaveSettings
+} request_type;
+
+enum{
+    BASE_DAC = 0,
+};
+
+uint16_t base[] = {
 	4095
 };
 
+bool currentirq;
+extern uint8_t _suser_settings;
+
 /*!****************************************************************************
-* @brief	main output ON
-*/
+ * @brief	main output ON
+ */
 static inline void switchON(void){
 	gppin_reset(GP_ON_OFF);
-	rg.tf.state.bit.switchIsON = 1;
 }
 
 /*!****************************************************************************
-* @brief	main output OFF
-*/
+ * @brief	main output OFF
+ */
 static inline void switchOFF(void){
 	gppin_set(GP_ON_OFF);
-	rg.tf.state.bit.switchIsON = 0;
+}
+
+void vsave(const struct prmHandle* h, void *arg){
+	if(arg == NULL){
+		return;
+	}
+	if(h->parameter > 3){
+		return;
+	}
+	prm_writeVal(prm_getHandler(Nv0_adc + h->parameter), (prmval_type){ .t_u16Frmt = adcTaskStct.filtered[CH_UADC] }, NULL);
+	prmval_type dac = prm_nreadVal(Nvdac);
+	prm_writeVal(prm_getHandler(Nv0_dac + h->parameter), (prmval_type){ .t_u16Frmt = dac.t_u16Frmt }, NULL);
+}
+
+void isave(const struct prmHandle* h, void *arg){
+	if(arg == NULL){
+		return;
+	}
+	if(h->parameter > 3){
+		return;
+	}
+	prm_writeVal(prm_getHandler(Ni0_adc + h->parameter), (prmval_type){ .t_u16Frmt = adcTaskStct.filtered[CH_IADC] }, NULL);
+	prmval_type dac = prm_nreadVal(Nidac);
+	prm_writeVal(prm_getHandler(Ni0_dac + h->parameter), (prmval_type){ .t_u16Frmt = dac.t_u16Frmt }, NULL);
+
+	prm_writeVal(prm_getHandler(Niext0_i + h->parameter), *prm_getHandler(Ni0_i + h->parameter)->prm, NULL);
+	prm_writeVal(prm_getHandler(Niext0_adc + h->parameter), (prmval_type){ .t_u16Frmt = adcTaskStct.adcIna226 }, NULL);
+}
+
+void irqCallback(pinMode_type *gpio){
+	(void)gpio;
+	currentirq = true;
 }
 
 /*!****************************************************************************
-*
-*/
+ * @brief
+ */
+bool savePrm(void){
+	size_t settingsize = prm_size(prmSaveSys);
+	uint8_t settingbuf[settingsize];
+	size_t serialisedsize;
+	prm_serialize(settingbuf, &serialisedsize, prmSaveSys);
+	flash_unlock();
+	flash_erasePage(&_suser_settings);
+	flashState_type memState = flash_write(&_suser_settings, (uint16_t *)settingbuf, serialisedsize/sizeof(uint16_t));
+	flash_lock();
+	if(memState != flash_ok){
+		return false;
+	}
+	return true;
+}
+
+/*!****************************************************************************
+ * @brief
+ */
 void systemTSK(void *pPrm){
-	BaseType_t			res;
-	TickType_t			curOffTime = xTaskGetTickCount();	//Время тока < 10%
-	TickType_t			timeOffset = xTaskGetTickCount();
-	regulator_type		*reg = &rg;
-	regSetting_type		*s = &reg->sett;		//Указатель на структуру с калибровками
-	adcTaskStct_type	*a = &adcTaskStct;		//Указатель на сруктуру с данными АЦП
-	request_type		l_switchRequest = setSwitchOff;		//Локальный запрос на вкл / выкл выход
-	_iq					qpwmTask;				//Заполнение ШИМ для венитлятора
-	_iq					qTask, qdac;
-	uint16_t			idac, udac;
+	(void)pPrm;
+
+	TickType_t pxPreviousWakeTime = xTaskGetTickCount();
+	TickType_t curOffTime = xTaskGetTickCount();
+	TickType_t timeOffset = xTaskGetTickCount();
+	adcTaskStct_type *a = &adcTaskStct;
+	uint8_t limitCnt = 0;
 
 	print_init(stdOut_semihost);
 
-	// Create Semaphore
-	vSemaphoreCreateBinary(rxRequest);
-	assert(rxRequest != NULL);
+	irqSetCallback(irqCallback);
 
-	res = pdTRUE;
-	res &= xTaskCreate(uartTSK,		 "uartTSK",		 UART_TSK_SZ_STACK,		 NULL, UART_TSK_PRIO,	 NULL);
-	res &= xTaskCreate(adcTSK,		 "adcTSK",		 ADC_TSK_SZ_STACK,		 NULL, ADC_TSK_PRIO,	 NULL);
-	res &= xTaskCreate(ds18TSK,		 "ds18TSK",		 DS18B_TSK_SZ_STACK,	 NULL, DS18B_TSK_PRIO,	 NULL);
-	assert(res == pdTRUE);
+	prm_loadDefault(prmNotSave);
+
+	if(prm_deserialize(&_suser_settings, prmSaveSys) != prm_ok){
+		prm_writeVal(prm_getHandler(Nstate), (prmval_type){ .t_u16Frmt = m_notCalibrated }, NULL);
+		prm_loadDefault(prmSaveSys);
+	}
+
+	assert(pdTRUE == xTaskCreate(modbusTSK, "uartTSK", UART_TSK_SZ_STACK,  NULL, UART_TSK_PRIO, NULL));
+	assert(pdTRUE == xTaskCreate(adcTSK, "adcTSK", ADC_TSK_SZ_STACK, NULL, ADC_TSK_PRIO, NULL));
+	assert(pdTRUE == xTaskCreate(ds18TSK, "ds18TSK", DS18B_TSK_SZ_STACK, NULL, DS18B_TSK_PRIO, NULL));
+
+	vTaskDelay(pdMS_TO_TICKS(200));
 
 	while(1){
-		res = xSemaphoreTake(rxRequest, pdMS_TO_TICKS(MAX_WAIT_RxRequest));
+		uint16_t state = prm_nreadVal(Nstate).t_u16Frmt & (m_notCalibrated);
 
-		/**************************************
-		* Вызов периодических функций
-		*/
-		static uint8_t ledCount = 0;
-		if(ledCount++ == 100){
-			LED_ON();
-			ledCount = 0;
-		}
-		if(ledCount == 10){
-			LED_OFF();
-		}
-		if((ledCount == 20)&&(res == pdTRUE)){
-			LED_ON();
-		}
-		if(ledCount == 30){
-			LED_OFF();
-		}
-
-		/**************************************
-		* Анализ датчика температуры линейного регулятора
-		*/
+		// Temperature sensor
 		if(temperature.state == temp_Ok){
 			if(temperature.temperature > (TEMP_OFF * 10)){
-				reg->tf.state.bit.ovfLinearRegTemper = 1;		 //Превышение температуры линейного стабилизатора
-			}else{
-				reg->tf.state.bit.ovfLinearRegTemper = 0;
+				state |= m_overheated;
 			}
-			reg->tf.state.bit.errorLinearRegTemperSens = 0;
 		}
 		else{
-			reg->tf.state.bit.errorLinearRegTemperSens = 1;
+			state |= m_errorTemperatureSensor;
+		}
+
+		// Binary filter
+		bool limited = false;
+		const uint8_t numbersample = 10;
+		if(MODE_IS_CC()){
+			if(limitCnt < numbersample)
+				limitCnt++;
+			else
+				limited = true;
+		}
+		else{
+			if(limitCnt > 0)
+				limitCnt--;
+			else
+				limited = false;
+		}
+
+
+		if(currentirq){
+			state |= m_overCurrent;
+		}
+
+		if(a->reverseVoltage){
+			state |= m_reverseVoltage;
+		}
+
+		if(a->udc < _IQ(MIN_VIN_VOLTAGE)){
+			state |= m_lowInputVoltage;
+		}
+
+		if(a->currentSensor == adcCcurrentSensorExternal){
+			state |= m_externaIDac;
+		}
+
+		if(prm_nreadVal(Nenable).t_boolFrmt && limited){
+			state |= m_limitation;
 		}
 
 		/**************************************
-		* Проверяем на режим ограничения тока
+		* Set value
 		*/
-		if(reg->tf.state.bit.switchIsON != 0){
-		   reg->tf.state.bit.modeIlim = MODE_IS_CC();
-		}else{
-			reg->tf.state.bit.modeIlim = 0;
+		prm_writeVal(prm_getHandler(Nvadc), (prmval_type){ .t_u16Frmt = a->filtered[CH_UADC] }, NULL);
+		prm_writeVal(prm_getHandler(Niadc), (prmval_type){ .t_u16Frmt = a->filtered[CH_IADC] }, NULL);
+		prm_writeVal(prm_getHandler(Niexternaladc), (prmval_type){ .t_u16Frmt = a->adcIna226 }, NULL);
+		prm_writeVal(prm_getHandler(Nvoltage), (prmval_type){ .t_u32Frmt = IQtoInt(a->voltage, 1000000) }, NULL);
+		prm_writeVal(prm_getHandler(Ncurrent), (prmval_type){ .t_u32Frmt = IQtoInt(a->current, 1000000) }, NULL);
+		prm_writeVal(prm_getHandler(Npower), (prmval_type){ .t_u32Frmt = IQNtoInt(a->outPower, 1000, 14) }, NULL);
+		prm_writeVal(prm_getHandler(Nresistance), (prmval_type){ .t_u32Frmt = IQNtoInt(a->resistens, 1000, 14) }, NULL);
+		prm_writeVal(prm_getHandler(Ncapacity), (prmval_type){ .t_u32Frmt = a->capacity }, NULL);
+		prm_writeVal(prm_getHandler(Ninput_voltage), (prmval_type){ .t_u32Frmt = IQtoInt(a->udc, 1000000) }, NULL);
+		prm_writeVal(prm_getHandler(Ntemperature), (prmval_type){ .t_u16Frmt = temperature.temperature }, NULL);
+
+		prmval_type prmval = {};
+		if(prm_readVal(prm_getHandler(Nenable)).t_boolFrmt == true){
+			prmval = (prmval_type){ .t_u32Frmt = (xTaskGetTickCount() - timeOffset) / configTICK_RATE_HZ };
 		}
+		prm_writeVal(prm_getHandler(Ntime), prmval, NULL);
 
 		/**************************************
-		* Перекладываем значения с модуля измерителя
-		*/
-		reg->tf.meas.adcu			= a->filtered[CH_UADC];
-		reg->tf.meas.adci			= a->filtered[CH_IADC];
-		reg->tf.meas.u				= IQtoInt(a->voltage, 1000000);
-		reg->tf.meas.i				= IQtoInt(a->current, 1000000);
-		reg->tf.meas.resistance		= IQNtoInt(a->resistens, 1, 14);
-		reg->tf.meas.power			= IQNtoInt(a->outPower, 1000, 14);
-		reg->tf.meas.uin			= IQtoInt(a->udc, 1000);
-		reg->tf.meas.temperatureLin = temperature.temperature;
-		reg->tf.meas.capacity		= a->capacity;
-		reg->tf.state.bit.reverseVoltage = a->reverseVoltage;
-		reg->tf.state.bit.lowInputVoltage = a->lowInputVoltage;
-
-		if(reg->tf.state.bit.switchIsON != 0){
-			reg->tf.meas.time = (xTaskGetTickCount() - timeOffset) / configTICK_RATE_HZ;
-		}
-
-		/**************************************
-		* Регулятор вентилятора
+		* Cooler regulator
 		*/
 		if(temperature.state == temp_Ok){
-			qpwmTask = iq_Fy_x1x2y1y2x(_IQ(MIN_TEMP), _IQ(MAX_TEMP),
+			_iq	qpwmTask = iq_Fy_x1x2y1y2x(_IQ(MIN_TEMP), _IQ(MAX_TEMP),
 									   _IQ(COOLER_PWM_START), _IQ(1),
 									   (uint32_t)(((uint64_t)temperature.temperature << 24) / 10)
 									   );
@@ -160,7 +236,7 @@ void systemTSK(void *pPrm){
 			}
 
 			if(temperature.temperature > (MIN_TEMP * 10)){
-				pwmk = IQtoInt(qpwmTask, 1000);
+				uint16_t pwmk = IQtoInt(qpwmTask, 1000);
 				FanPwmSet(pwmk);
 			}
 			if(temperature.temperature < ((MIN_TEMP - H_TEMP) * 10)){
@@ -170,141 +246,112 @@ void systemTSK(void *pPrm){
 		else{
 			FanPwmSet(1000);
 		}
+
 		/**************************************
-		* Рассчет значения ЦАП
+		* Calculate DAC values
 		*/
-		switch(reg->tf.task.mode){
-			case mode_overcurrentShutdown:
-			case mode_limitation:
-			case mode_timeShutdown:
-			case mode_lowCurrentShutdown:
-				//Calc idac
-				qTask = IntToIQ(reg->tf.task.i, 1000000);
-				if(qTask == 0){
-					qdac = 0;
-				}
-				else if(qTask <= s->pI[1].qi){
-					qdac = iq_Fy_x1x2y1y2x(s->pI[0].qi, s->pI[1].qi, IntToIQ(s->pI[0].dac, base[BASE_DAC]), IntToIQ(s->pI[1].dac, base[BASE_DAC]), qTask);
-				}
-				else if(qTask <= s->pI[2].qi){
-					qdac = iq_Fy_x1x2y1y2x(s->pI[1].qi, s->pI[2].qi, IntToIQ(s->pI[1].dac, base[BASE_DAC]), IntToIQ(s->pI[2].dac, base[BASE_DAC]), qTask);
-				}
-				else{
-					qdac = iq_Fy_x1x2y1y2x(s->pI[2].qi, s->pI[3].qi, IntToIQ(s->pI[2].dac, base[BASE_DAC]), IntToIQ(s->pI[3].dac, base[BASE_DAC]), qTask);
-				}
-				idac = IQtoInt(qdac, base[BASE_DAC]);
-				if(idac > base[BASE_DAC]){
-					idac = base[BASE_DAC];
-				}
+		static uint16_t udac = 0, idac = 0;
+		if(prm_nreadVal(Nmode).t_u16Frmt == dacMode){
+			if(prm_nreadVal(Nvdac).t_u16Frmt <= base[BASE_DAC]){
+				idac = prm_nreadVal(Nidac).t_u16Frmt;
+			}else{
+				idac = base[BASE_DAC];
+			}
+			if(prm_nreadVal(Nvdac).t_u16Frmt <= base[BASE_DAC]){
+				udac = prm_nreadVal(Nvdac).t_u16Frmt;
+			}else{
+				udac = base[BASE_DAC];
+			}
+		}
+		else{
+			// Calc idac
+			_iq qdac;
+			_iq qTask = IntToIQ(prm_nreadVal(Ncurrent_set).t_u32Frmt, 1000000);
+			if(qTask == 0){
+				qdac = 0;
+			}
+			else if(qTask <= IntToIQ(prm_nreadVal(Ni1_i).t_u32Frmt, 1000000)){
+				qdac = iq_Fy_x1x2y1y2x(IntToIQ(prm_nreadVal(Ni0_i).t_u32Frmt, 1000000), IntToIQ(prm_nreadVal(Ni1_i).t_u32Frmt, 1000000),
+						IntToIQ(prm_nreadVal(Ni0_dac).t_u16Frmt, base[BASE_DAC]), IntToIQ(prm_nreadVal(Ni1_dac).t_u16Frmt, base[BASE_DAC]),
+						qTask);
+			}
+			else if(qTask <= IntToIQ(prm_nreadVal(Ni2_i).t_u32Frmt, 1000000)){
+				qdac = iq_Fy_x1x2y1y2x(IntToIQ(prm_nreadVal(Ni1_i).t_u32Frmt, 1000000), IntToIQ(prm_nreadVal(Ni2_i).t_u32Frmt, 1000000),
+						IntToIQ(prm_nreadVal(Ni1_dac).t_u16Frmt, base[BASE_DAC]), IntToIQ(prm_nreadVal(Ni2_dac).t_u16Frmt, base[BASE_DAC]),
+						qTask);
+			}
+			else{
+				qdac = iq_Fy_x1x2y1y2x(IntToIQ(prm_nreadVal(Ni2_i).t_u32Frmt, 1000000), IntToIQ(prm_nreadVal(Ni3_i).t_u32Frmt, 1000000),
+						IntToIQ(prm_nreadVal(Ni2_dac).t_u16Frmt, base[BASE_DAC]), IntToIQ(prm_nreadVal(Ni3_dac).t_u16Frmt, base[BASE_DAC]),
+						qTask);
+			}
 
-				//Calc udac
-				qTask = IntToIQ(reg->tf.task.u, 1000000);
-				if(qTask == 0){
-					qdac = 0;
-				}
-				else if(qTask < s->pU[1].qu){
-					qdac = iq_Fy_x1x2y1y2x(s->pU[0].qu, s->pU[1].qu, IntToIQ(s->pU[0].dac, base[BASE_DAC]), IntToIQ(s->pU[1].dac, base[BASE_DAC]), qTask);
-				}
-				else if(qTask < s->pU[2].qu){
-					qdac = iq_Fy_x1x2y1y2x(s->pU[1].qu, s->pU[2].qu, IntToIQ(s->pU[1].dac, base[BASE_DAC]), IntToIQ(s->pU[2].dac, base[BASE_DAC]), qTask);
-				}
-				else{
-					qdac = iq_Fy_x1x2y1y2x(s->pU[2].qu, s->pU[3].qu, IntToIQ(s->pU[2].dac, base[BASE_DAC]), IntToIQ(s->pU[3].dac, base[BASE_DAC]), qTask);
-				}
+			idac = IQtoInt(qdac, base[BASE_DAC]);
+			if(idac > base[BASE_DAC]){
+				idac = base[BASE_DAC];
+			}
 
-				udac = IQtoInt(qdac, base[BASE_DAC]);
-				if(udac > base[BASE_DAC]){
-					udac = base[BASE_DAC];
-				}
-				break;
+			//Calc udac
+			qTask = IntToIQ(prm_nreadVal(Nvoltage_set).t_u32Frmt, 1000000);
+			if(qTask == 0){
+				qdac = 0;
+			}
+			else if(qTask < IntToIQ(prm_nreadVal(Nv1_u).t_u32Frmt, 1000000)){
+				qdac = iq_Fy_x1x2y1y2x(IntToIQ(prm_nreadVal(Nv0_u).t_u32Frmt, 1000000), IntToIQ(prm_nreadVal(Nv1_u).t_u32Frmt, 1000000),
+						IntToIQ(prm_nreadVal(Nv0_dac).t_u16Frmt, base[BASE_DAC]), IntToIQ(prm_nreadVal(Nv1_dac).t_u16Frmt, base[BASE_DAC]),
+						qTask);
+			}
+			else if(qTask < IntToIQ(prm_nreadVal(Nv2_u).t_u32Frmt, 1000000)){
+				qdac = iq_Fy_x1x2y1y2x(IntToIQ(prm_nreadVal(Nv1_u).t_u32Frmt, 1000000), IntToIQ(prm_nreadVal(Nv2_u).t_u32Frmt, 1000000),
+						IntToIQ(prm_nreadVal(Nv1_dac).t_u16Frmt, base[BASE_DAC]), IntToIQ(prm_nreadVal(Nv2_dac).t_u16Frmt, base[BASE_DAC]),
+						qTask);
+			}
+			else{
+				qdac = iq_Fy_x1x2y1y2x(IntToIQ(prm_nreadVal(Nv2_u).t_u32Frmt, 1000000), IntToIQ(prm_nreadVal(Nv3_u).t_u32Frmt, 1000000),
+						IntToIQ(prm_nreadVal(Nv2_dac).t_u16Frmt, base[BASE_DAC]), IntToIQ(prm_nreadVal(Nv3_dac).t_u16Frmt, base[BASE_DAC]),
+						qTask);
+			}
 
-			case mode_raw:
-				if(reg->tf.task.dacu <= base[BASE_DAC]){
-					udac = reg->tf.task.dacu;
-				}else{
-					udac = base[BASE_DAC];
-				}
-				if(reg->tf.task.daci <= base[BASE_DAC]){
-					idac = reg->tf.task.daci;
-				}else{
-					idac = base[BASE_DAC];
-				}
-				break;
-
-			case mode_off:
-			default:
-				idac = udac = 0;
-				if(reg->tf.state.bit.switchIsON != 0){
-					l_switchRequest = setSwitchOff;
-				}
-				break;
+			udac = IQtoInt(qdac, base[BASE_DAC]);
+			if(udac > base[BASE_DAC]){
+				udac = base[BASE_DAC];
+			}
 		}
 
-		/**************************************
-		 *Setting DAC value
-		 */
+		// Setting DAC value
 		setDacI(idac);
 		setDacU(udac);
-		//setDacU(iq_filtr(vTaskCumul, udac, VTASK_FILTER_K));
 
-		if(reg->tf.task.mode == mode_overcurrentShutdown){
+		if(prm_nreadVal(Nmode).t_u16Frmt == overcurrentShutdown){
 			irqLimitOn();
 		}
 		else{
 			irqLimitOff();
 		}
 
-		/**************************************
-		 * Обработка запросов сохранения точки калибровки
-		 */
-		if((reg->tf.task.request >= setSavePointU0)&&(reg->tf.task.request <= setSavePointU3)){
-			s->pU[reg->tf.task.request - setSavePointU0].qu	 = IntToIQ(reg->tf.task.u, 1000000);
-			s->pU[reg->tf.task.request - setSavePointU0].adc = a->filtered[CH_UADC];
-			s->pU[reg->tf.task.request - setSavePointU0].dac = reg->tf.task.dacu;
-		}
-		if((reg->tf.task.request >= setSavePointI0)&&(reg->tf.task.request <= setSavePointI3)){
-			s->pI[reg->tf.task.request - setSavePointI0].qi	 = IntToIQ(reg->tf.task.i, 1000000);
-			s->pI[reg->tf.task.request - setSavePointI0].adc = a->filtered[CH_IADC];
-			s->pI[reg->tf.task.request - setSavePointI0].dac = reg->tf.task.daci;
+		request_type l_switchRequest = setNone;
 
-			s->pIEx[reg->tf.task.request - setSavePointI0].qi  = IntToIQ(reg->tf.task.i, 1000000);
-			s->pIEx[reg->tf.task.request - setSavePointI0].adc = a->adcIna226;
-			s->pIEx[reg->tf.task.request - setSavePointI0].dac = reg->tf.task.daci;
-		}
-
-		/**************************************
-		 * Обработка запроса на сохранение калибровочной информации
-		 */
-		if(reg->tf.task.request == setSaveSettings){
-			taskENTER_CRITICAL();
-			prm_store(SYSFLASHADR, prmFlash);
-			taskEXIT_CRITICAL();
-			reg->tf.task.request = setNone;
-		}
-
-		/**************************************
-		 * Выключение по времени
-		 */
-		if(reg->tf.task.mode == mode_timeShutdown){
-			if((reg->tf.meas.time >= reg->tf.task.time)&&(reg->tf.state.bit.switchIsON != 0)){
+		// Disable on time
+		if(prm_nreadVal(Nmode).t_u16Frmt == timeShutdown){
+			if((prm_nreadVal(Ntime).t_u16Frmt >= prm_nreadVal(Ntime_set).t_u16Frmt) && prm_nreadVal(Nenable).t_u16Frmt){
 				l_switchRequest = setSwitchOff;
 			}
 		}
 
 		/**************************************
-		 * Случай когда в режиме ограничения тока переключили на mode_limitation
+		 *
 		 */
-		if(reg->tf.task.mode == mode_overcurrentShutdown){
-			if(reg->tf.state.bit.modeIlim != 0){
+		if(prm_nreadVal(Nmode).t_u16Frmt == overcurrentShutdown){
+			if(MODE_IS_CC()){
 				l_switchRequest = setSwitchOff;
 			}
 		}
 
-		/**************************************
-		 * Выключение по падению тока до 10% от задания
-		 */
-		if(reg->tf.task.mode == mode_lowCurrentShutdown){
-			if(((reg->tf.meas.i <= (reg->tf.task.i / 10))&&(reg->tf.state.bit.switchIsON != 0))||(reg->tf.task.i == 0)){
+		// Low current disable
+		if(prm_nreadVal(Nmode).t_u16Frmt == lowCurrentShutdown){
+			if(((prm_nreadVal(Ncurrent).t_u32Frmt <= (prm_nreadVal(Ncurrent).t_u32Frmt / 10))
+					&&(prm_nreadVal(Nenable).t_boolFrmt))||(prm_nreadVal(Ncurrent).t_u32Frmt == 0))
+			{
 				if((xTaskGetTickCount() - curOffTime) > pdMS_TO_TICKS(CUR_OFF_TIME)){
 					l_switchRequest = setSwitchOff;
 				}
@@ -314,47 +361,52 @@ void systemTSK(void *pPrm){
 		}
 
 		/**************************************
-		 * При любых авариях выключаем выход
+		 * On fails disable output
 		 */
-		if((reg->tf.state.bit.ovfLinearRegTemper != 0)||
-		   (reg->tf.state.bit.errorLinearRegTemperSens != 0)||
-		   (reg->tf.state.bit.lowInputVoltage != 0))
-		{
+		if(state & (m_overheated | m_errorTemperatureSensor | m_lowInputVoltage | m_reverseVoltage)){
 			l_switchRequest = setSwitchOff;
 		}
 
 		/**************************************
-		 * Запросы на включение / отключение по каналу управления
+		 * Request enable
 		 */
-		if(reg->tf.task.request == setSwitchOn){
+		static bool enable = false;
+		if(enable == false && prm_nreadVal(Nenable).t_boolFrmt == true){
+			enable = true;
 			l_switchRequest = setSwitchOn;
-			reg->tf.task.request = setNone;
 		}
-		if(reg->tf.task.request == setSwitchOff){
+		else if(enable == true && prm_nreadVal(Nenable).t_boolFrmt == false){
+			enable = false;
 			l_switchRequest = setSwitchOff;
-			reg->tf.task.request = setNone;
 		}
 
 		/**************************************
-		 * Включение / отключение
+		 * Enabling / Disabling
 		 */
 		if(l_switchRequest == setSwitchOn){
-			if(reg->tf.state.bit.switchIsON == 0){
-				reg->tf.state.bit.ovfCurrent = 0;
-				setDacU(0);
-				switchON();
-			}
+			currentirq = false;
+			setDacU(0);
+			switchON();
 			timeOffset = xTaskGetTickCount();
 			l_switchRequest = setNone;
 		}
-		if(l_switchRequest == setSwitchOff){
-			if(reg->tf.state.bit.switchIsON != 0){
-				setDacU(0);
-				switchOFF();
-			}
+		else if(l_switchRequest == setSwitchOff){
+			setDacU(0);
+			switchOFF();
 			l_switchRequest = setNone;
+			prm_writeVal(prm_getHandler(Nenable), (prmval_type){ .t_boolFrmt = false }, NULL);
 		}
+
+		if(state & m_lowInputVoltage && modbus_needSave(false)){
+			if(savePrm()){
+				modbus_needSave(true);
+			}
+		}
+
+		prm_writeVal(prm_getHandler(Nstate), (prmval_type){ .t_u16Frmt = state }, NULL);
+
+		vTaskDelayUntil(&pxPreviousWakeTime, pdMS_TO_TICKS(5));
 	}
 }
 
-/*************** GNU GPL ************** END OF FILE ********* D_EL ***********/
+/******************************** END OF FILE ********************************/

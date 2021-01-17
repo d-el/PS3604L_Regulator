@@ -9,10 +9,8 @@
 /*!****************************************************************************
 * Include
 */
+#include <string.h>
 #include "stm32f3xx.h"
-#include "systemTSK.h"
-#include "string.h"
-#include "crc.h"
 #include "flash.h"
 
 /*!****************************************************************************

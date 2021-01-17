@@ -9,15 +9,15 @@
 /*!****************************************************************************
 * Include
 */
+#include <stddef.h>
 #include "gpio.h"
 #include "board.h"
-#include "OSinit.h"
 #include "adc.h"
 
 /*!****************************************************************************
 * MEMORY
 */
-adcStct_type		adcStct = {
+adcStct_type adcStct = {
 	.sampleRate = 10000,	//Default sample Rate
 };
 
@@ -27,7 +27,7 @@ adcStct_type		adcStct = {
 * SDADC1_IN5P
 * SDADC1_IN6P
 */
-void sdadc_init(void){
+void adc_init(void){
 	/**********************************
 	 * IO
 	 */
@@ -130,7 +130,7 @@ void sdadc_init(void){
 /*!****************************************************************************
  *
  */
-void startSampling(void){
+void adc_startSampling(void){
 	TIM3->CCR1 = 1;
 	TIM3->CR1 |= TIM_CR1_CEN;
 }
@@ -138,17 +138,23 @@ void startSampling(void){
 /*!****************************************************************************
  *
  */
-void stopSampling(void){
+void adc_stopSampling(void){
 	TIM3->CR1 &= ~TIM_CR1_CEN;
 }
 
 /*!****************************************************************************
  *
  */
-void setSampleRate(uint16_t us){
+void adc_setSampleRate(uint16_t us){
 	TIM3->ARR = us;
 }
 
+/*!****************************************************************************
+ *
+ */
+void adc_setCallback(adcCallback_type tcHoock){
+	adcStct.tcHoock = tcHoock;
+}
 
 /*!****************************************************************************
 *---> DMA for SAADC Interrupt Handler
@@ -157,15 +163,10 @@ void DMA2_Channel3_IRQHandler(void){
 	adcStct.adcreg[0] += SDADC_DR_TO_LSB_ADD;
 	adcStct.adcreg[1] += SDADC_DR_TO_LSB_ADD;
 	adcStct.adcreg[2] += SDADC_DR_TO_LSB_ADD;
-
-	BaseType_t xHigherPriorityTaskWoken;
-	xHigherPriorityTaskWoken = pdFALSE;
-	xSemaphoreGiveFromISR(AdcEndConversionSem, &xHigherPriorityTaskWoken);	//Отдать семафор задаче-обработчику
-	if(xHigherPriorityTaskWoken != pdFALSE){
-		portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
+	if(adcStct.tcHoock != NULL){
+		adcStct.tcHoock(&adcStct);
 	}
-
-	DMA2->IFCR		= DMA_IFCR_CTCIF3;							//Сбрасываем флаг
+	DMA2->IFCR = DMA_IFCR_CTCIF3;
 }
 
 /*************** GNU GPL ************** END OF FILE ********* D_EL ***********/

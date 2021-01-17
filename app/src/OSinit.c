@@ -8,13 +8,15 @@
 /*!****************************************************************************
 * Include
 */
-#include "assert.h"
-#include "OSinit.h"
-#include "systemTSK.h"
+#include <assert.h>
+#include <FreeRTOS.h>
+#include <task.h>
+#include <queue.h>
+#include <semphr.h>
+#include <systemTSK.h>
 
-/*!****************************************************************************
-* Semaphore
-*/
+#define SYSTEM_TSK_SZ_STACK     512
+#define SYSTEM_TSK_PRIO         3
 
 /*!****************************************************************************
 *

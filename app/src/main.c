@@ -25,7 +25,7 @@
 /*!****************************************************************************
 * @brief    main function
 */
-void main(void){
+int main(void){
     hardInit();
 
     OSinit();

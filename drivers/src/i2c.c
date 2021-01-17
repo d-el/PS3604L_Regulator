@@ -9,10 +9,7 @@
 /*!****************************************************************************
 * Include
 */
-#include "stm32f3xx.h"
 #include "gpio.h"
-#include "stddef.h"
-#include "OSinit.h"
 #include "i2c.h"
 
 /*!****************************************************************************
@@ -53,8 +50,8 @@ void i2c_init(i2c_type *i2cx){
 		* PB6 - I2C2_CSCL
 		* PB7 - I2C2_SDA
 		*/
-		gppin_init(GPIOB, 6, alternateFunctionOpenDrain, pullUp, 0, I2C2_PINAFSCL);
-		gppin_init(GPIOB, 7, alternateFunctionOpenDrain, pullUp, 0, I2C2_PINAFSDA);
+		gppin_init(GPIOB, 6, alternateFunctionOpenDrain, pullUp, 0, I2C1_PINAFSCL);
+		gppin_init(GPIOB, 7, alternateFunctionOpenDrain, pullUp, 0, I2C1_PINAFSDA);
 
 		/************************************************
 		* NVIC
@@ -254,7 +251,6 @@ void i2cEventHendler(i2c_type *i2cx){
 	else if((i2cx->pI2c->ISR & I2C_ISR_TXE) != 0){
 		i2cx->state = i2cTxSuccess;
 		if(i2cx->tcHook != NULL){				//Call hook
-		#warning "еще один колбэк?"
 			i2cx->tcHook(i2cx);
 		}
 		i2cx->pI2c->ICR = I2C_ICR_STOPCF;
@@ -265,7 +261,7 @@ void i2cEventHendler(i2c_type *i2cx){
 * I2C ERROR HANDLER
 */
 void i2cErrorHendler(i2c_type *i2cx){
-	//__IO uint32_t	 I2Cx_SR1 = i2cx->I2C->ISR;
+	(void)i2cx->pI2c->ISR;
 }
 
 /******************************************************************************
@@ -278,11 +274,6 @@ void I2C1_EV_IRQHandler(void){
 void I2C1_ER_IRQHandler(void){
 	i2cErrorHendler(i2c1);
 }
-#warning delete
-void DMA1_Channel5_IRQHandler(void){			//RX
-	//DMA1->HIFCR  =  DMA_HIFCR_CTCIF3;			//Clear flag
-	i2c1Sct.state = i2cRxSuccess;
-}
 #endif
 
 /******************************************************************************
@@ -294,10 +285,6 @@ void I2C2_EV_IRQHandler(void){
 }
 void I2C2_ER_IRQHandler(void){
 	i2cErrorHendler(i2c2);
-}
-void DMA1_Channel5_IRQHandler(void){   //RX
-	//DMA1->HIFCR  =  DMA_HIFCR_CTCIF3;		  //Clear flag
-	i2c2Sct.state = i2cRxSuccess;
 }
 #endif
 
