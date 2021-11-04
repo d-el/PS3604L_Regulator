@@ -1,10 +1,10 @@
 ﻿/*!****************************************************************************
-* @file    		dac.c
-* @author  		d_el
-* @version 		V1.0
-* @date    		02.05.2016, Storozhenko Roman
-* @copyright 	GNU Public License
-*/
+ * @file    	dac.c
+ * @author  	Storozhenko Roman - D_EL
+ * @version 	V1.0
+ * @date    	02.05.2016
+ * @copyright 	The MIT License (MIT). Copyright (c) 2020 Storozhenko Roman
+ */
 
 /*!****************************************************************************
 * Include
@@ -32,4 +32,4 @@ void dac_init(void){
     DAC1->DHR12R2	= 0;                                        //На выходе канала2 0В
 }
 
-/*************** GNU GPL ************** END OF FILE ********* D_EL ***********/
+/******************************** END OF FILE ********************************/

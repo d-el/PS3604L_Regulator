@@ -1,15 +1,27 @@
 ﻿/*!****************************************************************************
-* @file		version.h
-* @author	d_el
+* @file			version.h
+* @author		d_el
+* @copyright	The MIT License (MIT). Copyright (c) 2017 Storozhenko Roman
 */
 
-#include "stdint.h"
+inline const char* getVersion(){
+	return "1.4.0";
+}
 
-extern const uint32_t fwinfoMajor;
-extern const uint32_t fwinfoMinor;
-extern const uint32_t fwinfoRevision;
-extern const uint32_t fwinfoBuild;
-extern const char fwinfoVersion[];
-extern const char fwinfoDate[];
+inline unsigned getVersionMajor(){
+	return 1;
+}
 
-/***************** Copyright (C) Storozhenko Roman ******* END OF FILE *******/
+inline unsigned getVersionMinor(){
+	return 4 +0;
+}
+
+inline unsigned getVersionPatch(){
+	return 0 +0;
+}
+
+inline unsigned getVersionTweak(){
+	return  +0;
+}
+
+/******************************** END OF FILE ********************************/

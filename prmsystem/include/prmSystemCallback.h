@@ -2,7 +2,7 @@
  * @file		prmSystemCallback.h
  * @author		d_el
  * @version		V1.0
- * @date		Dec 11, 2019
+ * @date		17.03.2021
  * @brief
  */
 
@@ -15,33 +15,13 @@
 #include "prmSystem.h"
 
 /*!****************************************************************************
- * Define
- */
-
-/*!****************************************************************************
- * Enumeration
- */
-
-/*!****************************************************************************
- * Typedef
- */
-
-/*!****************************************************************************
- * Exported variables
- */
-
-/*!****************************************************************************
- * Macro functions
- */
-
-/*!****************************************************************************
  * Function declaration
  */
-void pcpy(const struct prmHandle* h, void *arg);
-void getFwVer(const struct prmHandle* h, void *arg);
+void getFwVer(Prm::Val<uint16_t>& prm, bool read, void *arg);
 
-void vsave(const struct prmHandle* h, void *arg);
-void isave(const struct prmHandle* h, void *arg);
+void vsave(Prm::Val<uint32_t>& prm, bool read, void *arg);
+void isave(Prm::Val<uint32_t>& prm, bool read, void *arg);
 
 #endif //prmSystemCallback_H
+
 /***************** Copyright (C) Storozhenko Roman ******* END OF FILE *******/

@@ -1,17 +1,18 @@
 ﻿/*!****************************************************************************
- * @file		crc.h
- * @author		d_el - Storozhenko Roman
+ * @file		uart.h
+ * @author		d_el
  * @version		V1.5
  * @date		12.12.2017
  * @brief		Driver for uart STM32F3 MCUs
- * @copyright	Copyright (C) 2017 Storozhenko Roman
- *				All rights reserved
- *				This software may be modified and distributed under the terms
- *				of the BSD license.	 See the LICENSE file for details
+ * @copyright	The MIT License (MIT). Copyright (c) 2021 Storozhenko Roman
  */
 
 #ifndef UART_H
 #define UART_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*!****************************************************************************
 * Include
@@ -44,20 +45,20 @@
 #define		UART2_PINAFTX				(7)
 #define		UART2_PINAFRX				(7)
 #define		UART2_HALFDUPLEX			(1)
-#define		UART2_RX_IDLE_LINE_MODE		(0)
-#define		UART2_DMA_MODE				(0)
+#define		UART2_RX_IDLE_LINE_MODE		(1)
+#define		UART2_DMA_MODE				(1)
 
 //UART3
-#define		UART3_USE					(0)
-#define		UART3_TxBffSz				(128)
-#define		UART3_RxBffSz				(128)
+#define		UART3_USE					(1)
+#define		UART3_TxBffSz				(16)
+#define		UART3_RxBffSz				(16)
 #define		UART3_RxDmaInterruptPrior	(15)
 #define		UART3_TXIRQPrior			(15)
 #define		UART3_PINAFTX				(7)
 #define		UART3_PINAFRX				(7)
 #define		UART3_HALFDUPLEX			(0)
 #define		UART3_RX_IDLE_LINE_MODE		(1)
-#define		UART1_DMA_MODE				(1)
+#define		UART3_DMA_MODE				(1)
 
 /*!****************************************************************************
  * Enumeration
@@ -150,5 +151,9 @@ void uart_write(uart_type *uartx, void *src, uint16_t len);
 void uart_read(uart_type *uartx, void *dst, uint16_t len);
 void uart_stopRead(uart_type *uartStruct);
 
+#ifdef __cplusplus
+}
+#endif
+
 #endif //UART_H
-/***************** Copyright (C) Storozhenko Roman ******* END OF FILE *******/
+/******************************** END OF FILE ********************************/

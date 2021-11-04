@@ -1,16 +1,17 @@
 ﻿/*!****************************************************************************
- * @file		crc.h
+ * @file		crc.c
  * @author		d_el - Storozhenko Roman
  * @version		V2.0
  * @date		12.12.2017
- * @copyright	Copyright (C) 2017 Storozhenko Roman
- *				All rights reserved
- *				This software may be modified and distributed under the terms
- *				of the BSD license.	 See the LICENSE file for details
+ * @copyright	The MIT License (MIT). Copyright (c) 2021 Storozhenko Roman
+ * @brief		Parameters system
  */
-
 #ifndef crc_H
 #define crc_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*!****************************************************************************
 * Include
@@ -51,9 +52,13 @@ extern crc8Struct_type crc1Wire;
 /*!****************************************************************************
  * Function declaration
  */
-uint16_t crc16Calc(crc16Struct_type *dat, void *src, uint32_t len);
-uint16_t crc16CalcWithInit(crc16Struct_type *dat, void *src, uint32_t len, uint16_t initVal);
-uint8_t crc8Calc(crc8Struct_type *dat, void *src, uint32_t len);
+uint16_t crc16Calc(crc16Struct_type *dat, const void *src, uint32_t len);
+uint16_t crc16CalcWithInit(crc16Struct_type *dat, const void *src, uint32_t len, uint16_t initVal);
+uint8_t crc8Calc(crc8Struct_type *dat, const void *src, uint32_t len);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif	//crc_H
-/***************** Copyright (C) Storozhenko Roman ******* END OF FILE *******/
+/******************************** END OF FILE ********************************/

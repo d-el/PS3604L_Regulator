@@ -8,16 +8,16 @@
 ENTRY(Reset_Handler)
 
 /* Highest address of the user mode stack */
-_estack = 0x20008000;    /* end of RAM */
-/* Generate a link error if heap and stack don't fit into RAM */
-_Min_Heap_Size = 0x400;      /* required amount of heap  */
-_Min_Stack_Size = 0x400; /* required amount of stack */
+_estack = 0x20008000;      /* end of RAM */
+_Min_Heap_Size = 0x400;    /* required amount of heap  */
+_Min_Stack_Size = 0x400;   /* required amount of stack */
 _Settings_Size = 2K;
 
 /* Specify the memory areas */
 MEMORY
 {
-    FLASH (rx)      : ORIGIN = 0x08000000, LENGTH = 256K
+    FLASH (rx)      : ORIGIN = 0x08000000, LENGTH = 254K
+    FLASHS (r)      : ORIGIN = 0x08000000 + 254K, LENGTH = _Settings_Size
     RAM (xrw)       : ORIGIN = 0x20000000, LENGTH = 32K
 }
 
@@ -71,6 +71,7 @@ SECTIONS
     KEEP (*(.preinit_array*))
     PROVIDE_HIDDEN (__preinit_array_end = .);
   } >FLASH
+
   .init_array :
   {
     PROVIDE_HIDDEN (__init_array_start = .);
@@ -78,6 +79,7 @@ SECTIONS
     KEEP (*(.init_array*))
     PROVIDE_HIDDEN (__init_array_end = .);
   } >FLASH
+
   .fini_array :
   {
     PROVIDE_HIDDEN (__fini_array_start = .);
@@ -102,15 +104,12 @@ SECTIONS
   } >RAM AT> FLASH
 
   /* User settings */
-  ._user_settings :
+  ._user_settings (NOLOAD):
   {
-    . = ALIGN(2K);
     _suser_settings = .;
-    PROVIDE ( _end = . );
     . = . + _Settings_Size;
     _euser_settings = .;
-    . = ALIGN(2K);
-  } >FLASH
+  } >FLASHS
   
   /* Uninitialized data section */
   . = ALIGN(4);
@@ -138,8 +137,6 @@ SECTIONS
     . = . + _Min_Stack_Size;
     . = ALIGN(4);
   } >RAM
-
-  
 
   /* Remove information from the standard libraries */
   /DISCARD/ :

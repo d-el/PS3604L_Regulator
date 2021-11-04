@@ -23,6 +23,10 @@ elif [ "$1" == "openocd_jlink" ]; then
     echo "start" $1
     openocd -f openocd_jlink.cfg
 
+elif [ "$1" == "openocd_mculink" ]; then
+	echo "start" $1
+	openocd -f openocd_mculink.cfg
+	
 elif [ "$1" == "jlink" ]; then
     echo "start" $1
     while read line; do    

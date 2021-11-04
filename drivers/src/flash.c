@@ -1,10 +1,10 @@
 ﻿/*!****************************************************************************
-* @file         flash.c
-* @author       d_el
-* @version      V2.1
-* @date         07.02.2015
-* @copyright 	GNU Public License
-*/
+ * @file    	flash.c
+ * @author  	Storozhenko Roman - D_EL
+ * @version 	V1.0
+ * @date    	07.02.2015
+ * @copyright 	The MIT License (MIT). Copyright (c) 2020 Storozhenko Roman
+ */
 
 /*!****************************************************************************
 * Include
@@ -88,4 +88,4 @@ flashState_type flash_write(void *dst, uint16_t *src, uint32_t num){
     return flash_ok;
 }
 
-/*************** GNU GPL ************** END OF FILE ********* D_EL ***********/
+/******************************** END OF FILE ********************************/

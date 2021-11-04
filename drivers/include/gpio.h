@@ -1,13 +1,17 @@
 ﻿/*!****************************************************************************
-* @file     	gpio.h
-* @author   	Storozhenko Roman - D_EL
-* @version  	V1.0
-* @date     	22.11.2016
-* @brief    	gpio driver for stm32 F0 F3 F4 L4 microcontroller
-* @copyright 	GNU Public License
-*/
+ * @file    	gpio.h
+ * @author  	Storozhenko Roman - D_EL
+ * @version 	V1.0
+ * @date    	22.11.2016
+ * @brief    	gpio driver for stm32 F3 microcontroller
+ * @copyright 	The MIT License (MIT). Copyright (c) 2020 Storozhenko Roman
+ */
 #ifndef GPIO_H
 #define GPIO_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*!****************************************************************************
 * Include
@@ -96,6 +100,7 @@ typedef enum{
     GP_ON_OFF,
     GP_CC_CV,
     GP_DS18B20,
+	GP_SPI3_NSS,
 
 GP_NOT_USED
 }GPnum_type;
@@ -142,7 +147,7 @@ typedef void (*gpioCallback_type)(pinMode_type *gpio);
 //example: EXTI_INIT(GPIOA, 9, EXTI_MODE_BOTH, 15);
 
 /*!****************************************************************************
-* Extern viriables
+* External variables
 */
 extern pinMode_type   const pinsMode[];
 
@@ -156,5 +161,9 @@ void irqSetCallback(gpioCallback_type callback);
 void irqLimitOn(void);
 void irqLimitOff(void);
 
+#ifdef __cplusplus
+}
+#endif
+
 #endif //GPIO_H
-/*************** GNU GPL ************** END OF FILE ********* D_EL ***********/
+/******************************** END OF FILE ********************************/

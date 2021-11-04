@@ -3,10 +3,8 @@
  * @author		d_el - Storozhenko Roman
  * @version		V2.0
  * @date		12.12.2017
- * @copyright	Copyright (C) 2017 Storozhenko Roman
- *				All rights reserved
- *				This software may be modified and distributed under the terms
- *				of the BSD license.	 See the LICENSE file for details
+ * @copyright	The MIT License (MIT). Copyright (c) 2021 Storozhenko Roman
+ * @brief		Parameters system
  */
 
 /*!****************************************************************************
@@ -21,7 +19,7 @@
  * @param[in] len - number of bytes to calculate
  * @return CRC16 result
  */
-uint16_t crc16Calc(crc16Struct_type *dat, void *src, uint32_t len){
+uint16_t crc16Calc(crc16Struct_type *dat, const void *src, uint32_t len){
 	uint16_t	*table = dat->table;
 	uint16_t	crc = dat->initVal;
 	uint8_t		*pBuf = (uint8_t*)src;
@@ -45,7 +43,7 @@ uint16_t crc16Calc(crc16Struct_type *dat, void *src, uint32_t len){
  * @param[in] initVal - initial value
  * @return CRC16 result
  */
-uint16_t crc16CalcWithInit(crc16Struct_type *dat, void *src, uint32_t len, uint16_t initVal){
+uint16_t crc16CalcWithInit(crc16Struct_type *dat, const void *src, uint32_t len, uint16_t initVal){
 	uint16_t	*table = dat->table;
 	uint16_t	crc = initVal;
 	uint8_t		*pBuf = (uint8_t*)src;
@@ -68,7 +66,7 @@ uint16_t crc16CalcWithInit(crc16Struct_type *dat, void *src, uint32_t len, uint1
  * @param[in] len - number of bytes to calculate
  * @return CRC8 result
  */
-uint8_t crc8Calc(crc8Struct_type *dat, void *src, uint32_t len){
+uint8_t crc8Calc(crc8Struct_type *dat, const void *src, uint32_t len){
 	uint8_t	   *table = dat->table;
 	uint8_t		crc = dat->initVal;
 	uint8_t		*pBuf = (uint8_t*)src;
@@ -201,4 +199,4 @@ crc8Struct_type crc1Wire = {
 	.finalXorValue = 0x00
 };
 
-/***************** Copyright (C) Storozhenko Roman ******* END OF FILE *******/
+/******************************** END OF FILE ********************************/

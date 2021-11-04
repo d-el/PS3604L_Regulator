@@ -1,12 +1,17 @@
 ﻿/*!****************************************************************************
-* @file    		oneWireUart.h
-* @author  		d_el
-* @version 		V1.0
-* @date    		21.07.2016, Storozhenko Roman
-* @copyright 	GNU Public License
-*/
+ * @file		oneWireUart.h
+ * @author		d_el
+ * @version		V1.0
+ * @date		21.07.2016
+ * @brief
+ * @copyright	The MIT License (MIT). Copyright (c) 2021 Storozhenko Roman
+ */
 #ifndef oneWireUart_H
 #define oneWireUart_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*!****************************************************************************
 * Include
@@ -27,7 +32,7 @@
 * User typedef
 */
 typedef enum{
-    owOk,               //Устройство обнаружено
+    owOk,
     owNotFound,
     owShortCircle,
 	owTimeOut,
@@ -56,5 +61,9 @@ owSt_type ow_write(const void *src, uint8_t len);
 owSt_type ow_read(void *dst, uint8_t len);
 uint8_t ow_crc8(uint8_t *mas, uint8_t n);
 
+#ifdef __cplusplus
+}
+#endif
+
 #endif //oneWireUart_H
-/*************** GNU GPL ************** END OF FILE ********* D_EL ***********/
+/******************************** END OF FILE ********************************/

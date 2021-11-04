@@ -7,6 +7,7 @@ add_library(drivers STATIC
 	src/i2c.c
 	src/pwm.c
 	src/sdAdc.c
+	src/spi.c
 	src/uart.c
 	)
 

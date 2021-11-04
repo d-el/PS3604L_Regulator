@@ -1,11 +1,10 @@
 ﻿/*!****************************************************************************
-* @file    		pwm.c
-* @author  		d_el
-* @version 		V1.0
-* @date   	 	02.05.2016, Storozhenko Roman
-* @copyright 	GNU Public License
-*/
-
+ * @file    	pwm.c
+ * @author  	Storozhenko Roman - D_EL
+ * @version 	V1.0
+ * @date    	02.05.2016
+ * @copyright 	The MIT License (MIT). Copyright (c) 2020 Storozhenko Roman
+ */
 /*!****************************************************************************
 * Include
 */
@@ -13,10 +12,6 @@
 #include "board.h"
 #include "gpio.h"
 #include "pwm.h"
-
-/*!****************************************************************************
-* MEMORY
-*/
 
 /*!****************************************************************************
 * @brief    TIM5_CH4 - PB9
@@ -78,4 +73,4 @@ void LedPwmSet(uint16_t dc){
 	TIM12->CCR1 = ((uint32_t)TIM12->ARR * dc) / 1000;
 }
 
-/*************** GNU GPL ************** END OF FILE ********* D_EL ***********/
+/******************************** END OF FILE ********************************/

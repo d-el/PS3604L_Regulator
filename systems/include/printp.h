@@ -1,27 +1,19 @@
 ﻿/*!****************************************************************************
- * @file		printp.h
- * @author		d_el
- * @version		V1.0
- * @date		06.12.2017
- * @brief		System control task
- * @copyright	Copyright (C) 2017 Storozhenko Roman
- *				All rights reserved
- *				This software may be modified and distributed under the terms
- *				of the BSD license.	 See the LICENSE file for details
+ * @file    	printp.h
+ * @author  	Storozhenko Roman - D_EL
+ * @version 	V1.0
+ * @date    	06.12.2017
+ * @copyright 	The MIT License (MIT). Copyright (c) 2020 Storozhenko Roman
  */
 #ifndef printp_H
 #define printp_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*!****************************************************************************
  * Include
- */
-
-/*!****************************************************************************
- * Define
- */
-
-/*!****************************************************************************
- * Enumeration
  */
 
 /*!****************************************************************************
@@ -75,5 +67,9 @@ typedef enum{
 void print_init(stdOutInterface_type stdoi);
 void l_print(const char *fmt, ...);
 
+#ifdef __cplusplus
+}
+#endif
+
 #endif //printp_H
-/*************** LGPL ************** END OF FILE *********** D_EL ************/
+/******************************** END OF FILE ********************************/

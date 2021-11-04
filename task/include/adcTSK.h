@@ -51,14 +51,14 @@ typedef struct {
 typedef struct {
 	adcFilt_type	adcFilt[ADC_NUM_CH];
 	uint16_t 		filtered[ADC_NUM_CH];
-	int16_t 		adcIna226;
+	int16_t 		adcIna229;
 
 	/*******************************/
 	_iq 				udc;
 	_iq 				voltage;        		//[V]
 	_iq 				current;  				//[A]
 	_iq 				currentInt;     		//[A]
-	_iq 				currentIna226;  		//[A]
+	_iq 				currentExt;  		//[A]
 	_iq14 				outPower;       		//[W]
 	_iq14 				radPower;       		//[W]
 	_iq14 				resistens;      		//[Ohm]

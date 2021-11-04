@@ -1,11 +1,11 @@
 ﻿/*!****************************************************************************
-* @file    		oneWireUart.c
-* @author  		d_el
-* @version 		V1.0
-* @date    		21.07.2016, Storozhenko Roman
-* @brief   		driver 1Wire on UART
-* @copyright 	GNU Public License
-*/
+ * @file		oneWireUart.c
+ * @author		d_el
+ * @version		V1.0
+ * @date		21.07.2016
+ * @brief
+ * @copyright	The MIT License (MIT). Copyright (c) 2021 Storozhenko Roman
+ */
 
 /*!****************************************************************************
 * Include
@@ -28,6 +28,7 @@ static SemaphoreHandle_t oneWireUartSem;
  * @brief	uart RX callback
  */
 static void uartRxHook(uart_type *puart){
+	(void)puart;
 	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 	xSemaphoreGiveFromISR(oneWireUartSem, &xHigherPriorityTaskWoken);
 	portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
@@ -74,7 +75,7 @@ owSt_type ow_reset(void){
 
     uart_setBaud(OW_UART, 9600);
     OW_UART->pTxBff[0] = 0xF0;
-    uart_read(OW_UART, OW_UART->pRxBff, 1);
+    uart_read(OW_UART, OW_UART->pRxBff, 1 + 1);
     uart_write(OW_UART, OW_UART->pTxBff, 1);
     res = xSemaphoreTake(oneWireUartSem, pdMS_TO_TICKS(OW_TIMEOUT));
     if(res != pdTRUE){
@@ -160,10 +161,11 @@ owSt_type ow_read(void *dst, uint8_t len){
 }
 
 /*!***************************************************************************
-* @brief  Подсчет CRC-8-Dallas/Maxim
-* @param  Указатель на массив, колличество элементов
-* @retval Result: the value of the received data
-*/
+ *  CRC8 MAXIM
+ * Polynomial:		0x31
+ * Initial Value:	0x00
+ * Final Xor Value:	0x00
+ */
 uint8_t ow_crc8(uint8_t *mas, uint8_t n){
     uint8_t j , i, tmp, data, crc = 0;
 
@@ -181,4 +183,4 @@ uint8_t ow_crc8(uint8_t *mas, uint8_t n){
     return crc;
 }
 
-/*************** GNU GPL ************** END OF FILE ********* D_EL ***********/
+/******************************** END OF FILE ********************************/

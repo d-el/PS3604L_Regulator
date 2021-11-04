@@ -1,12 +1,11 @@
 ﻿/*!****************************************************************************
-* @file     	gpio.c
-* @author   	Storozhenko Roman - D_EL, 14.08.2016 - 4eef
-* @version  	V1.0
-* @date     	20.07.2016
-* @date     	02.08.2016  fix set nAF
-* @brief    	gpio driver for stm32 F0 F3 F4 L4 microcontroller
-* @copyright 	GNU Public License
-*/
+ * @file    	gpio.c
+ * @author  	Storozhenko Roman - D_EL
+ * @version 	V1.0
+ * @date    	22.11.2016
+ * @brief    	gpio driver for stm32 F3 microcontroller
+ * @copyright 	The MIT License (MIT). Copyright (c) 2020 Storozhenko Roman
+ */
 
 /*!****************************************************************************
 * Include
@@ -22,9 +21,10 @@
 */
 pinMode_type   const pinsMode[] = {
 	/*0 */  makepin(GPIOF,  6,  	outPushPull,				pullDisable,	0,  0),  //LED
-	/*1 */  makepin(GPIOB,  5,  	outOpenDrain,				pullDisable,	1,  0),  //ON_OFF
+	/*1 */  makepin(GPIOB,  7,  	outOpenDrain,				pullDisable,	1,  0),  //ON_OFF
 	/*2 */  makepin(GPIOA,  0,  	digitalInput,   			pullDisable,	0,  0),  //CC_CV
-	/*3 */  makepin(GPIOB,  3,  	alternateFunctionOpenDrain,	pullDisable,	1,  7),  //DS18B20
+	/*3 */  makepin(GPIOA,  2,  	alternateFunctionOpenDrain,	pullDisable,	1,  7),  //DS18B20
+	/*4 */	makepin(GPIOA,  15,  	outPushPull,				pullDisable,	1,  0),  //SPI3_NSS
 };
 static const uint32_t pinNum = sizeof(pinsMode) / sizeof(pinMode_type);
 
@@ -148,4 +148,4 @@ void gppin_init(GPIO_TypeDef *port, uint8_t npin, gpioMode_type mode, gpioPull_t
     port->AFR[npin / 8] |= nAF << (4*(npin % 8));
 }
 
-/*************** GNU GPL ************** END OF FILE ********* D_EL ***********/
+/******************************** END OF FILE ********************************/

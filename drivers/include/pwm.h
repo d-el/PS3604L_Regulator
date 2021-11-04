@@ -1,12 +1,16 @@
 ﻿/*!****************************************************************************
-* @file    		pwm.h
-* @author  		d_el
-* @version 		V1.0
-* @date    		02.05.2016, Storozhenko Roman
-* @copyright 	GNU Public License
-*/
+ * @file    	pwm.h
+ * @author  	Storozhenko Roman - D_EL
+ * @version 	V1.0
+ * @date    	02.05.2016
+ * @copyright 	The MIT License (MIT). Copyright (c) 2020 Storozhenko Roman
+ */
 #ifndef pwm_H
 #define pwm_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*!****************************************************************************
 * Include
@@ -20,22 +24,6 @@
 #define PWM_LED_FREQ    2000    //[Hz]
 
 /*!****************************************************************************
-* User enum
-*/
-
-/*!****************************************************************************
-* User typedef
-*/
-
-/*!****************************************************************************
-* External variables
-*/
-
-/*!****************************************************************************
-* Macro functions
-*/
-
-/*!****************************************************************************
 * Prototypes for the functions
 */
 void pwmFan_init(void);
@@ -43,5 +31,9 @@ void FanPwmSet(uint16_t dc);
 void Init_PwmLed(void);
 void LedPwmSet(uint16_t dc);
 
+#ifdef __cplusplus
+}
+#endif
+
 #endif //pwm_H
-/*************** GNU GPL ************** END OF FILE ********* D_EL ***********/
+/******************************** END OF FILE ********************************/

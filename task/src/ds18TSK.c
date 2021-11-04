@@ -1,10 +1,11 @@
 ﻿/*!****************************************************************************
-* @file    		ds18TSK.c
-* @author  		d_el
-* @version 		V1.0
-* @date    		26.07.2016, Storozhenko Roman
-* @copyright 	GNU Public License
-*/
+ * @file		ds18TSK.c
+ * @author		d_el
+ * @version		V1.0
+ * @date		26.07.2016
+ * @brief
+ * @copyright	The MIT License (MIT). Copyright (c) 2021 Storozhenko Roman
+ */
 
 /*!****************************************************************************
 * Include
@@ -33,7 +34,7 @@ void ds18TSK(void *pPrm){
 	(void)pPrm;
     uint8_t errorcnt = 0;
 
-    uart_init(uart2, 9600);   //1WIRE
+    uart_init(OW_UART, 9600);   //1WIRE
 
     ow_init();
     temperature.state = temp_Ok;
@@ -48,7 +49,11 @@ void ds18TSK(void *pPrm){
 			break;
 		}
 		else{
-			temperature.state = temp_NoInit;
+			if(errorcnt < DS18_MAX_ERROR){
+				errorcnt++;
+			}else{
+				temperature.state = temp_NoInit;
+			}
 			vTaskDelay(pdMS_TO_TICKS(1000));
 		}
     }
@@ -107,5 +112,4 @@ void ds18TSK(void *pPrm){
 	}
 }
 
-
-/*************** GNU GPL ************** END OF FILE ********* D_EL ***********/
+/******************************** END OF FILE ********************************/

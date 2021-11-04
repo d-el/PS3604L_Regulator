@@ -1,12 +1,16 @@
 ﻿/*!****************************************************************************
-* @file    		adc.h
-* @author  		Storozhenko Roman - D_EL
-* @version 		V1.0
-* @date    		07.03.2017
-* @copyright 	GNU Public License
-*/
+ * @file    	adc.h
+ * @author  	Storozhenko Roman - D_EL
+ * @version 	V1.0
+ * @date    	07.03.2017
+ * @copyright 	The MIT License (MIT). Copyright (c) 2020 Storozhenko Roman
+ */
 #ifndef ADC_H
 #define ADC_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*!****************************************************************************
 * Include
@@ -41,14 +45,6 @@ enum{
 };
 
 /*!****************************************************************************
-* External variables
-*/
-
-/*!****************************************************************************
-* Macro functions
-*/
-
-/*!****************************************************************************
 * Prototypes for the functions
 */
 void adc_init(void);
@@ -57,5 +53,9 @@ void adc_stopSampling(void);
 void adc_setSampleRate(uint16_t us);
 void adc_setCallback(adcCallback_type tcHoock);
 
+#ifdef __cplusplus
+}
+#endif
+
 #endif //ADC_H
-/*************** GNU GPL ************** END OF FILE ********* D_EL ***********/
+/******************************** END OF FILE ********************************/

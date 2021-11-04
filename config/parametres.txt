@@ -1,0 +1,91 @@
+﻿
+text(state, mask,
+	1: m_overCurrent,
+	2: m_limitation,
+	4: m_externaIDac,
+	8: m_overheated,
+	16: m_errorTemperatureSensor,
+	32: m_lowInputVoltage,
+	64: m_reverseVoltage,
+	128: m_notCalibrated
+	)
+
+text(mode, value,
+	0: overcurrentShutdown,
+	1: limitation,
+	2: timeShutdown,
+	3: lowCurrentShutdown,
+	4: dacMode
+	)
+
+group(Info, public)
+	p(version_major		,""			,uint16_t	,chmodRW	,getFwVer	,0	,0x0000	,0			,0			,65535		,0	,0	,0		,notsave)
+	p(version_minor		,""			,uint16_t	,chmodRW	,getFwVer	,1	,0x0001	,0			,0			,65535		,0	,0	,0		,notsave)
+	p(version_patch		,""			,uint16_t	,chmodRW	,getFwVer	,2	,0x0002	,0			,0			,65535		,0	,0	,0		,notsave)
+	p(version_tweak		,""			,uint16_t	,chmodRW	,getFwVer	,3	,0x0003	,0			,0			,65535		,0	,0	,0		,notsave)
+	p(modbus_address	,""			,uint16_t	,chmodRW	,NULL		,0	,0x0004	,1			,0			,65535		,0	,0	,0		,savesys)
+
+group(Target, public)
+	p(voltage_set		,"V"		,uint32_t	,chmodRW	,NULL		,0	,0x0100	,0.0000		,0.0000		,36.0000	,0	,0	,6		,notsave)
+	p(current_set		,"A"		,uint32_t	,chmodRW	,NULL		,0	,0x0102	,0.00000	,0.00000	,4.00000	,0	,0,6		,notsave)
+	p(vdac				,"lsb"		,uint16_t	,chmodRW	,NULL		,1	,0x0104	,0			,0			,4095		,0	,0	,0		,notsave)
+	p(idac				,"lsb"		,uint16_t	,chmodRW	,NULL		,1	,0x0105	,0			,0			,4095		,0	,0	,0		,notsave)	
+	p(mode				,""			,uint16_t	,chmodRW	,NULL		,0	,0x0106	,0			,0			,4			,0	,0	,0		,notsave)
+	p(time_set			,"s"		,uint32_t	,chmodRW	,NULL		,0	,0x0107	,0			,0			,999000		,0	,0	,0		,notsave)
+	p(enable			,""			,uint16_t	,chmodRW	,NULL		,0	,0x0109	,0			,0			,1			,0	,0	,0		,notsave)
+
+group(Measurement, public)
+	p(voltage			,"V"		,uint32_t	,chmodR		,NULL		,0	,0x0200	,0.0000		,0.0000		,36.0000	,0	,0	,6		,notsave)
+	p(current			,"A"		,uint32_t	,chmodR		,NULL		,0	,0x0202	,0.00000	,0.00000	,4.00000	,0	,0	,6		,notsave)
+	p(power				,"W"		,uint32_t	,chmodR		,NULL		,0	,0x0204	,0.000		,0.000		,160.000	,0	,0	,3		,notsave)
+	p(resistance		,"Ohm"		,uint32_t	,chmodR		,NULL		,0	,0x0206	,0.000		,0.000		,999.000	,0	,0	,3		,notsave)
+	p(time				,"s"		,uint32_t	,chmodR		,NULL		,0	,0x0208	,0			,0			,999000		,0	,0	,0		,notsave)
+	p(capacity			,"Ah"		,uint32_t	,chmodR		,NULL		,0	,0x020A	,0			,0			,999.000	,0	,0	,3		,notsave)
+	p(input_voltage		,"V"		,uint32_t	,chmodR		,NULL		,0	,0x020C	,0.000		,0.000		,100.000	,0	,0	,6		,notsave)
+	p(temperature		,"°С"		,uint16_t	,chmodR		,NULL		,0	,0x020E	,0.0		,0.0		,125.0		,0	,0	,1		,notsave)
+	p(state				,""			,uint16_t	,chmodR		,NULL		,0	,0x020F	,0			,0			,65535		,0	,0	,0		,notsave)
+	p(vadc				,"lsb"		,uint16_t	,chmodR		,NULL		,0	,0x0210	,0			,0			,65535		,0	,0	,0		,notsave)
+	p(iadc				,"lsb"		,uint16_t	,chmodR		,NULL		,0	,0x0211	,0			,0			,65535		,0	,0	,0		,notsave)
+	p(iexternaladc		,"lsb"		,int16_t	,chmodR		,NULL		,0	,0x0212	,0			,-32768		,32767		,0	,0	,0		,notsave)
+
+group(calibration, public)
+	p(v0_u				,"V"		,uint32_t	,chmodRW	,vsave		,0	,0x0500	,0.0101		,0.0000		,36.0000	,0	,0	,6		,savesys)
+	p(v1_u				,"V"		,uint32_t	,chmodRW	,vsave		,1	,0x0502	,0.1050		,0.0000		,36.0000	,0	,0	,6		,savesys)
+	p(v2_u				,"V"		,uint32_t	,chmodRW	,vsave		,2	,0x0504	,19.0000	,0.0000		,36.0000	,0	,0	,6		,savesys)
+	p(v3_u				,"V"		,uint32_t	,chmodRW	,vsave		,3	,0x0506	,30.0000	,0.0000		,36.0000	,0	,0	,6		,savesys)
+
+	p(i0_i				,"A"		,uint32_t	,chmodRW	,isave		,0	,0x0600	,0.00966	,0.0000		,4.00000	,0	,0	,6		,savesys)
+	p(i1_i				,"A"		,uint32_t	,chmodRW	,isave		,1	,0x0602	,0.01007	,0.0000		,4.00000	,0	,0	,6		,savesys)
+	p(i2_i				,"A"		,uint32_t	,chmodRW	,isave		,2	,0x0604	,1.50000	,0.0000		,4.00000	,0	,0	,6		,savesys)
+	p(i3_i				,"A"		,uint32_t	,chmodRW	,isave		,3	,0x0606	,3.00000	,0.0000		,4.00000	,0	,0	,6		,savesys)
+
+group(calibration, private)
+	p(iext0_i			,"A"		,uint32_t	,chmodRW	,NULL		,0	,0x0700	,0.00966	,0.0000		,4.00000	,0	,0	,6		,savesys)
+	p(iext1_i			,"A"		,uint32_t	,chmodRW	,NULL		,0	,0x0702	,0.01007	,0.0000		,4.00000	,0	,0	,6		,savesys)
+	p(iext2_i			,"A"		,uint32_t	,chmodRW	,NULL		,0	,0x0704	,1.50000	,0.0000		,4.00000	,0	,0	,6		,savesys)
+	p(iext3_i			,"A"		,uint32_t	,chmodRW	,NULL		,0	,0x0706	,3.00000	,0.0000		,4.00000	,0	,0	,6		,savesys)
+	
+	p(v0_adc			,"lsb"		,uint16_t	,chmodRW	,NULL		,0	,0x0800	,414		,0			,65535		,0	,0	,0		,savesys)
+	p(v1_adc			,"lsb"		,uint16_t	,chmodRW	,NULL		,0	,0x0801	,580		,0			,65535		,0	,0	,0		,savesys)
+	p(v2_adc			,"lsb"		,uint16_t	,chmodRW	,NULL		,0	,0x0802	,33230		,0			,65535		,0	,0	,0		,savesys)
+	p(v3_adc			,"lsb"		,uint16_t	,chmodRW	,NULL		,0	,0x0803	,52292		,0			,65535		,0	,0	,0		,savesys)
+
+	p(v0_dac			,"lsb"		,uint16_t	,chmodRW	,NULL		,0	,0x0804	,25			,0			,65535		,0	,0	,0		,savesys)
+	p(v1_dac			,"lsb"		,uint16_t	,chmodRW	,NULL		,0	,0x0805	,35			,0			,65535		,0	,0	,0		,savesys)
+	p(v2_dac			,"lsb"		,uint16_t	,chmodRW	,NULL		,0	,0x0806	,2021		,0			,65535		,0	,0	,0		,savesys)
+	p(v3_dac			,"lsb"		,uint16_t	,chmodRW	,NULL		,0	,0x0507	,3178		,0			,65535		,0	,0	,0		,savesys)
+
+	p(i0_adc			,"lsb"		,uint16_t	,chmodRW	,NULL		,0	,0x0808	,562		,0			,65535		,0	,0	,0		,savesys)
+	p(i1_adc			,"lsb"		,uint16_t	,chmodRW	,NULL		,0	,0x0809	,1980		,0			,65535		,0	,0	,0		,savesys)
+	p(i2_adc			,"lsb"		,uint16_t	,chmodRW	,NULL		,0	,0x080A	,24539		,0			,65535		,0	,0	,0		,savesys)
+	p(i3_adc			,"lsb"		,uint16_t	,chmodRW	,NULL		,0	,0x080B	,48647		,0			,65535		,0	,0	,0		,savesys)
+
+	p(i0_dac			,"lsb"		,uint16_t	,chmodRW	,NULL		,0	,0x080C	,35			,0			,65535		,0	,0	,0		,savesys)
+	p(i1_dac			,"lsb"		,uint16_t	,chmodRW	,NULL		,0	,0x080D	,121		,0			,65535		,0	,0	,0		,savesys)
+	p(i2_dac			,"lsb"		,uint16_t	,chmodRW	,NULL		,0	,0x080E	,1491		,0			,65535		,0	,0	,0		,savesys)
+	p(i3_dac			,"lsb"		,uint16_t	,chmodRW	,NULL		,0	,0x080F	,2958		,0			,65535		,0	,0	,0		,savesys)
+ 
+	p(iext0_adc			,"lsb"		,int16_t	,chmodRW	,NULL		,0	,0x0810	,50			,-32768		,32767		,0	,0	,0		,savesys)
+	p(iext1_adc			,"lsb"		,int16_t	,chmodRW	,NULL		,0	,0x0811	,340		,-32768		,32767		,0	,0	,0		,savesys)
+	p(iext2_adc			,"lsb"		,int16_t	,chmodRW	,NULL		,0	,0x0812	,3214		,-32768		,32767		,0	,0	,0		,savesys)
+	p(iext3_adc			,"lsb"		,int16_t	,chmodRW	,NULL		,0	,0x0813	,32767		,-32768		,32767		,0	,0	,0		,savesys)

@@ -1,12 +1,17 @@
 ﻿/*!****************************************************************************
-* @file    		ds18TSK.h
-* @author  		d_el
-* @version 		V1.0
-* @date    		26.07.2016, Storozhenko Roman
-* @copyright 	GNU Public License
-*/
+ * @file		ds18TSK.h
+ * @author		d_el
+ * @version		V1.0
+ * @date		26.07.2016
+ * @brief
+ * @copyright	The MIT License (MIT). Copyright (c) 2021 Storozhenko Roman
+ */
 #ifndef ds18TSK_H
 #define ds18TSK_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*!****************************************************************************
 * Include
@@ -50,5 +55,9 @@ extern temperature_type   temperature;
 */
 void ds18TSK(void *pPrm);
 
+#ifdef __cplusplus
+}
+#endif
+
 #endif //ds18TSK_H
-/*************** GNU GPL ************** END OF FILE ********* D_EL ***********/
+/******************************** END OF FILE ********************************/

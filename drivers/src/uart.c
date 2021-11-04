@@ -1,13 +1,10 @@
 ﻿/*!****************************************************************************
- * @file		crc.с
+ * @file		uart.c
  * @author		d_el
  * @version		V1.5
  * @date		12.12.2017
  * @brief		Driver for uart STM32F3 MCUs
- * @copyright	Copyright (C) 2017 Storozhenko Roman
- *				All rights reserved
- *				This software may be modified and distributed under the terms
- *				of the BSD license.	 See the LICENSE file for details
+ * @copyright	The MIT License (MIT). Copyright (c) 2021 Storozhenko Roman
  */
 
 /*!****************************************************************************
@@ -97,7 +94,7 @@ void uart_init(uart_type *uartx, uint32_t baudRate){
 		/************************************************
 		 * USART clock
 		 */
-		RCC->CFGR3 |= RCC_CFGR3_USART1SW_SYSCLK;
+		RCC->CFGR3 |= RCC_CFGR3_USART2SW_PCLK;
 		RCC->APB2ENR |= RCC_APB2ENR_USART1EN;
 		RCC->APB2RSTR |= RCC_APB2RSTR_USART1RST;
 		RCC->APB2RSTR &= ~RCC_APB2RSTR_USART1RST;
@@ -133,7 +130,7 @@ void uart_init(uart_type *uartx, uint32_t baudRate){
 		 * IO
 		 */
 		//gppin_init(GPIOB, 3, alternateFunctionPushPull, pullDisable, 0, UART2_PINAFTX);			//PA2 USART2_TX
-		gppin_init(GPIOB, 3, alternateFunctionOpenDrain, pullDisable, 0, UART2_PINAFTX);	//PD8 USART3_TX
+		gppin_init(GPIOA, 2, alternateFunctionOpenDrain, pullDisable, 0, UART2_PINAFTX);	//PD8 USART2_TX
 		#if(UART2_HALFDUPLEX == 0)
 		gppin_init(GPIOB, 4, alternateFunctionPushPull, pullUp, 0, UART2_PINAFRX);				//PA3 USART2_RX
 		#else
@@ -153,7 +150,7 @@ void uart_init(uart_type *uartx, uint32_t baudRate){
 		/************************************************
 		 * USART clock
 		 */
-		RCC->CFGR3 |= RCC_CFGR3_USART2SW_SYSCLK;
+		RCC->CFGR3 |= RCC_CFGR3_USART2SW_PCLK;
 		RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
 		RCC->APB1RSTR |= RCC_APB1RSTR_USART2RST;
 		RCC->APB1RSTR &= ~RCC_APB1RSTR_USART2RST;
@@ -212,7 +209,7 @@ void uart_init(uart_type *uartx, uint32_t baudRate){
 		/************************************************
 		 * USART clock
 		 */
-		RCC->CFGR3 |= RCC_CFGR3_USART3SW_SYSCLK;
+		RCC->CFGR3 |= RCC_CFGR3_USART2SW_PCLK;
 		RCC->APB1ENR |= RCC_APB1ENR_USART3EN;
 		RCC->APB1RSTR |= RCC_APB1RSTR_USART3RST;
 		RCC->APB1RSTR &= ~RCC_APB1RSTR_USART3RST;
@@ -353,7 +350,6 @@ void uart_write(uart_type *uartx, void *src, uint16_t len){
 		uartx->pCurrentTx = src;
 		uartx->pEndTx = uartx->pCurrentTx + len;
 		uartx->pUart->CR1 |= USART_CR1_TXEIE;
-		//uartx->pUart->TDR = *uartx->pCurrentTx++;
 	}
 	uartx->txState = uartTxRun;
 }
@@ -362,9 +358,7 @@ void uart_write(uart_type *uartx, void *src, uint16_t len){
  * @brief
  */
 void uart_read(uart_type *uartx, void *dst, uint16_t len){
-	uartx->pUart->ICR = 0xFFFFFFFFU;											//Clear all flags
-	(void) uartx->pUart->RDR;
-	(void) uartx->pUart->RDR;
+	uartx->pUart->ICR = 0xFFFFFFFFU;												//Clear all flags
 	uartx->pUart->RQR = USART_RQR_RXFRQ;
 
 	if(uartx->dmaMode > 0){
@@ -421,6 +415,8 @@ void USART_IRQHandler(uart_type *uartx){
 		//Clear IDLE flag by sequence (read USART_SR register followed by a read to the USART_DR register)
 		uartx->pUart->ICR = USART_ICR_IDLECF;
 	}
+
+	uartx->pUart->ICR = 0xFFFFFFFF;
 }
 
 /******************************************************************************
@@ -436,7 +432,6 @@ void USART_IRQHandlerPolling(uart_type *uartx){
 		if(uartx->pCurrentTx < uartx->pEndTx){
 			uartx->pUart->TDR = *uartx->pCurrentTx++;
 		}else{
-			//uartx->pUart->RQR = USART_RQR_TXFRQ;	//Clear TXE
 			uartx->pUart->CR1 &= ~USART_CR1_TXEIE;
 		}
 	}
@@ -467,7 +462,6 @@ void USART_IRQHandlerPolling(uart_type *uartx){
 				if(uartx->rxHoock != NULL){
 					uartx->rxHoock(uartx);
 				}
-//
 			}
 		}
 		else{
@@ -545,4 +539,4 @@ void DMA1_Channel3_IRQHandler(void){
 #endif //(UART2_RX_IDLE_LINE_MODE == 0)
 #endif //UART3_USE
 
-/***************** Copyright (C) Storozhenko Roman ******* END OF FILE *******/
+/******************************** END OF FILE ********************************/

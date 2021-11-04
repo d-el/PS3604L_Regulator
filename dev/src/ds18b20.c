@@ -1,12 +1,10 @@
 ﻿/*!****************************************************************************
-* @file			ds18b20.c
-* @author		d_el
-* @version		V2.1
-* @date			30.03.2014
-* @date			04.08.2014	remade for 1wire on uart
-* @brief		ds18b20 driver
-* @copyright	GNU Public License
-*/
+ * @file    	ds18b20.c
+ * @author  	Storozhenko Roman - D_EL
+ * @version 	V2.1
+ * @date    	30.03.2014
+ * @copyright 	The MIT License (MIT). Copyright (c) 2020 Storozhenko Roman
+ */
 
 /*!****************************************************************************
 * Include
@@ -48,9 +46,9 @@ ds18b20state_type ds18b20Init(void){
 		return ds18b20st_errorCrc;
 	}
 
-	if(buff[0] != 0x28){
+	/*if(buff[0] != 0x28){
 		return ds18b20st_notDs18b20;
-	}
+	}*/
 
 	//Set TH, TL, Resolution
 	buff[0] = SKIP_ROM;
@@ -100,7 +98,7 @@ uint16_t reg2tmpr(uint8_t rl, uint8_t rh){
 	scratchpad.byte.rl = rl;
 	scratchpad.byte.rh = rh;
 
-	return (scratchpad.word * 10U + (16/2)) / 16;	//Деление с округлением
+	return (scratchpad.word * 10U + (16/2)) / 16;	// Div with round
 }
 
-/*************** GNU GPL ************** END OF FILE ********* D_EL ***********/
+/******************************** END OF FILE ********************************/

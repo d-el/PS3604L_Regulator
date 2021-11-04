@@ -1,26 +1,21 @@
 ﻿/*!****************************************************************************
-* @file         flash.h
-* @author		d_el
-* @version      V2.1
-* @date         07-02-2015
-* @brief        flash driver
-* @copyright 	GNU Public License
-*/
+ * @file    	flash.h
+ * @author  	Storozhenko Roman - D_EL
+ * @version 	V1.0
+ * @date    	07.02.2015
+ * @copyright 	The MIT License (MIT). Copyright (c) 2020 Storozhenko Roman
+ */
 #ifndef FLASH_H
 #define FLASH_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*!****************************************************************************
 * Include
 */
 #include <stdint.h>
-
-/*!****************************************************************************
-* User define
-*/
-
-/*!****************************************************************************
-* User enum
-*/
 
 /*!****************************************************************************
 * User typedef
@@ -33,13 +28,6 @@ typedef enum{
     flash_error
 }flashState_type;
 
-/*!****************************************************************************
-* External variables
-*/
-
-/*!****************************************************************************
-* Macro functions
-*/
 
 /*!****************************************************************************
 * Prototypes for the functions
@@ -50,5 +38,9 @@ void flash_eraseAllPages(void);
 void flash_erasePage(void *address);
 flashState_type flash_write(void *dst, uint16_t *src, uint32_t num);
 
+#ifdef __cplusplus
+}
+#endif
+
 #endif //FLASH_H
-/*************** GNU GPL ************** END OF FILE ********* D_EL ***********/
+/******************************** END OF FILE ********************************/

@@ -1,10 +1,10 @@
 /*!****************************************************************************
-* @file			i2c.c
-* @author		Storozhenko Roman - D_EL
-* @version		V1.2
-* @date			1-06-2015
-* @copyright	GNU Public License
-*/
+ * @file    	i2c.c
+ * @author  	Storozhenko Roman - D_EL
+ * @version 	V1.2
+ * @date    	22.11.2015
+ * @copyright 	The MIT License (MIT). Copyright (c) 2020 Storozhenko Roman
+ */
 
 /*!****************************************************************************
 * Include
@@ -288,4 +288,4 @@ void I2C2_ER_IRQHandler(void){
 }
 #endif
 
-/*************** GNU GPL ************** END OF FILE ********* D_EL ***********/
+/******************************** END OF FILE ********************************/

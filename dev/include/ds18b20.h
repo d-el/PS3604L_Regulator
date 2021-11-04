@@ -1,12 +1,16 @@
 ﻿/*!****************************************************************************
-* @file			ds18b20.h
-* @author		d_el
-* @version		V2.1
-* @date			23.11.2015
-* @copyright	GNU Public License
-*/
+ * @file    	ds18b20.h
+ * @author  	Storozhenko Roman - D_EL
+ * @version 	V2.1
+ * @date    	30.03.2014
+ * @copyright 	The MIT License (MIT). Copyright (c) 2020 Storozhenko Roman
+ */
 #ifndef ds18b20_H
 #define ds18b20_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*!****************************************************************************
 * Include
@@ -70,8 +74,12 @@ extern volatile		tmpr_type	tem;
 /*!****************************************************************************
 * Prototypes for the functions
 */
-uint8_t ds18b20Init(void);
+ds18b20state_type ds18b20Init(void);
 uint16_t reg2tmpr(uint8_t rl, uint8_t rh);
 
+#ifdef __cplusplus
+}
+#endif
+
 #endif //ds18b20_H
-/*************** GNU GPL ************** END OF FILE ********* D_EL ***********/
+/******************************** END OF FILE ********************************/

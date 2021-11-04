@@ -37,25 +37,14 @@ uint32_t coreIsInDebugMode(void){
  * called from HardFault_Handler
  */
 void hardFaultHandlerC(unsigned int * stackedContextPtr){
-	volatile uint32_t stacked_r0;
-	volatile uint32_t stacked_r1;
-	volatile uint32_t stacked_r2;
-	volatile uint32_t stacked_r3;
-	volatile uint32_t stacked_r12;
-	volatile uint32_t stacked_lr;
-	volatile uint32_t stacked_pc;
-	volatile uint32_t stacked_psr;
-
-	stacked_r0 = stackedContextPtr[0];
-	stacked_r1 = stackedContextPtr[1];
-	stacked_r2 = stackedContextPtr[2];
-	stacked_r3 = stackedContextPtr[3];
-	stacked_r12 = stackedContextPtr[4];
-	stacked_lr = stackedContextPtr[5];
-	stacked_pc = stackedContextPtr[6];
-	stacked_psr = stackedContextPtr[7];
-
-	print_init(stdOut_semihost);
+	volatile uint32_t stacked_r0 = stackedContextPtr[0];
+	volatile uint32_t stacked_r1 = stackedContextPtr[1];
+	volatile uint32_t stacked_r2 = stackedContextPtr[2];
+	volatile uint32_t stacked_r3 = stackedContextPtr[3];
+	volatile uint32_t stacked_r12 = stackedContextPtr[4];
+	volatile uint32_t stacked_lr = stackedContextPtr[5];
+	volatile uint32_t stacked_pc = stackedContextPtr[6];
+	volatile uint32_t stacked_psr = stackedContextPtr[7];
 
 	printp("\n\n[GAME OVER]\n");
 	printp("R0 = 0x%008X\n", stacked_r0);

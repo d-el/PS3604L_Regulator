@@ -1,10 +1,10 @@
 ﻿/*!****************************************************************************
-* @file    clock.c
-* @author  d_el
-* @version V1.0
-* @date    09.01.2016, by d_el
-* @copyright GNU Public License
-*/
+ * @file    	clock.c
+ * @author  	Storozhenko Roman - D_EL
+ * @version 	V1.0
+ * @date    	09.01.2016
+ * @copyright 	The MIT License (MIT). Copyright (c) 2020 Storozhenko Roman
+ */
 
 /*!****************************************************************************
 * Include
@@ -26,7 +26,7 @@ void clock_init(void){
 
     RCC->CFGR &=~(  RCC_CFGR_PLLSRC     |
                     RCC_CFGR_PLLXTPRE   |
-					RCC_CFGR_PLLMUL)   	;                       //Предочистка
+					RCC_CFGR_PLLMUL)   	;                       //CLear
 
     /**************************************
     * Пытаемся запустить генератор HSE
@@ -37,9 +37,9 @@ void clock_init(void){
 
     //Запустился HSE
     if(timeOut != 0){                                           //HSE is ready
-        RCC->CFGR   |= RCC_CFGR_PLLSRC_HSE_PREDIV;         		//Тактировать PLL от HSE
-        RCC->CFGR2  = HSE_PLL_PREDIV - 1;                       //Делитель
-        RCC->CFGR   |= ((HSE_PLL_MUL - 2) << 18);               //Умножитель
+        RCC->CFGR   |= RCC_CFGR_PLLSRC_HSE_PREDIV;         		//PLL on HSE
+        RCC->CFGR2  = HSE_PLL_PREDIV - 1;                       //Div
+        RCC->CFGR   |= ((HSE_PLL_MUL - 2) << 18);               //Mul
         useGen = clock_useHse;
     }
 
@@ -48,22 +48,22 @@ void clock_init(void){
         RCC->CR     &= ~RCC_CR_HSEON;                           //HSE oscillator OFF
         RCC->CR     |= RCC_CR_HSION;                            //HSI oscillator ON
         while((RCC->CR & RCC_CR_HSION) == 0);
-        RCC->CFGR   |= RCC_CFGR_PLLSRC_HSI_DIV2;                //Тактировать PLL от HSI/2
-        RCC->CFGR2  = HSI_PLL_PREDIV - 1;                       //Делитель
-        RCC->CFGR   |=((HSI_PLL_MUL - 2) << 18);                //Умножитель
+        RCC->CFGR   |= RCC_CFGR_PLLSRC_HSI_DIV2;                //PLL in HSI/2
+        RCC->CFGR2  = HSI_PLL_PREDIV - 1;                       //Div
+        RCC->CFGR   |=((HSI_PLL_MUL - 2) << 18);                //Mul
         useGen = clock_useHsi;
     }
 
     /**************************************
 	* Включаем PLL
 	*/
-    RCC->CR     |= RCC_CR_PLLON;                                //Запустить PLL
-    while((RCC->CR & RCC_CR_PLLRDY) == 0);                   	//Ожидание готовности PLL
-    RCC->CFGR   &= ~RCC_CFGR_SW;                                //Очистить биты SW0, SW1
-    RCC->CFGR   |= RCC_CFGR_SW_PLL;                             //Тактирование с выхода PLL
-    while((RCC->CFGR & RCC_CFGR_SWS) != 0x08);                  //Ожидание переключения на PLL
+    RCC->CR     |= RCC_CR_PLLON;                                //Enable PLL
+    while((RCC->CR & RCC_CR_PLLRDY) == 0);                   	//Wait PLL
+    RCC->CFGR   &= ~RCC_CFGR_SW;                                //Clear SW0, SW1
+    RCC->CFGR   |= RCC_CFGR_SW_PLL;                             //Select system clock - PLL
+    while((RCC->CFGR & RCC_CFGR_SWS) != 0x08);                  //Wait on switch PLL
 
     clock.useGen = useGen;
 }
 
-/*************** GNU GPL ************** END OF FILE ********* D_EL ***********/
+/******************************** END OF FILE ********************************/

@@ -1,12 +1,16 @@
 /*!****************************************************************************
-* @file			i2c.h
-* @author		Storozhenko Roman - D_EL
-* @version		V1.2
-* @date			22.11.2015
-* @copyright	GNU Public License
-*/
+ * @file    	i2c.h
+ * @author  	Storozhenko Roman - D_EL
+ * @version 	V1.2
+ * @date    	22.11.2015
+ * @copyright 	The MIT License (MIT). Copyright (c) 2020 Storozhenko Roman
+ */
 #ifndef i2c_H
 #define i2c_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*!****************************************************************************
 * Include
@@ -131,5 +135,9 @@ void i2c_setCallback(i2c_type *i2cx, i2cCallback_type tcHook);
 void i2c_write(i2c_type *i2cx, void *src, uint16_t len, uint8_t slaveAdr, i2c_stopMode_type stopMode);
 void i2c_read(i2c_type *i2cx, void *dst, uint16_t len, uint8_t slaveAdr);
 
+#ifdef __cplusplus
+}
+#endif
+
 #endif //i2c_H
-/*************** GNU GPL ************** END OF FILE ********* D_EL ***********/
+/******************************** END OF FILE ********************************/

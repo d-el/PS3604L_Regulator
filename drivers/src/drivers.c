@@ -1,10 +1,10 @@
 ﻿/*!****************************************************************************
-* @file    		drivers.c
-* @author  		Storozhenko Roman - D_EL
-* @version 		V1.0
-* @date    		05-07-2013
-* @copyright 	GNU Public License
-*/
+ * @file    	drivers.h
+ * @author  	Storozhenko Roman - D_EL
+ * @version 	V1.0
+ * @date    	05.07.2013
+ * @copyright 	The MIT License (MIT). Copyright (c) 2020 Storozhenko Roman
+ */
 
 /*!****************************************************************************
 * Include
@@ -36,4 +36,4 @@ void hardInit(void){
     externalInterrupt_CcCv_init();
 }
 
-/*************** GNU GPL ************** END OF FILE ********* D_EL ***********/
+/******************************** END OF FILE ********************************/

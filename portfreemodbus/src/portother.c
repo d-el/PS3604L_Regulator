@@ -19,15 +19,17 @@
 
 /* ----------------------- Start implementation -----------------------------*/
 void vMBPortLogLevel(eMBPortLogLevel eNewLevelMax){
-
+	(void)eNewLevelMax;
 }
 
 void vMBPortLogFile(FILE *fNewLogFile){
-
+	(void)fNewLogFile;
 }
 
 void vMBPortLog(eMBPortLogLevel eLevel, const CHAR *szModule, const CHAR *szFmt, ...){
-
+	(void)eLevel;
+	(void)szModule;
+	(void)szFmt;
 }
 
 void vMBPortEnterCritical(void){
