@@ -21,8 +21,8 @@ extern "C" {
 /*!****************************************************************************
 * User define
 */
-#define OW_UART     		(uart2)
-#define OW_TIMEOUT     		(500)		//[ms]
+#define OW_UART				(uart2)
+#define OW_TIMEOUT			(500)		//[ms]
 
 /*!****************************************************************************
 * User enum
@@ -32,13 +32,13 @@ extern "C" {
 * User typedef
 */
 typedef enum{
-    owOk,
-    owNotFound,
-    owShortCircle,
+	owOk,
+	owNotFound,
+	owShortCircle,
 	owTimeOut,
-    owSearchLast,
-    owSearchFinished,
-    owSearchError,
+	owSearchLast,
+	owSearchFinished,
+	owSearchError,
 	owUartTimeout
 }owSt_type;
 

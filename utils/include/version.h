@@ -5,7 +5,7 @@
 */
 
 inline const char* getVersion(){
-	return "1.4.0";
+	return "1.5.0";
 }
 
 inline unsigned getVersionMajor(){
@@ -13,7 +13,7 @@ inline unsigned getVersionMajor(){
 }
 
 inline unsigned getVersionMinor(){
-	return 4 +0;
+	return 5 +0;
 }
 
 inline unsigned getVersionPatch(){

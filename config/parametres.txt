@@ -2,12 +2,13 @@
 text(state, mask,
 	1: m_overCurrent,
 	2: m_limitation,
-	4: m_externaIDac,
+	4: m_externaIAdc,
 	8: m_overheated,
 	16: m_errorTemperatureSensor,
 	32: m_lowInputVoltage,
 	64: m_reverseVoltage,
-	128: m_notCalibrated
+	128: m_notCalibrated,
+	256: m_errorExternalIAdc
 	)
 
 text(mode, value,

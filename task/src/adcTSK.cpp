@@ -58,12 +58,12 @@ void adcTSK(void *pPrm){
 	_iq qtemp;
 	uint8_t thinningCnt = 0;
 
-    //AdcEndConversionSem
-    vSemaphoreCreateBinary(AdcEndConversionSem);
-    xSemaphoreTake(AdcEndConversionSem, portMAX_DELAY);
+	//AdcEndConversionSem
+	vSemaphoreCreateBinary(AdcEndConversionSem);
+	xSemaphoreTake(AdcEndConversionSem, portMAX_DELAY);
 
-    adc_setCallback(adcHoock);
-    a.externalSensorOk = ina229_init() ? 1 : 0;
+	adc_setCallback(adcHoock);
+	a.externalSensorOk = ina229_init() ? 1 : 0;
 	aInit();
 	adc_startSampling();
 

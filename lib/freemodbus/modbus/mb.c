@@ -362,6 +362,7 @@ eMBPoll( void )
             break;
 
         case EV_FRAME_RECEIVED:
+        case EV_EXECUTE:
             eStatus = peMBFrameReceiveCur( &ucRcvAddress, &ucMBFrame, &usLength );
             if( eStatus == MB_ENOERR )
             {

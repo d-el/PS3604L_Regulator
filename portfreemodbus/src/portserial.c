@@ -23,8 +23,6 @@
 static BOOL bRxEnabled;
 static BOOL bTxEnabled;
 
-static ULONG ulTimeoutMs;
-
 static unsigned char rxBuffer[BUF_SIZE];
 static unsigned char txBuffer[BUF_SIZE];
 
@@ -99,6 +97,10 @@ void vMBPortSerialEnable(BOOL bEnableRx, BOOL bEnableTx){
 }
 
 BOOL xMBPortSerialInit(UCHAR ucPort, ULONG ulBaudRate, UCHAR ucDataBits, eMBParity eParity){
+	(void)ucPort;
+	(void)ulBaudRate;
+	(void)ucDataBits;
+	(void)eParity;
 	vMBPortSerialEnable( FALSE, FALSE );
 	return TRUE;
 }

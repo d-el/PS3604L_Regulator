@@ -232,7 +232,11 @@ void systemTSK(void *pPrm){
 		}
 
 		if(a->currentSensor == adcCcurrentSensorExternal){
-			state |= Prm::m_externaIDac;
+			state |= Prm::m_externaIAdc;
+		}
+		
+		if(!a->externalSensorOk){
+			state |= Prm::m_errorExternalIAdc;
 		}
 
 		if(Prm::enable && limited){

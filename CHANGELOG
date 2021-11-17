@@ -3,6 +3,9 @@ HISTORY
 (git master)
 
   * [Enter new changes just after this line - do not remove this line]
+(1.5.0)
+  fix warning
+  add status external ADC
  
 (1.4.0)
   Update CMSIS

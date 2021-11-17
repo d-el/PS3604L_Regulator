@@ -14,31 +14,25 @@
 #include "ds18b20.h"
 
 /*!****************************************************************************
-* MEMORY
-*/
-volatile	tmpr_type	tem;
-
-/*!****************************************************************************
 * @brief	Init ds18b20
 */
 ds18b20state_type ds18b20Init(void){
-	owSt_type result;
 	uint8_t buff[8];
 	uint8_t crc = 0;
 
-	result = ow_reset();
+	owSt_type result = ow_reset();
 	if(result != 0){
-		return result;
+		return (ds18b20state_type)result;
 	}
 	buff[0] = READ_ROM;
 	result = ow_write(buff, 1);
 	if(result != owOk){
-		return result;
+		return (ds18b20state_type)result;
 	}
 
 	result = ow_read(buff, 8);
 	if(result != owOk){
-		return result;
+		return (ds18b20state_type)result;
 	}
 
 	crc = crc8Calc(&crc1Wire, buff, 8);
@@ -46,9 +40,9 @@ ds18b20state_type ds18b20Init(void){
 		return ds18b20st_errorCrc;
 	}
 
-	/*if(buff[0] != 0x28){
+	if(buff[0] != 0x28){
 		return ds18b20st_notDs18b20;
-	}*/
+	}
 
 	//Set TH, TL, Resolution
 	buff[0] = SKIP_ROM;
@@ -58,26 +52,14 @@ ds18b20state_type ds18b20Init(void){
 	buff[4] = 0x7F;				//12bit 750ms	0.0625
 	result = ow_reset();
 	if(result != 0){
-		return result;
+		return (ds18b20state_type)result;
 	}
 
 	result = ow_write(buff, 5);
 	if(result != 0){
-		return result;
+		return (ds18b20state_type)result;
 	}
 
-	/*buff[0] = SKIP_ROM;
-	buff[1] = CONVERT_T;
-
-	result = ow_reset();
-	if(result != 0){
-		return result;
-	}
-
-	result = ow_write(buff, 2);
-	if(result != 0){
-		return result;
-	}*/
 	return ds18b20st_ok;
 }
 
