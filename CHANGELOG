@@ -3,9 +3,14 @@ HISTORY
 (git master)
 
   * [Enter new changes just after this line - do not remove this line]
+
+(1.5.1)
+  Encresize time constant binary filter CC/CV
+  Fix callback on read ModBus register
+
 (1.5.0)
-  fix warning
-  add status external ADC
+  Six warning
+  Add status external ADC
  
 (1.4.0)
   Update CMSIS

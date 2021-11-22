@@ -204,9 +204,9 @@ void systemTSK(void *pPrm){
 
 		// Binary filter
 		bool limited = false;
-		const uint8_t numbersample = 10;
+		const uint8_t timeConstant = 40;
 		if(MODE_IS_CC()){
-			if(limitCnt < numbersample)
+			if(limitCnt < timeConstant)
 				limitCnt++;
 			else
 				limited = true;

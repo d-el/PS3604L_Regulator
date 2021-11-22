@@ -21,7 +21,7 @@
 #include <prmSystem.h>
 #include <board.h>
 
-#define PIECE_BUF_RX        256	//[bytes]
+#define PIECE_BUF_RX		256	//[bytes]
 #define connectUart			uart1
 
 /*!****************************************************************************
@@ -51,24 +51,24 @@ void modbusTSK(void *pPrm){
 	eMBInit(MB_RTU, 0x01, 0, 115200, MB_PAR_NONE);
 	eMBEnable();
 
-    while(1){
-        uart_read(connectUart, connectUart->pRxBff, PIECE_BUF_RX);
-        BaseType_t res = xSemaphoreTake(connUartRxSem, portMAX_DELAY);
-        size_t numRx = PIECE_BUF_RX - uartGetRemainRx(connectUart);
+	while(1){
+		uart_read(connectUart, connectUart->pRxBff, PIECE_BUF_RX);
+		BaseType_t res = xSemaphoreTake(connUartRxSem, portMAX_DELAY);
+		size_t numRx = PIECE_BUF_RX - uartGetRemainRx(connectUart);
 
-        if((numRx != 0)&&(res == pdTRUE)){
-        	LED_ON();
-        	mbSlaveSetReceive(connectUart->pRxBff, numRx);
-        	if(eMBPoll() == MB_ENOERR){
+		if((numRx != 0)&&(res == pdTRUE)){
+			LED_ON();
+			mbSlaveSetReceive(connectUart->pRxBff, numRx);
+			if(eMBPoll() == MB_ENOERR){
 				uint8_t txsize = mbSlaveGetTransmit(connectUart->pTxBff);
 				if(txsize > 0){
 					uart_write(connectUart, connectUart->pTxBff, txsize);
 					xSemaphoreTake(connUartRxSem, pdMS_TO_TICKS(100));
 				}
-        	}
-        	LED_OFF();
-        }
-    }
+	}
+	LED_OFF();
+}
+	}
 }
 
 /*!****************************************************************************
@@ -99,6 +99,7 @@ eMBErrorCode eMBRegHoldingCB(UCHAR *pucRegBuffer, USHORT usAddress, USHORT usNRe
 				//ph->tostring(string, sizeof(string));
 				//P_LOGD(logTag, "read: [%04X] %u %s %s %s", usAddress, usNRegs, ph->label, string, ph->units);
 
+				(*ph)(true, nullptr);
 				uint8_t buffer[4] = {};
 				ph->serialize(buffer);
 				switch(prmsize){
