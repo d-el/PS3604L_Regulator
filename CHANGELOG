@@ -4,6 +4,9 @@ HISTORY
 
   * [Enter new changes just after this line - do not remove this line]
 
+(1.5.2)
+  Fix disabling in timeShutdown and lowCurrentShutdown
+
 (1.5.1)
   Encresize time constant binary filter CC/CV
   Fix callback on read ModBus register

@@ -174,7 +174,8 @@ void systemTSK(void *pPrm){
 	TickType_t timeOffset = xTaskGetTickCount();
 	adcTaskStct_type *a = &adcTaskStct;
 	uint8_t limitCnt = 0;
-
+	bool enableState = false;
+	
 	print_init(stdOut_semihost);
 
 	irqSetCallback(irqCallback);
@@ -391,9 +392,7 @@ void systemTSK(void *pPrm){
 
 		// Low current disable
 		if(Prm::mode == Prm::lowCurrentShutdown){
-			if(((Prm::current <= (Prm::current / 10))
-					&&(Prm::enable))||(Prm::current == 0))
-			{
+			if(enableState && Prm::current <= (Prm::current_set / 10)){
 				if((xTaskGetTickCount() - curOffTime) > pdMS_TO_TICKS(CUR_OFF_TIME)){
 					l_switchRequest = setSwitchOff;
 				}
@@ -412,13 +411,10 @@ void systemTSK(void *pPrm){
 		/**************************************
 		 * Request enable
 		 */
-		static bool enable = false;
-		if(!enable && Prm::enable){
-			enable = true;
+		if(!enableState && Prm::enable){
 			l_switchRequest = setSwitchOn;
 		}
-		else if(enable && !Prm::enable){
-			enable = false;
+		else if(enableState && !Prm::enable){
 			l_switchRequest = setSwitchOff;
 		}
 
@@ -429,12 +425,14 @@ void systemTSK(void *pPrm){
 			currentirq = false;
 			setDacU(0);
 			switchON();
+			enableState = true;
 			timeOffset = xTaskGetTickCount();
 			l_switchRequest = setNone;
 		}
 		else if(l_switchRequest == setSwitchOff){
 			setDacU(0);
 			switchOFF();
+			enableState = false;
 			l_switchRequest = setNone;
 			Prm::enable = false;
 		}
