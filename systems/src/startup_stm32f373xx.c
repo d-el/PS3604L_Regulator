@@ -90,80 +90,80 @@ void Default_Handler(void){
 }
 
 ///Cortex-M4 Processor Exceptions Numbers
-__attribute__((weak)) void NMI_Handler				(void) __attribute__((weak, alias ("Default_Handler")));	/*!< 2 Cortex-M4 Non Maskable Interrupt									*/
-__attribute__((weak)) void HardFault_Handler		(void) __attribute__((weak, alias ("Default_Handler")));	/*!< 3 Cortex-M4 Hard Fault Interrupt									*/
-__attribute__((weak)) void MemManage_Handler		(void) __attribute__((weak, alias ("Default_Handler")));	/*!< 4 Cortex-M4 Memory Management Interrupt							*/
-__attribute__((weak)) void BusFault_Handler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< 5 Cortex-M4 Bus Fault Interrupt									*/
-__attribute__((weak)) void UsageFault_Handler		(void) __attribute__((weak, alias ("Default_Handler")));	/*!< 6 Cortex-M4 Usage Fault Interrupt									*/
-__attribute__((weak)) void SVC_Handler				(void) __attribute__((weak, alias ("Default_Handler")));	/*!< 11 Cortex-M4 SV Call Interrupt										*/
-__attribute__((weak)) void DebugMon_Handler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< 12 Cortex-M4 Debug Monitor Interrupt								*/
-__attribute__((weak)) void PendSV_Handler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< 14 Cortex-M4 Pend SV Interrupt										*/
-__attribute__((weak)) void SysTick_Handler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< 15 Cortex-M4 System Tick Interrupt									*/
+void NMI_Handler				(void) __attribute__((weak, alias ("Default_Handler")));	/*!< 2 Cortex-M4 Non Maskable Interrupt									*/
+void HardFault_Handler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< 3 Cortex-M4 Hard Fault Interrupt									*/
+void MemManage_Handler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< 4 Cortex-M4 Memory Management Interrupt							*/
+void BusFault_Handler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< 5 Cortex-M4 Bus Fault Interrupt									*/
+void UsageFault_Handler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< 6 Cortex-M4 Usage Fault Interrupt									*/
+void SVC_Handler				(void) __attribute__((weak, alias ("Default_Handler")));	/*!< 11 Cortex-M4 SV Call Interrupt										*/
+void DebugMon_Handler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< 12 Cortex-M4 Debug Monitor Interrupt								*/
+void PendSV_Handler				(void) __attribute__((weak, alias ("Default_Handler")));	/*!< 14 Cortex-M4 Pend SV Interrupt										*/
+void SysTick_Handler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< 15 Cortex-M4 System Tick Interrupt									*/
 ///STM32 specific Interrupt Numbers
-__attribute__((weak)) void WWDG_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< Window WatchDog Interrupt											*/
-__attribute__((weak)) void PVD_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< PVD through EXTI Line detection Interrupt							*/
-__attribute__((weak)) void TAMP_STAMP_IRQHandler	(void) __attribute__((weak, alias ("Default_Handler")));	/*!< Tamper and TimeStamp interrupts through the EXTI line 19			*/
-__attribute__((weak)) void RTC_WKUP_IRQHandler		(void) __attribute__((weak, alias ("Default_Handler")));	/*!< RTC Wakeup interrupt through the EXTI line 20						*/
-__attribute__((weak)) void FLASH_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< FLASH global Interrupt												*/
-__attribute__((weak)) void RCC_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< RCC global Interrupt												*/
-__attribute__((weak)) void EXTI0_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< EXTI Line0 Interrupt												*/
-__attribute__((weak)) void EXTI1_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< EXTI Line1 Interrupt												*/
-__attribute__((weak)) void EXTI2_TSC_IRQHandler		(void) __attribute__((weak, alias ("Default_Handler")));	/*!< EXTI Line2 Interrupt and Touch Sense Controller Interrupt			*/
-__attribute__((weak)) void EXTI3_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< EXTI Line3 Interrupt												*/
-__attribute__((weak)) void EXTI4_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< EXTI Line4 Interrupt												*/
-__attribute__((weak)) void DMA1_Channel1_IRQHandler	(void) __attribute__((weak, alias ("Default_Handler")));	/*!< DMA1 Channel 1 Interrupt											*/
-__attribute__((weak)) void DMA1_Channel2_IRQHandler	(void) __attribute__((weak, alias ("Default_Handler")));	/*!< DMA1 Channel 2 Interrupt											*/
-__attribute__((weak)) void DMA1_Channel3_IRQHandler	(void) __attribute__((weak, alias ("Default_Handler")));	/*!< DMA1 Channel 3 Interrupt											*/
-__attribute__((weak)) void DMA1_Channel4_IRQHandler	(void) __attribute__((weak, alias ("Default_Handler")));	/*!< DMA1 Channel 4 Interrupt											*/
-__attribute__((weak)) void DMA1_Channel5_IRQHandler	(void) __attribute__((weak, alias ("Default_Handler")));	/*!< DMA1 Channel 5 Interrupt											*/
-__attribute__((weak)) void DMA1_Channel6_IRQHandler	(void) __attribute__((weak, alias ("Default_Handler")));	/*!< DMA1 Channel 6 Interrupt											*/
-__attribute__((weak)) void DMA1_Channel7_IRQHandler	(void) __attribute__((weak, alias ("Default_Handler")));	/*!< DMA1 Channel 7 Interrupt											*/
-__attribute__((weak)) void ADC1_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< ADC1 Interrupts													*/
-__attribute__((weak)) void CAN_TX_IRQHandler		(void) __attribute__((weak, alias ("Default_Handler")));	/*!< CAN TX Interrupt													*/
-__attribute__((weak)) void CAN_RX0_IRQHandler		(void) __attribute__((weak, alias ("Default_Handler")));	/*!< CAN RX0 Interrupt													*/
-__attribute__((weak)) void CAN_RX1_IRQHandler		(void) __attribute__((weak, alias ("Default_Handler")));	/*!< CAN RX1 Interrupt													*/
-__attribute__((weak)) void CAN_SCE_IRQHandler		(void) __attribute__((weak, alias ("Default_Handler")));	/*!< CAN SCE Interrupt													*/
-__attribute__((weak)) void EXTI9_5_IRQHandler		(void) __attribute__((weak, alias ("Default_Handler")));	/*!< External Line[9:5] Interrupts										*/
-__attribute__((weak)) void TIM15_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< TIM15 global Interrupt												*/
-__attribute__((weak)) void TIM16_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< TIM16 global Interrupt												*/
-__attribute__((weak)) void TIM17_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< TIM17 global Interrupt												*/
-__attribute__((weak)) void TIM18_DAC2_IRQHandler	(void) __attribute__((weak, alias ("Default_Handler")));	/*!< TIM18 global Interrupt and DAC2 underrun Interrupt					*/
-__attribute__((weak)) void TIM2_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< TIM2 global Interrupt												*/
-__attribute__((weak)) void TIM3_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< TIM3 global Interrupt												*/
-__attribute__((weak)) void TIM4_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< TIM4 global Interrupt												*/
-__attribute__((weak)) void I2C1_EV_IRQHandler		(void) __attribute__((weak, alias ("Default_Handler")));	/*!< I2C1 Event Interrupt & EXTI Line23 Interrupt (I2C1 wakeup)			*/
-__attribute__((weak)) void I2C1_ER_IRQHandler		(void) __attribute__((weak, alias ("Default_Handler")));	/*!< I2C1 Error Interrupt												*/
-__attribute__((weak)) void I2C2_EV_IRQHandler		(void) __attribute__((weak, alias ("Default_Handler")));	/*!< I2C2 Event Interrupt & EXTI Line24 Interrupt (I2C2 wakeup)			*/
-__attribute__((weak)) void I2C2_ER_IRQHandler		(void) __attribute__((weak, alias ("Default_Handler")));	/*!< I2C2 Error Interrupt												*/
-__attribute__((weak)) void SPI1_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< SPI1 global Interrupt												*/
-__attribute__((weak)) void SPI2_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< SPI2 global Interrupt												*/
-__attribute__((weak)) void USART1_IRQHandler		(void) __attribute__((weak, alias ("Default_Handler")));	/*!< USART1 global Interrupt & EXTI Line25 Interrupt (USART1 wakeup)	*/
-__attribute__((weak)) void USART2_IRQHandler		(void) __attribute__((weak, alias ("Default_Handler")));	/*!< USART2 global Interrupt & EXTI Line26 Interrupt (USART2 wakeup)	*/
-__attribute__((weak)) void USART3_IRQHandler		(void) __attribute__((weak, alias ("Default_Handler")));	/*!< USART3 global Interrupt & EXTI Line28 Interrupt (USART3 wakeup)	*/
-__attribute__((weak)) void EXTI15_10_IRQHandler		(void) __attribute__((weak, alias ("Default_Handler")));	/*!< External Line[15:10] Interrupts									*/
-__attribute__((weak)) void RTC_Alarm_IRQHandler		(void) __attribute__((weak, alias ("Default_Handler")));	/*!< RTC Alarm (A and B) through EXTI Line 17 Interrupt					*/
-__attribute__((weak)) void CEC_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< CEC Interrupt & EXTI Line27 Interrupt (CEC wakeup)					*/
-__attribute__((weak)) void TIM12_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< TIM12 global interrupt												*/
-__attribute__((weak)) void TIM13_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< TIM13 global interrupt												*/
-__attribute__((weak)) void TIM14_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< TIM14 global interrupt												*/
-__attribute__((weak)) void TIM5_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< TIM5 global Interrupt												*/
-__attribute__((weak)) void SPI3_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< SPI3 global Interrupt												*/
-__attribute__((weak)) void TIM6_DAC1_IRQHandler		(void) __attribute__((weak, alias ("Default_Handler")));	/*!< TIM6 global and DAC1 underrun error Interrupts						*/
-__attribute__((weak)) void TIM7_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< TIM7 global Interrupt												*/
-__attribute__((weak)) void DMA2_Channel1_IRQHandler	(void) __attribute__((weak, alias ("Default_Handler")));	/*!< DMA2 Channel 1 global Interrupt									*/
-__attribute__((weak)) void DMA2_Channel2_IRQHandler	(void) __attribute__((weak, alias ("Default_Handler")));	/*!< DMA2 Channel 2 global Interrupt									*/
-__attribute__((weak)) void DMA2_Channel3_IRQHandler	(void) __attribute__((weak, alias ("Default_Handler")));	/*!< DMA2 Channel 3 global Interrupt									*/
-__attribute__((weak)) void DMA2_Channel4_IRQHandler	(void) __attribute__((weak, alias ("Default_Handler")));	/*!< DMA2 Channel 4 global Interrupt									*/
-__attribute__((weak)) void DMA2_Channel5_IRQHandler	(void) __attribute__((weak, alias ("Default_Handler")));	/*!< DMA2 Channel 5 global Interrupt									*/
-__attribute__((weak)) void SDADC1_IRQHandler		(void) __attribute__((weak, alias ("Default_Handler")));	/*!< ADC Sigma Delta 1 global Interrupt									*/
-__attribute__((weak)) void SDADC2_IRQHandler		(void) __attribute__((weak, alias ("Default_Handler")));	/*!< ADC Sigma Delta 2 global Interrupt									*/
-__attribute__((weak)) void SDADC3_IRQHandler		(void) __attribute__((weak, alias ("Default_Handler")));	/*!< ADC Sigma Delta 1 global Interrupt									*/
-__attribute__((weak)) void COMP1_2_IRQHandler		(void) __attribute__((weak, alias ("Default_Handler")));	/*!< COMP1 and COMP2 global Interrupt									*/
-__attribute__((weak)) void USB_HP_IRQHandler		(void) __attribute__((weak, alias ("Default_Handler")));	/*!< USB High Priority global Interrupt									*/
-__attribute__((weak)) void USB_LP_IRQHandler		(void) __attribute__((weak, alias ("Default_Handler")));	/*!< USB Low Priority global Interrupt									*/
-__attribute__((weak)) void USBWakeUp_IRQHandler		(void) __attribute__((weak, alias ("Default_Handler")));	/*!< USB Wakeup Interrupt												*/
-__attribute__((weak)) void TIM19_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< TIM19 global Interrupt												*/
-__attribute__((weak)) void FPU_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< Floating point Interrupt											*/
+void WWDG_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< Window WatchDog Interrupt											*/
+void PVD_IRQHandler				(void) __attribute__((weak, alias ("Default_Handler")));	/*!< PVD through EXTI Line detection Interrupt							*/
+void TAMP_STAMP_IRQHandler		(void) __attribute__((weak, alias ("Default_Handler")));	/*!< Tamper and TimeStamp interrupts through the EXTI line 19			*/
+void RTC_WKUP_IRQHandler		(void) __attribute__((weak, alias ("Default_Handler")));	/*!< RTC Wakeup interrupt through the EXTI line 20						*/
+void FLASH_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< FLASH global Interrupt												*/
+void RCC_IRQHandler				(void) __attribute__((weak, alias ("Default_Handler")));	/*!< RCC global Interrupt												*/
+void EXTI0_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< EXTI Line0 Interrupt												*/
+void EXTI1_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< EXTI Line1 Interrupt												*/
+void EXTI2_TSC_IRQHandler		(void) __attribute__((weak, alias ("Default_Handler")));	/*!< EXTI Line2 Interrupt and Touch Sense Controller Interrupt			*/
+void EXTI3_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< EXTI Line3 Interrupt												*/
+void EXTI4_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< EXTI Line4 Interrupt												*/
+void DMA1_Channel1_IRQHandler	(void) __attribute__((weak, alias ("Default_Handler")));	/*!< DMA1 Channel 1 Interrupt											*/
+void DMA1_Channel2_IRQHandler	(void) __attribute__((weak, alias ("Default_Handler")));	/*!< DMA1 Channel 2 Interrupt											*/
+void DMA1_Channel3_IRQHandler	(void) __attribute__((weak, alias ("Default_Handler")));	/*!< DMA1 Channel 3 Interrupt											*/
+void DMA1_Channel4_IRQHandler	(void) __attribute__((weak, alias ("Default_Handler")));	/*!< DMA1 Channel 4 Interrupt											*/
+void DMA1_Channel5_IRQHandler	(void) __attribute__((weak, alias ("Default_Handler")));	/*!< DMA1 Channel 5 Interrupt											*/
+void DMA1_Channel6_IRQHandler	(void) __attribute__((weak, alias ("Default_Handler")));	/*!< DMA1 Channel 6 Interrupt											*/
+void DMA1_Channel7_IRQHandler	(void) __attribute__((weak, alias ("Default_Handler")));	/*!< DMA1 Channel 7 Interrupt											*/
+void ADC1_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< ADC1 Interrupts													*/
+void CAN_TX_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< CAN TX Interrupt													*/
+void CAN_RX0_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< CAN RX0 Interrupt													*/
+void CAN_RX1_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< CAN RX1 Interrupt													*/
+void CAN_SCE_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< CAN SCE Interrupt													*/
+void EXTI9_5_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< External Line[9:5] Interrupts										*/
+void TIM15_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< TIM15 global Interrupt												*/
+void TIM16_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< TIM16 global Interrupt												*/
+void TIM17_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< TIM17 global Interrupt												*/
+void TIM18_DAC2_IRQHandler		(void) __attribute__((weak, alias ("Default_Handler")));	/*!< TIM18 global Interrupt and DAC2 underrun Interrupt					*/
+void TIM2_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< TIM2 global Interrupt												*/
+void TIM3_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< TIM3 global Interrupt												*/
+void TIM4_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< TIM4 global Interrupt												*/
+void I2C1_EV_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< I2C1 Event Interrupt & EXTI Line23 Interrupt (I2C1 wakeup)			*/
+void I2C1_ER_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< I2C1 Error Interrupt												*/
+void I2C2_EV_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< I2C2 Event Interrupt & EXTI Line24 Interrupt (I2C2 wakeup)			*/
+void I2C2_ER_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< I2C2 Error Interrupt												*/
+void SPI1_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< SPI1 global Interrupt												*/
+void SPI2_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< SPI2 global Interrupt												*/
+void USART1_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< USART1 global Interrupt & EXTI Line25 Interrupt (USART1 wakeup)	*/
+void USART2_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< USART2 global Interrupt & EXTI Line26 Interrupt (USART2 wakeup)	*/
+void USART3_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< USART3 global Interrupt & EXTI Line28 Interrupt (USART3 wakeup)	*/
+void EXTI15_10_IRQHandler		(void) __attribute__((weak, alias ("Default_Handler")));	/*!< External Line[15:10] Interrupts									*/
+void RTC_Alarm_IRQHandler		(void) __attribute__((weak, alias ("Default_Handler")));	/*!< RTC Alarm (A and B) through EXTI Line 17 Interrupt					*/
+void CEC_IRQHandler				(void) __attribute__((weak, alias ("Default_Handler")));	/*!< CEC Interrupt & EXTI Line27 Interrupt (CEC wakeup)					*/
+void TIM12_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< TIM12 global interrupt												*/
+void TIM13_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< TIM13 global interrupt												*/
+void TIM14_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< TIM14 global interrupt												*/
+void TIM5_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< TIM5 global Interrupt												*/
+void SPI3_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< SPI3 global Interrupt												*/
+void TIM6_DAC1_IRQHandler		(void) __attribute__((weak, alias ("Default_Handler")));	/*!< TIM6 global and DAC1 underrun error Interrupts						*/
+void TIM7_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< TIM7 global Interrupt												*/
+void DMA2_Channel1_IRQHandler	(void) __attribute__((weak, alias ("Default_Handler")));	/*!< DMA2 Channel 1 global Interrupt									*/
+void DMA2_Channel2_IRQHandler	(void) __attribute__((weak, alias ("Default_Handler")));	/*!< DMA2 Channel 2 global Interrupt									*/
+void DMA2_Channel3_IRQHandler	(void) __attribute__((weak, alias ("Default_Handler")));	/*!< DMA2 Channel 3 global Interrupt									*/
+void DMA2_Channel4_IRQHandler	(void) __attribute__((weak, alias ("Default_Handler")));	/*!< DMA2 Channel 4 global Interrupt									*/
+void DMA2_Channel5_IRQHandler	(void) __attribute__((weak, alias ("Default_Handler")));	/*!< DMA2 Channel 5 global Interrupt									*/
+void SDADC1_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< ADC Sigma Delta 1 global Interrupt									*/
+void SDADC2_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< ADC Sigma Delta 2 global Interrupt									*/
+void SDADC3_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< ADC Sigma Delta 1 global Interrupt									*/
+void COMP1_2_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< COMP1 and COMP2 global Interrupt									*/
+void USB_HP_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< USB High Priority global Interrupt									*/
+void USB_LP_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< USB Low Priority global Interrupt									*/
+void USBWakeUp_IRQHandler		(void) __attribute__((weak, alias ("Default_Handler")));	/*!< USB Wakeup Interrupt												*/
+void TIM19_IRQHandler			(void) __attribute__((weak, alias ("Default_Handler")));	/*!< TIM19 global Interrupt												*/
+void FPU_IRQHandler				(void) __attribute__((weak, alias ("Default_Handler")));	/*!< Floating point Interrupt											*/
 
 /*!****************************************************************************
 * Interrupt vector table
