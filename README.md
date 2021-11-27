@@ -1,7 +1,7 @@
 # PS3604LR
 
 ### Overview
-This repository include the source code of the regulator power Supply PS3604L.  
+This repository include the source code of the front panel Power Supply [PS3604L](https://github.com/d-el/PS3604L).  
 MCU: STM32F373CCT6:  
     - LQFP48, ARM Cortex-M4 32b MCU+FPU, up to 256KB Flash + 32KB SRAM, timers,  
     - 4 ADCs (16-bit Sig. Delta / 12-bit SAR), 3 DACs, 2 comp., 2.0-3.6 V  
@@ -19,4 +19,7 @@ libjsoncpp-dev
 >make -j8  
 
 #### Start debug server
->./scripts/gdb_serv_start.sh openocd_mculink
+>./scripts/gdb-serv.sh openocd-jlink
+
+#### Start debug client
+>./scripts/gdb-client.sh
