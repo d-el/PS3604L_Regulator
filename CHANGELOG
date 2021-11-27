@@ -4,6 +4,11 @@ HISTORY
 
   * [Enter new changes just after this line - do not remove this line]
 
+(1.6.0)
+  Add disablecause
+  Refactor enable/disable mechanism
+  Move MCU flags to toolchain.cmake
+
 (1.5.2)
   Fix disabling in timeShutdown and lowCurrentShutdown
 

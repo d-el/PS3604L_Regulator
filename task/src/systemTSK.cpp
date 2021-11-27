@@ -170,12 +170,12 @@ void systemTSK(void *pPrm){
 	(void)pPrm;
 
 	TickType_t pxPreviousWakeTime = xTaskGetTickCount();
-	TickType_t curOffTime = xTaskGetTickCount();
+	TickType_t lowCurrentTime = xTaskGetTickCount();
 	TickType_t timeOffset = xTaskGetTickCount();
 	adcTaskStct_type *a = &adcTaskStct;
 	uint8_t limitCnt = 0;
 	bool enableState = false;
-	
+
 	print_init(stdOut_semihost);
 
 	irqSetCallback(irqCallback);
@@ -191,16 +191,16 @@ void systemTSK(void *pPrm){
 	vTaskDelay(pdMS_TO_TICKS(300));
 
 	while(1){
-		uint16_t state = Prm::state & (Prm::m_notCalibrated);
+		uint16_t status = Prm::status & (Prm::m_notCalibrated);
 
 		// Temperature sensor
 		if(temperature.state == temp_Ok){
 			if(temperature.temperature > (TEMP_OFF * 10)){
-				state |= Prm::m_overheated;
+				status |= Prm::m_overheated;
 			}
 		}
 		else{
-			state |= Prm::m_errorTemperatureSensor;
+			status |= Prm::m_errorTemperatureSensor;
 		}
 
 		// Binary filter
@@ -219,29 +219,24 @@ void systemTSK(void *pPrm){
 				limited = false;
 		}
 
-
-		if(currentirq){
-			state |= Prm::m_overCurrent;
-		}
-
 		if(a->reverseVoltage){
-			state |= Prm::m_reverseVoltage;
+			status |= Prm::v_reverseVoltage;
 		}
 
 		if(a->udc < _IQ(MIN_VIN_VOLTAGE)){
-			state |= Prm::m_lowInputVoltage;
+			status |= Prm::m_lowInputVoltage;
 		}
 
 		if(a->currentSensor == adcCcurrentSensorExternal){
-			state |= Prm::m_externaIAdc;
+			status |= Prm::m_externaIAdc;
 		}
-		
+
 		if(!a->externalSensorOk){
-			state |= Prm::m_errorExternalIAdc;
+			status |= Prm::m_errorExternalIAdc;
 		}
 
 		if(Prm::enable && limited){
-			state |= Prm::m_limitation;
+			status |= Prm::m_limitation;
 		}
 
 		/**************************************
@@ -269,9 +264,9 @@ void systemTSK(void *pPrm){
 		*/
 		if(temperature.state == temp_Ok){
 			_iq	qpwmTask = iq_Fy_x1x2y1y2x(_IQ(MIN_TEMP), _IQ(MAX_TEMP),
-									   _IQ(COOLER_PWM_START), _IQ(1),
-									   (uint32_t)(((uint64_t)temperature.temperature << 24) / 10)
-									   );
+										_IQ(COOLER_PWM_START), _IQ(1),
+										(uint32_t)(((uint64_t)temperature.temperature << 24) / 10)
+										);
 			if(qpwmTask < _IQ(COOLER_PWM_START)){
 				qpwmTask = _IQ(COOLER_PWM_START);
 			}else if(qpwmTask > _IQ(1)){
@@ -372,78 +367,83 @@ void systemTSK(void *pPrm){
 			irqLimitOff();
 		}
 
-		request_type l_switchRequest = setNone;
 
-		// Disable on time
-		if(Prm::mode == Prm::timeShutdown){
-			if((Prm::time >= Prm::time_set) && Prm::enable){
-				l_switchRequest = setSwitchOff;
-			}
+		TickType_t lowCurrentDuration = 0;
+		if(enableState && Prm::current < (Prm::current_set / 10)){
+			lowCurrentDuration = xTaskGetTickCount() - lowCurrentTime;
+		}else{
+			lowCurrentTime = xTaskGetTickCount();
 		}
 
-		/**************************************
-		 *
-		 */
-		if(Prm::mode == Prm::overcurrentShutdown){
-			if(MODE_IS_CC()){
-				l_switchRequest = setSwitchOff;
-			}
-		}
+		Prm::mask_disablecause disablecause = Prm::v_none;
 
-		// Low current disable
-		if(Prm::mode == Prm::lowCurrentShutdown){
-			if(enableState && Prm::current <= (Prm::current_set / 10)){
-				if((xTaskGetTickCount() - curOffTime) > pdMS_TO_TICKS(CUR_OFF_TIME)){
-					l_switchRequest = setSwitchOff;
-				}
-			}else{
-				curOffTime = xTaskGetTickCount();
+		if(enableState){
+			// On fails disable output if(state & (Prm::m_overheated | Prm::m_errorTemperatureSensor | Prm::m_lowInputVoltage | Prm::m_reverseVoltage)){
+			if(status & Prm::m_errorTemperatureSensor){
+				disablecause = Prm::v_errorTemperatureSensor;
 			}
-		}
 
-		/**************************************
-		 * On fails disable output
-		 */
-		if(state & (Prm::m_overheated | Prm::m_errorTemperatureSensor | Prm::m_lowInputVoltage | Prm::m_reverseVoltage)){
-			l_switchRequest = setSwitchOff;
+			else if(status & Prm::m_overheated){
+				disablecause = Prm::v_overheated;
+			}
+
+			else if(status & Prm::m_lowInputVoltage){
+				disablecause = Prm::v_lowInputVoltage;
+			}
+
+			else if(status & Prm::m_reverseVoltage){
+				disablecause = Prm::v_reverseVoltage;
+			}
+
+			else if(currentirq || (Prm::mode == Prm::overcurrentShutdown && MODE_IS_CC())){
+				disablecause = Prm::v_overCurrent;
+				currentirq = false;
+			}
+
+			// Disable on time
+			else if(Prm::mode == Prm::timeShutdown && Prm::time >= Prm::time_set){
+				disablecause = Prm::v_timeShutdown;
+			}
+
+			else if(Prm::mode == Prm::lowCurrentShutdown && lowCurrentDuration > pdMS_TO_TICKS(CUR_OFF_TIME)){
+				disablecause = Prm::v_lowCurrentShutdown;
+			}
+
+			else if(enableState && !Prm::enable){
+				disablecause = Prm::v_request;
+			}
 		}
 
 		/**************************************
 		 * Request enable
 		 */
 		if(!enableState && Prm::enable){
-			l_switchRequest = setSwitchOn;
-		}
-		else if(enableState && !Prm::enable){
-			l_switchRequest = setSwitchOff;
-		}
-
-		/**************************************
-		 * Enabling / Disabling
-		 */
-		if(l_switchRequest == setSwitchOn){
-			currentirq = false;
 			setDacU(0);
 			switchON();
 			enableState = true;
 			timeOffset = xTaskGetTickCount();
-			l_switchRequest = setNone;
+			Prm::disablecause = Prm::v_none;
 		}
-		else if(l_switchRequest == setSwitchOff){
+
+		/**************************************
+		 * Request disable
+		 */
+		if(disablecause > Prm::v_none){
 			setDacU(0);
 			switchOFF();
 			enableState = false;
-			l_switchRequest = setNone;
+			Prm::disablecause = disablecause;
 			Prm::enable = false;
+			disablecause = Prm::v_none;
 		}
 
-		if((state & Prm::m_lowInputVoltage || flagsave) && modbus_needSave(false)){
+		if((status & Prm::m_lowInputVoltage || flagsave) && modbus_needSave(false)){
 			if(savePrm()){
 				modbus_needSave(true);
 			}
 		}
 
-		Prm::state = state;
+		Prm::status = status;
 
 		vTaskDelayUntil(&pxPreviousWakeTime, pdMS_TO_TICKS(SYSTEM_TSK_PERIOD));
 	}
@@ -453,9 +453,9 @@ void systemTSK(void *pPrm){
 *
 */
 void OSinit(void){
-    BaseType_t res = xTaskCreate(systemTSK, "systemTSK", SYSTEM_TSK_SZ_STACK, NULL, SYSTEM_TSK_PRIO, NULL);
-    assert(res == pdTRUE);
-    vTaskStartScheduler();
+	BaseType_t res = xTaskCreate(systemTSK, "systemTSK", SYSTEM_TSK_SZ_STACK, NULL, SYSTEM_TSK_PRIO, NULL);
+	assert(res == pdTRUE);
+	vTaskStartScheduler();
 }
 
 /******************************** END OF FILE ********************************/

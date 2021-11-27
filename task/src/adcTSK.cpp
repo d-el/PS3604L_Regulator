@@ -56,9 +56,8 @@ void adcTSK(void *pPrm){
 	(void)pPrm;
 	adcTaskStct_type& a = adcTaskStct;
 	_iq qtemp;
-	uint8_t thinningCnt = 0;
+	uint8_t divider = 0;
 
-	//AdcEndConversionSem
 	vSemaphoreCreateBinary(AdcEndConversionSem);
 	xSemaphoreTake(AdcEndConversionSem, portMAX_DELAY);
 
@@ -66,6 +65,7 @@ void adcTSK(void *pPrm){
 	a.externalSensorOk = ina229_init() ? 1 : 0;
 	aInit();
 	adc_startSampling();
+	auto prevenable = Prm::enable.val;
 
 	while(1){
 		xSemaphoreTake(AdcEndConversionSem, portMAX_DELAY);
@@ -79,15 +79,12 @@ void adcTSK(void *pPrm){
 		/*
 		 */
 		if(a.externalSensorOk != 0){
-			if(thinningCnt == 0){
+			if(++divider == 8){
 				int32_t shunt;
 				ina229_readShuntVoltage(&shunt);
 				a.adcIna229 = shunt >> 8;
 				ina229_trig();
-			}
-			thinningCnt++;
-			if(thinningCnt >= 8){
-				thinningCnt = 0;
+				divider = 0;
 			}
 		}
 
@@ -215,17 +212,16 @@ void adcTSK(void *pPrm){
 		static uint64_t capacity;
 		if(Prm::enable){
 			capacity += a.current;
-			if(capacity >= ((uint64_t) _IQ(0.001) * (1000000 / adcValue.sampleRate)
-							* 60 * 60)){
+			if(capacity >= ((uint64_t) _IQ(0.001) * (1000000 / adcValue.sampleRate) * 60 * 60)){
 				a.capacity += 1;
-				capacity = capacity
-						- ((uint64_t) _IQ(0.001)
-								* (1000000 / adcValue.sampleRate) * 60 * 60);
+				capacity = capacity - ((uint64_t) _IQ(0.001) * (1000000 / adcValue.sampleRate) * 60 * 60);
 			}
-		}else{
+		}
+		if(!prevenable && Prm::enable){
 			a.capacity = 0;
 			capacity = 0;
 		}
+		prevenable = Prm::enable;
 	}
 }
 
