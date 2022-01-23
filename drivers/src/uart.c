@@ -358,7 +358,7 @@ void uart_write(uart_type *uartx, void *src, uint16_t len){
  * @brief
  */
 void uart_read(uart_type *uartx, void *dst, uint16_t len){
-	uartx->pUart->ICR = 0xFFFFFFFFU;												//Clear all flags
+	//uartx->pUart->ICR = 0xFFFFFFFFU;												//Clear all flags
 	uartx->pUart->RQR = USART_RQR_RXFRQ;
 
 	if(uartx->dmaMode > 0){

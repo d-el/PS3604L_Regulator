@@ -46,9 +46,9 @@ void modbusTSK(void *pPrm){
 	xSemaphoreTake(connUartRxSem, portMAX_DELAY);
 	assert(connUartRxSem != NULL);
 
-	uart_init(uart1, 115200);
+	uart_init(uart1, 230400);
 	uart_setCallback(connectUart, uartTskHook, uartTskHook);
-	eMBInit(MB_RTU, 0x01, 0, 115200, MB_PAR_NONE);
+	eMBInit(MB_RTU, 0x01, 0, 230400, MB_PAR_NONE);
 	eMBEnable();
 
 	while(1){

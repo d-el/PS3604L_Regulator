@@ -48,7 +48,7 @@ void adc_init(void){
 	for(int i = 0; i < 360000; i++) __NOP();
 
 	RCC->CFGR		&= ~RCC_CFGR_SDADCPRE;
-	RCC->CFGR		|=	RCC_CFGR_SDADCPRE_DIV12;				//SDADC CLK divided by 12
+	RCC->CFGR		|=	RCC_CFGR_SDADCPRE_DIV48;				//SDADC CLK divided
 	for(int i = 0; i < 360000; i++) __NOP();
 
 	RCC->APB2ENR	|= RCC_APB2ENR_SDADC1EN;					//SDADC1 clock Enable
@@ -106,7 +106,7 @@ void adc_init(void){
 	DMA2_Channel3->CCR |= DMA_CCR_CIRC;							//Circular mode enabled
 	DMA2_Channel3->CCR &= ~DMA_CCR_DIR;							//Read from peripheral
 	DMA2_Channel3->CCR |= DMA_CCR_TCIE;							//Transfer complete interrupt enable
-	DMA2_Channel3->CNDTR = ADC_NUM_CH;							//Number of data
+	DMA2_Channel3->CNDTR = CH_NUMBER;							//Number of data
 	DMA2_Channel3->CPAR = (uint32_t)&(SDADC1->JDATAR);			//Peripheral address
 	DMA2_Channel3->CMAR = (uint32_t)&adcStct.adcreg[0];			//Memory address
 	NVIC_EnableIRQ(DMA2_Channel3_IRQn);
@@ -123,6 +123,7 @@ void adc_init(void){
 	TIM3->CR1		|= TIM_CR1_ARPE;							//TIMx_ARR register is buffered
 	TIM3->CR2		|= TIM_CR2_MMS_2;							//Compare - OC1REF signal is used as trigger output (TRGO)
 	TIM3->CCMR1		|= TIM_CCMR1_OC1M_2 | TIM_CCMR1_OC1M_1;		//PWM mode 1 (NORMAL PWM)
+	TIM3->CCR1 = 1;
 	TIM3->CCER		|= TIM_CCER_CC1E;							//Channel enable
 	TIM3->ARR		= adcStct.sampleRate;						//SampleRate, [us]
 }
@@ -131,7 +132,6 @@ void adc_init(void){
  *
  */
 void adc_startSampling(void){
-	TIM3->CCR1 = 1;
 	TIM3->CR1 |= TIM_CR1_CEN;
 }
 
@@ -146,6 +146,7 @@ void adc_stopSampling(void){
  *
  */
 void adc_setSampleRate(uint16_t us){
+	adcStct.sampleRate = us;
 	TIM3->ARR = us;
 }
 

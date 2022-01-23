@@ -28,12 +28,12 @@
 *
 */
 void hardInit(void){
-    clock_init();
-    gpio_init();
-    pwmFan_init();
-    adc_init();
-    dac_init();
-    externalInterrupt_CcCv_init();
+	clock_init();
+	gpio_init();
+	pwmFan_init();
+	adc_init();
+	dac_init();
+	externalInterrupt_CcCv_init();
 }
 
 /******************************** END OF FILE ********************************/

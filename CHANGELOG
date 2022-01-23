@@ -4,6 +4,15 @@ HISTORY
 
   * [Enter new changes just after this line - do not remove this line]
 
+(1.8.0)
+  Refactored of measure filtering 
+  Moved calculation to slow task
+  Added memory manager
+
+(1.7.0)
+  Set core clock 64 MHz
+  Set connect baud 460800
+
 (1.6.0)
   Add disablecause
   Refactor enable/disable mechanism

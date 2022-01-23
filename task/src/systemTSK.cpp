@@ -27,18 +27,6 @@
 #include "adcTSK.h"
 #include "ds18TSK.h"
 
-/*-------NAME--------------------size [4 byte Word] */
-#define SYSTEM_TSK_SZ_STACK     512
-#define ADC_TSK_SZ_STACK        512
-#define UART_TSK_SZ_STACK       512
-#define DS18B_TSK_SZ_STACK      512
-/*-------NAME--------------------size [4 byte Word] */
-#define SYSTEM_TSK_PRIO         3
-#define ADC_TSK_PRIO            4
-#define UART_TSK_PRIO           2
-#define DS18B_TSK_PRIO          1
-
-
 /*!****************************************************************************
 * Memory
 */
@@ -50,7 +38,7 @@ typedef enum {
 } request_type;
 
 enum{
-    BASE_DAC = 0,
+	BASE_DAC = 0,
 };
 
 static uint16_t base[] = {
@@ -83,22 +71,22 @@ void vsave(Prm::Val<uint32_t>& prm, bool read, void *arg){
 
 	switch(reinterpret_cast<uint32_t>(prm.getarg())){
 		case 0:
-			Prm::v0_adc = adcTaskStct.filtered[CH_UADC];
+			Prm::v0_adc = adcTaskStct.filtered.u;
 			Prm::v0_dac = Prm::vdac.val;
 			break;
 
 		case 1:
-			Prm::v1_adc = adcTaskStct.filtered[CH_UADC];
+			Prm::v1_adc = adcTaskStct.filtered.u;
 			Prm::v1_dac = Prm::vdac.val;
 			break;
 
 		case 2:
-			Prm::v2_adc = adcTaskStct.filtered[CH_UADC];
+			Prm::v2_adc = adcTaskStct.filtered.u;
 			Prm::v2_dac = Prm::vdac.val;
 			break;
 
 		case 3:
-			Prm::v3_adc = adcTaskStct.filtered[CH_UADC];
+			Prm::v3_adc = adcTaskStct.filtered.u;
 			Prm::v3_dac = Prm::vdac.val;
 			break;
 	}
@@ -112,30 +100,30 @@ void isave(Prm::Val<uint32_t>& prm, bool read, void *arg){
 
 	switch(reinterpret_cast<uint32_t>(prm.getarg())){
 		case 0:
-			Prm::i0_adc = adcTaskStct.filtered[CH_IADC];
+			Prm::i0_adc = adcTaskStct.filtered.i;
 			Prm::i0_dac = Prm::idac.val;
-			Prm::iext0_adc = adcTaskStct.adcIna229;
+			Prm::iext0_adc = adcTaskStct.filtered.iex;
 			Prm::iext0_i = Prm::i0_i.val;
 			break;
 
 		case 1:
-			Prm::i1_adc = adcTaskStct.filtered[CH_IADC];
+			Prm::i1_adc = adcTaskStct.filtered.i;
 			Prm::i1_dac = Prm::idac.val;
-			Prm::iext1_adc = adcTaskStct.adcIna229;
+			Prm::iext1_adc = adcTaskStct.filtered.iex;
 			Prm::iext1_i = Prm::i1_i.val;
 			break;
 
 		case 2:
-			Prm::i2_adc = adcTaskStct.filtered[CH_IADC];
+			Prm::i2_adc = adcTaskStct.filtered.i;
 			Prm::i2_dac = Prm::idac.val;
-			Prm::iext2_adc = adcTaskStct.adcIna229;
+			Prm::iext2_adc = adcTaskStct.filtered.iex;
 			Prm::iext2_i = Prm::i2_i.val;
 			break;
 
 		case 3:
-			Prm::i3_adc = adcTaskStct.filtered[CH_IADC];
+			Prm::i3_adc = adcTaskStct.filtered.i;
 			Prm::i3_dac = Prm::idac.val;
-			Prm::iext3_adc = adcTaskStct.adcIna229;
+			Prm::iext3_adc = adcTaskStct.filtered.iex;
 			Prm::iext3_i = Prm::i3_i.val;
 			break;
 	}
@@ -172,7 +160,7 @@ void systemTSK(void *pPrm){
 	TickType_t pxPreviousWakeTime = xTaskGetTickCount();
 	TickType_t lowCurrentTime = xTaskGetTickCount();
 	TickType_t timeOffset = xTaskGetTickCount();
-	adcTaskStct_type *a = &adcTaskStct;
+	adcTaskStct_type& a = adcTaskStct;
 	uint8_t limitCnt = 0;
 	bool enableState = false;
 
@@ -185,17 +173,166 @@ void systemTSK(void *pPrm){
 		__NOP();
 	}
 
-	assert(pdTRUE == xTaskCreate(modbusTSK, "uartTSK", UART_TSK_SZ_STACK,  NULL, UART_TSK_PRIO, NULL));
+	assert(pdTRUE == xTaskCreate(modbusTSK, "modbusTSK", MODBUS_TSK_SZ_STACK,  NULL, MODBUS_TSK_PRIO, NULL));
 	assert(pdTRUE == xTaskCreate(adcTSK, "adcTSK", ADC_TSK_SZ_STACK, NULL, ADC_TSK_PRIO, NULL));
 	assert(pdTRUE == xTaskCreate(ds18TSK, "ds18TSK", DS18B_TSK_SZ_STACK, NULL, DS18B_TSK_PRIO, NULL));
 	vTaskDelay(pdMS_TO_TICKS(300));
 
+	_iq qtemp;
+	auto prevenable = Prm::enable.val;
+
+	///========================================================
+	_iq					udc = 0;
+	_iq					voltage = 0;			//[V]
+	_iq					current = 0;			//[A]
+	_iq					currentInt = 0;			//[A]
+	_iq					currentExt = 0;			//[A]
+	_iq14				outPower = 0;			//[W]
+	_iq14				resistens = 0;			//[Ohm]
+	uint32_t 			capacity = 0;			//[mAh]
+	adcCurrentSensor_type	currentSensor = adcCurrentSensorInternal;
+	uint8_t				reverseVoltage = 0;
+
 	while(1){
+
+		///========================================================
+		/*
+		 * Calculate current on external ADC
+		 */
+		if(a.filtered.iex <= Prm::iext1_adc){
+			currentExt = s32iq_Fy_x1x2y1y2x(Prm::iext0_adc, Prm::iext1_adc,
+													IntToIQ(Prm::iext0_i, 1000000), IntToIQ(Prm::iext1_i, 1000000),
+													a.filtered.iex);
+		}
+		else{
+			currentExt = s32iq_Fy_x1x2y1y2x(Prm::iext1_adc, Prm::iext2_adc,
+													IntToIQ(Prm::iext1_i, 1000000), IntToIQ(Prm::iext2_i, 1000000),
+													a.filtered.iex);
+		}
+		if(currentExt < 0){
+			currentExt = 0;
+		}
+
+		/*
+		 * Calculate voltage
+		 */
+		if(a.filtered.u <= Prm::v1_adc){
+			voltage = s32iq_Fy_x1x2y1y2x(Prm::v0_adc, Prm::v1_adc,
+													IntToIQ(Prm::v0_u, 1000000), IntToIQ(Prm::v1_u, 1000000),
+													a.filtered.u);
+		}
+		else if(a.filtered.u <= Prm::v2_adc){
+			voltage = s32iq_Fy_x1x2y1y2x(Prm::v1_adc, Prm::v2_adc,
+													IntToIQ(Prm::v1_u, 1000000), IntToIQ(Prm::v2_u, 1000000),
+													a.filtered.u);
+		}
+		else{
+			voltage = s32iq_Fy_x1x2y1y2x(Prm::v2_adc, Prm::v3_adc,
+													IntToIQ(Prm::v2_u, 1000000), IntToIQ(Prm::v3_u, 1000000),
+													a.filtered.u);
+		}
+		if(voltage < 0){
+			voltage = 0;
+		}
+
+		/*
+		 * Detect revers voltage
+		 */
+//		if(a.adcFilt[CH_UADC].recursiveFilterOut > REVERSE_VOLTAGE_THRESHOLD){
+//			a.reverseVoltage = 0;
+//		}else{
+//			a.reverseVoltage = 1;
+//		}
+
+		/*
+		 * Calculate current
+		 */
+		if(a.filtered.i <= Prm::i1_adc){
+			currentInt = s32iq_Fy_x1x2y1y2x(Prm::i0_adc, Prm::i1_adc,
+													IntToIQ(Prm::i0_i, 1000000), IntToIQ(Prm::i1_i, 1000000),
+													a.filtered.i);
+		}
+		else if(a.filtered.i <= Prm::i2_adc){
+			currentInt = s32iq_Fy_x1x2y1y2x(Prm::i1_adc, Prm::i2_adc,
+													IntToIQ(Prm::i1_i, 1000000), IntToIQ(Prm::i2_i, 1000000),
+													a.filtered.i);
+		}
+		else{
+			currentInt = s32iq_Fy_x1x2y1y2x(Prm::i2_adc, Prm::i3_adc,
+													IntToIQ(Prm::i2_i, 1000000), IntToIQ(Prm::i3_i, 1000000),
+													a.filtered.i);
+		}
+		if(currentInt < 0){
+			currentInt = 0;
+		}
+
+		/*
+		 * Select current sensor
+		 */
+		if((currentInt >= _IQ(CURRENT_SENSOR_THRESHOLD_UP / 1000.0f))
+				|| (a.externalSensorOk == 0)){
+			currentSensor = adcCurrentSensorInternal;
+		}
+		if((currentInt < _IQ(CURRENT_SENSOR_THRESHOLD_DOWN / 1000.0f))
+				&& (a.externalSensorOk != 0)){
+			currentSensor = adcCcurrentSensorExternal;
+		}
+
+		current = currentSensor == adcCurrentSensorInternal ? currentInt : currentExt;
+
+		/*
+		 * Calculate input voltage
+		 */
+		udc = a.filtered.uin * _IQ((AdcVref * (UDC_Rh + UDC_Rl)) / (65536 * UDC_Rl));
+
+		/*
+		 * Calculate output power
+		 */
+		if(Prm::enable){
+			outPower = _IQ14mpy(_IQtoIQ14(voltage), _IQtoIQ14(current));
+		}else{
+			outPower = 0;
+		}
+
+		/*
+		 * Calculate resistens
+		 */
+		if(Prm::enable && (current > _IQ(0.001))
+				&& (voltage > _IQ(0.05))){
+			qtemp = _IQ14div(_IQtoIQ14(voltage), _IQtoIQ14(current));
+			if(qtemp > _IQ14(99999)){  //limit 99999 Ohm
+				qtemp = _IQ14(99999);
+			}
+			resistens = qtemp;
+		}else{
+			resistens = _IQ14(99999);
+		}
+
+		/*
+		 * Calculate capacity
+		 */
+		static uint64_t lcapacity;
+		if(Prm::enable){
+			lcapacity += current;
+			constexpr uint32_t loopPeriod = SYSTEM_TSK_PERIOD * 1000;
+			if(lcapacity >= ((uint64_t) _IQ(0.001) * (1000000 / loopPeriod) * 60 * 60)){
+				capacity += 1;
+				lcapacity = lcapacity - ((uint64_t) _IQ(0.001) * (1000000 / loopPeriod) * 60 * 60);
+			}
+		}
+		if(!prevenable && Prm::enable){
+			capacity = 0;
+			lcapacity = 0;
+		}
+
+		prevenable = Prm::enable;
+
+		///========================================================
 		uint16_t status = Prm::status & (Prm::m_notCalibrated);
 
 		// Temperature sensor
 		if(temperature.state == temp_Ok){
-			if(temperature.temperature > (TEMP_OFF * 10)){
+			if(temperature.temperature > (TEMP_DISABLE * 10)){
 				status |= Prm::m_overheated;
 			}
 		}
@@ -214,24 +351,25 @@ void systemTSK(void *pPrm){
 		}
 		else{
 			if(limitCnt > 0)
-				limitCnt--;
+				//limitCnt--;
+				limitCnt = 0;
 			else
 				limited = false;
 		}
 
-		if(a->reverseVoltage){
+		if(reverseVoltage){
 			status |= Prm::v_reverseVoltage;
 		}
 
-		if(a->udc < _IQ(MIN_VIN_VOLTAGE)){
+		if(udc < _IQ(MIN_VIN_VOLTAGE)){
 			status |= Prm::m_lowInputVoltage;
 		}
 
-		if(a->currentSensor == adcCcurrentSensorExternal){
+		if(currentSensor == adcCcurrentSensorExternal){
 			status |= Prm::m_externaIAdc;
 		}
 
-		if(!a->externalSensorOk){
+		if(!a.externalSensorOk){
 			status |= Prm::m_errorExternalIAdc;
 		}
 
@@ -242,15 +380,15 @@ void systemTSK(void *pPrm){
 		/**************************************
 		* Set value
 		*/
-		Prm::vadc = a->filtered[CH_UADC];
-		Prm::iadc = a->filtered[CH_IADC];
-		Prm::iexternaladc = a->adcIna229;
-		Prm::voltage = IQtoInt(a->voltage, 1000000);
-		Prm::current = IQtoInt(a->current, 1000000);
-		Prm::power = IQNtoInt(a->outPower, 1000, 14);
-		Prm::resistance = IQNtoInt(a->resistens, 1000, 14);
-		Prm::capacity = a->capacity;
-		Prm::input_voltage = IQtoInt(a->udc, 1000000);
+		Prm::vadc = a.filtered.u;
+		Prm::iadc = a.filtered.i;
+		Prm::iexternaladc = a.filtered.iex;
+		Prm::voltage = IQtoInt(voltage, 1000000);
+		Prm::current = IQtoInt(current, 1000000);
+		Prm::power = IQNtoInt(outPower, 1000, 14);
+		Prm::resistance = IQNtoInt(resistens, 1000, 14);
+		Prm::capacity = capacity;
+		Prm::input_voltage = IQtoInt(udc, 1000000);
 		Prm::temperature = temperature.temperature;
 
 		if(Prm::enable){
@@ -263,7 +401,7 @@ void systemTSK(void *pPrm){
 		* Cooler regulator
 		*/
 		if(temperature.state == temp_Ok){
-			_iq	qpwmTask = iq_Fy_x1x2y1y2x(_IQ(MIN_TEMP), _IQ(MAX_TEMP),
+			_iq	qpwmTask = iq_Fy_x1x2y1y2x(_IQ(TEMP_FAN_ON), _IQ(TEMP_FAN_MAX),
 										_IQ(COOLER_PWM_START), _IQ(1),
 										(uint32_t)(((uint64_t)temperature.temperature << 24) / 10)
 										);
@@ -273,11 +411,11 @@ void systemTSK(void *pPrm){
 				qpwmTask = _IQ(1);
 			}
 
-			if(temperature.temperature > (MIN_TEMP * 10)){
+			if(temperature.temperature > (TEMP_FAN_ON * 10)){
 				uint16_t pwmk = IQtoInt(qpwmTask, 1000);
 				FanPwmSet(pwmk);
 			}
-			if(temperature.temperature < ((MIN_TEMP - H_TEMP) * 10)){
+			if(temperature.temperature < TEMP_FAN_OFF * 10){
 				FanPwmSet(0);
 			}
 		}

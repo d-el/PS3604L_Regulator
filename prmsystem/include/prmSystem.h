@@ -1,7 +1,7 @@
 /*!****************************************************************************
  * @file		prmSystem.h
  * @author		d_el - Storozhenko Roman
- * @version		V2.0
+ * @version		V2.1
  * @date		25.01.2021
  * @copyright	The MIT License (MIT). Copyright (c) 2021 Storozhenko Roman
  * @brief		Parameters system
@@ -19,6 +19,8 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stddef.h>
+
+#include <inttypes.h>
 
 namespace Prm {
 
@@ -93,7 +95,7 @@ public:
 	const T bigstep;
 	const uint16_t addr;
 	constexpr static size_t size = sizeof(T);
-	void* const arg;
+	void *const arg;
 	const uint8_t power :4;
 	const Save save;
 	void (*callback)(Val<T>& prm, bool read, void *arg);
@@ -117,8 +119,7 @@ public:
 	virtual void operator()(bool read, void *arg) = 0;
 };
 
-template <class T> class Val: public IVal
-{
+template <class T> class Val: public IVal{
 public:
 	Val(const ValHandler<T> &_handler) :
 		handler(_handler)
@@ -164,20 +165,7 @@ public:
 		memcpy(dst, &val, sizeof(val));
 	}
 
-	bool deserialize(const void *src){
-		T v = 0;
-		memcpy(&v, src, sizeof(v));
-		if constexpr(std::is_same_v<T, float>){
-			if(std::isnan(v)){
-				return false;
-			}
-		}
-		if(v > handler.max || v < handler.min){
-			return false;
-		}
-		val = v;
-		return true;
-	}
+	bool deserialize(const void *src);
 
 	size_t tostring(char *string, size_t size) const;
 
@@ -196,20 +184,7 @@ public:
 	}
 
 private:
-	void stepsize(int32_t step, T stepsize){
-		T result = stepsize * abs(step);
-		if(step < 0)
-			val = result > val - handler.min
-				? handler.min
-				: val - result;
-		else
-			val = result > handler.max - val
-				? handler.max
-				: val + result;
-	}
-
-	size_t uprintval(char *string, size_t size, uint8_t power, uint32_t var) const;
-	size_t iprintval(char *string, size_t size, uint8_t power, int32_t var) const;
+	void stepsize(int32_t step, T stepsize);
 
 public:
 	T val;
@@ -217,6 +192,19 @@ public:
 private:
 	const ValHandler<T> &handler;
 };
+
+template<class T>
+void Val<T>::stepsize(int32_t step, T stepsize){
+	T result = stepsize * abs(step);
+	if(step < 0)
+		val = result > val - handler.min
+			? handler.min
+			: val - result;
+	else
+		val = result > handler.max - val
+			? handler.max
+			: val + result;
+}
 
 IVal *getbyaddress(uint16_t address);
 size_t getSerialSize(Save save);

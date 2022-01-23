@@ -20,29 +20,26 @@ extern "C" {
 /*!****************************************************************************
 * User define
 */
-#define ADC_NUM_CH                  (3)
-#define ADC_TIM_FREQUENCY        	(24000000)  //[Hz]
-#define SDADC_DR_TO_LSB_ADD     	32767
+#define ADC_TIM_FREQUENCY			(24000000) // [Hz]
+#define SDADC_DR_TO_LSB_ADD			32767
+
+enum{
+	CH_UINADC,
+	CH_IADC,
+	CH_UADC,
+	CH_NUMBER
+};
 
 /*!****************************************************************************
 * User typedef
 */
 typedef struct adcStct{
-    uint16_t        sampleRate;                         ///<[us]
-    uint16_t        adcreg[ADC_NUM_CH];                 ///<
-    void (*tcHoock)(struct adcStct *adc);
+	uint16_t		sampleRate;			// [us]
+	uint16_t		adcreg[CH_NUMBER];
+	void (*tcHoock)(struct adcStct *adc);
 }adcStct_type;
 
 typedef void (*adcCallback_type)(adcStct_type *adc);
-
-/*!****************************************************************************
-* User enum
-*/
-enum{
-	CH_UINADC,
-    CH_IADC,
-	CH_UADC,
-};
 
 /*!****************************************************************************
 * Prototypes for the functions

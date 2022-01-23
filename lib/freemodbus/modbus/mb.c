@@ -373,7 +373,7 @@ eMBPoll( void )
                 }
             }
             else{
-            	return MB_EIO;
+                return MB_EIO;
             }
 
             ucFunctionCode = ucMBFrame[MB_PDU_FUNC_OFF];

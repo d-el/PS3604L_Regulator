@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.6)
 
 PROJECT(PS3604LR
-	VERSION 1.6.0
+	VERSION 1.8.0
 	LANGUAGES CXX C
 	)
 	

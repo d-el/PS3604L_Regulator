@@ -73,7 +73,7 @@ bool ina229_init(void){
 	vSemaphoreCreateBinary(spiSem);
 	xSemaphoreTake(spiSem, portMAX_DELAY);
 
-	spi_init(spi3, spiDiv4);
+	spi_init(spi3, spiDiv8);
 	spi_setCallback(spi3, spiTC_Hook);
 
 	int16_t val;
@@ -88,7 +88,7 @@ bool ina229_init(void){
 
 	DEVICE_ID_t* DEVICE_ID = (DEVICE_ID_t*)&val;
 
-	const uint16_t  deviceIdentification = 0x229;
+	const uint16_t deviceIdentification = 0x229;
 	if(DEVICE_ID->DIEID != deviceIdentification){
 		return false;
 	}
@@ -105,7 +105,7 @@ bool ina229_init(void){
 bool ina229_trig(void){
 	uint16_t adcconfig =	2 /*Triggered shunt voltage triggered, single shot*/ << 12 |
 							2 /*150 µs*/ << 6 |
-							3 /*averaging 64*/ << 0;
+							1 /*averaging 4*/ << 0;
 	return ina229_writeReg16u(ADC_CONFIG, adcconfig);
 }
 

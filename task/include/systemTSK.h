@@ -15,17 +15,17 @@
 /*!****************************************************************************
 * User define
 */
-#define SYSTEM_TSK_PERIOD   (2)         ///<[ms]
-#define CUR_OFF_TIME        (1000)      ///<[ms]
-#define MAX_WAIT_RxRequest  (20)        ///<[ms]
+#define SYSTEM_TSK_PERIOD	(4)		///<[ms]
+#define CUR_OFF_TIME		(1000)	///<[ms]
+#define MAX_WAIT_RxRequest	(20)	///<[ms]
 
-#define COOLER_PWM_START    (0.3)       ///<[k PWM]
-#define MIN_TEMP            (38.0)      ///<[°C]
-#define MAX_TEMP            (60.0)      ///<[°C]
-#define TEMP_OFF            (60.0)      ///<[°C]
-#define H_TEMP              (5.0)       ///<[°C]
+#define COOLER_PWM_START	(0.3)	///<[k PWM]
+#define TEMP_FAN_OFF		(35.0)	///<[°C]
+#define TEMP_FAN_ON			(40.0)	///<[°C]
+#define TEMP_FAN_MAX		(60.0)	///<[°C]
+#define TEMP_DISABLE		(80.0)	///<[°C]
 
-#define VTASK_FILTER_K      (3)
+#define VTASK_FILTER_K		(3)
 
 #define MIN_VIN_VOLTAGE		(35.0)		//[V]
 

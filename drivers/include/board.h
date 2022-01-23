@@ -1,23 +1,23 @@
 ﻿/*!****************************************************************************
-* @file    		board.h
-* @author  		d_el
+* @file			board.h
+ * @author		Storozhenko Roman - D_EL
 * @version 		V1.0
-* @date    		01.05.2016, Storozhenko Roman
-* @copyright 	GNU Public License
+* @date			10.01.2021, Storozhenko Roman
+* @copyright 	The MIT License (MIT). Copyright (c) 2020 Storozhenko Roman
 *
-* TIM12_CH1 (PB14)             	-> LED
+* TIM12_CH1 (PB14)				-> LED
 * TIM3_CH1 						-> ADC TRIGGER
-* TIM4_CH2 (PA12)			    -> FAN_PWM
+* TIM4_CH2 (PA12)				-> FAN_PWM
 *
 * SDADC1_IN4P 					-> UDC_MEAS
 * SDADC1_IN5P 					-> I_MEAS
 * SDADC1_IN6P 					-> U_MEAS
 *
-* UART3 TX - (PD8)              -> 1Wire
+* UART3 TX - (PD8)				-> 1Wire
 * UART1 TX - (PA9), RX - (PA10)	-> UART CONNECT
 *
 * GPIO (PB5) 					-> ON_OFF
-* GPIO (PA0)                    -> CC_CV
+* GPIO (PA0)					-> CC_CV
 */
 #ifndef board_H
 #define board_H
@@ -31,31 +31,31 @@
 /*!****************************************************************************
 * User define
 */
-#define SYSTEM_FREQ         24000000    //[Hz]
-#define APB1_FREQ           24000000    //[Hz]
-#define APB2_FREQ           24000000    //[Hz]
+#define SYSTEM_FREQ			64000000	//[Hz]
+#define APB1_FREQ			32000000	//[Hz]
+#define APB1_TIM_FREQ		64000000	//[Hz]
+#define APB2_FREQ			32000000	//[Hz]
+#define APB2_TIM_FREQ		64000000	//[Hz]
 
-//-----------------------------------------------------------------------------
-//ПРИОРИТЕТЫ ПРЕРЫВАНИЙ, ПО УБЫВАНИЮ
-#define EXTI_CC_CV_Priority         0
-#define PVD_IRQ_Priority            1
-#define DMA2_Channel3_IRQn_Priority 15  //Должен быть ниже configMAX_SYSCALL_INTERRUPT_PRIORITY, иначе нельзя испольховать API ф-и ОС
-//-----------------------------------------------------------------------------
+// Task Priority
+#define EXTI_CC_CV_Priority			0
+#define PVD_IRQ_Priority			1
+#define DMA2_Channel3_IRQn_Priority	15
 
 /*!****************************************************************************
 * Macro functions
 */
-#define setDacI(u16val)     setDacCh1(u16val)
-#define setDacU(u16val)     setDacCh2(u16val)
-#define LED_ON()            gppin_set(GP_LED)
-#define LED_OFF()           gppin_reset(GP_LED)
-#define LED_TOGGLE()        gppin_togle(GP_LED)
+#define setDacI(u16val)		setDacCh1(u16val)
+#define setDacU(u16val)		setDacCh2(u16val)
+#define LED_ON()			gppin_set(GP_LED)
+#define LED_OFF()			gppin_reset(GP_LED)
+#define LED_TOGGLE()		gppin_togle(GP_LED)
 #define SWITCH_OFF()		_gppin_set(GPIOB, pinm9)
-#define MODE_IS_CC()        ((gppin_get(GP_CC_CV)) ? 1:0)   //Определяет проверка режима ограничения
+#define MODE_IS_CC()		((gppin_get(GP_CC_CV)) ? 1:0)   //Определяет проверка режима ограничения
 
 /*!****************************************************************************
 * Prototypes for the functions
 */
 
 #endif //board_H
-/*************** GNU GPL ************** END OF FILE ********* D_EL ***********/
+/******************************** END OF FILE ********************************/

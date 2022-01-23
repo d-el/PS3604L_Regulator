@@ -68,7 +68,7 @@ typedef enum
 static volatile eMBSndState eSndState;
 static volatile eMBRcvState eRcvState;
 
-volatile UCHAR  ucRTUBuf[MB_SER_PDU_SIZE_MAX];
+/*volatile*/ UCHAR  ucRTUBuf[MB_SER_PDU_SIZE_MAX];
 
 static volatile UCHAR *pucSndBufferCur;
 static volatile USHORT usSndBufferCount;
@@ -198,32 +198,25 @@ eMBRTUSend( UCHAR ucSlaveAddress, const UCHAR * pucFrame, USHORT usLength )
      * slow with processing the received frame and the master sent another
      * frame on the network. We have to abort sending the frame.
      */
-//    if( eRcvState == STATE_RX_IDLE )
-//    {
-        /* First byte before the Modbus-PDU is the slave address. */
-        pucSndBufferCur = ( UCHAR * ) pucFrame - 1;
-        usSndBufferCount = 1;
 
-        /* Now copy the Modbus-PDU into the Modbus-Serial-Line-PDU. */
-        pucSndBufferCur[MB_SER_PDU_ADDR_OFF] = ucSlaveAddress;
-        usSndBufferCount += usLength;
+    /* First byte before the Modbus-PDU is the slave address. */
+    pucSndBufferCur = ( UCHAR * ) pucFrame - 1;
+    usSndBufferCount = 1;
 
-        /* Calculate CRC16 checksum for Modbus-Serial-Line-PDU. */
-        usCRC16 = usMBCRC16( ( UCHAR * ) pucSndBufferCur, usSndBufferCount );
-        ucRTUBuf[usSndBufferCount++] = ( UCHAR )( usCRC16 & 0xFF );
-        ucRTUBuf[usSndBufferCount++] = ( UCHAR )( usCRC16 >> 8 );
+    /* Now copy the Modbus-PDU into the Modbus-Serial-Line-PDU. */
+    pucSndBufferCur[MB_SER_PDU_ADDR_OFF] = ucSlaveAddress;
+    usSndBufferCount += usLength;
 
-        /* Activate the transmitter. */
-        eSndState = STATE_TX_XMIT;
-        vMBPortSerialEnable( FALSE, TRUE );
+    /* Calculate CRC16 checksum for Modbus-Serial-Line-PDU. */
+    usCRC16 = usMBCRC16( ( UCHAR * ) pucSndBufferCur, usSndBufferCount );
+    ucRTUBuf[usSndBufferCount++] = ( UCHAR )( usCRC16 & 0xFF );
+    ucRTUBuf[usSndBufferCount++] = ( UCHAR )( usCRC16 >> 8 );
 
-        setTransmitData((void*)ucRTUBuf, usSndBufferCount);
-//    }
-//    else
-//    {
-//        eStatus = MB_EIO;
-//    }
+    /* Activate the transmitter. */
+    eSndState = STATE_TX_XMIT;
+    vMBPortSerialEnable( FALSE, TRUE );
 
+    setTransmitData((void*)ucRTUBuf, usSndBufferCount);
 
     EXIT_CRITICAL_SECTION(  );
     return eStatus;
@@ -292,71 +285,11 @@ xMBRTUReceiveFSM( void )
 BOOL
 xMBRTUTransmitFSM( void )
 {
-    BOOL            xNeedPoll = FALSE;
-
-    assert( eRcvState == STATE_RX_IDLE );
-
-    switch ( eSndState )
-    {
-        /* We should not get a transmitter event if the transmitter is in
-         * idle state.  */
-    case STATE_TX_IDLE:
-        /* enable receiver/disable transmitter. */
-        vMBPortSerialEnable( TRUE, FALSE );
-        break;
-
-    case STATE_TX_XMIT:
-        /* check if we are finished. */
-        if( usSndBufferCount != 0 )
-        {
-            xMBPortSerialPutByte( ( CHAR )*pucSndBufferCur );
-            pucSndBufferCur++;  /* next byte in sendbuffer. */
-            usSndBufferCount--;
-        }
-        else
-        {
-            xNeedPoll = xMBPortEventPost( EV_FRAME_SENT );
-            /* Disable transmitter. This prevents another transmit buffer
-             * empty interrupt. */
-            vMBPortSerialEnable( TRUE, FALSE );
-            eSndState = STATE_TX_IDLE;
-        }
-        break;
-    }
-
-    return xNeedPoll;
+    return FALSE;
 }
 
 BOOL
 xMBRTUTimerT35Expired( void )
 {
-    BOOL            xNeedPoll = FALSE;
-
-    switch ( eRcvState )
-    {
-        /* Timer t35 expired. Startup phase is finished. */
-    case STATE_RX_INIT:
-        xNeedPoll = xMBPortEventPost( EV_READY );
-        break;
-
-        /* A frame was received and t35 expired. Notify the listener that
-         * a new frame was received. */
-    case STATE_RX_RCV:
-        xNeedPoll = xMBPortEventPost( EV_FRAME_RECEIVED );
-        break;
-
-        /* An error occured while receiving the frame. */
-    case STATE_RX_ERROR:
-        break;
-
-        /* Function called in an illegal state. */
-    default:
-        assert( ( eRcvState == STATE_RX_INIT ) ||
-                ( eRcvState == STATE_RX_RCV ) || ( eRcvState == STATE_RX_ERROR ) );
-    }
-
-    vMBPortTimersDisable(  );
-    eRcvState = STATE_RX_IDLE;
-
-    return xNeedPoll;
+    return FALSE;
 }

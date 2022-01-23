@@ -24,7 +24,7 @@ static BOOL bRxEnabled;
 static BOOL bTxEnabled;
 
 static unsigned char rxBuffer[BUF_SIZE];
-static unsigned char txBuffer[BUF_SIZE];
+static unsigned char *txPointer;
 
 //static int rxCount;
 static int txCount;
@@ -48,7 +48,7 @@ void mbSlaveSetReceive(void *data, size_t len){
 size_t mbSlaveGetTransmit(void *data){
 	int len = 0;
 	if(txNotEmpty){
-		memcpy(data, txBuffer, txCount);
+		memcpy(data, txPointer, txCount);
 		len = txCount;
 		txNotEmpty = 0;
 		txCount = 0;
@@ -71,7 +71,7 @@ int getReceiveData(void *data){
 }
 
 int setTransmitData(void *data, int len){
-	memcpy(txBuffer, data, len);
+	txPointer = data;
 	txNotEmpty = 1;
 	txCount = len;
 	return 0;
@@ -121,10 +121,8 @@ BOOL xMBPortSerialPoll(){
 }
 
 BOOL xMBPortSerialPutByte(CHAR ucByte){
-	assert( uiTxBufferPos < BUF_SIZE );
-	rxBuffer[uiTxBufferPos] = ucByte;
-	uiTxBufferPos++;
-	return TRUE;
+	(void)ucByte;
+	return FALSE;
 }
 
 BOOL xMBPortSerialGetByte(CHAR *pucByte){
