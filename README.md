@@ -1,5 +1,11 @@
 # PS3604LR
 
+<p float="left">
+  <img src="image/IMG_4709.JPG" width="200" />
+  <img src="image/IMG_4719.JPG" width="200" /> 
+  <img src="image/IMG_E4582.JPG" width="200" />
+</p>
+
 ### Overview
 This repository include the source code of the linear regulator Power Supply [PS3604L](https://github.com/d-el/PS3604L).  
 MCU: STM32F373CCT6:  
