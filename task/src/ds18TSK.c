@@ -1,10 +1,10 @@
 ﻿/*!****************************************************************************
  * @file		ds18TSK.c
  * @author		d_el
- * @version		V1.0
- * @date		26.07.2016
+ * @version		V1.1
+ * @date		06.04.2022
  * @brief
- * @copyright	The MIT License (MIT). Copyright (c) 2021 Storozhenko Roman
+ * @copyright	The MIT License (MIT). Copyright (c) 2022 Storozhenko Roman
  */
 
 /*!****************************************************************************
@@ -23,7 +23,7 @@
 /*!****************************************************************************
 * MEMORY
 */
-temperature_type   temperature;
+temperature_type temperature;
 
 /*!****************************************************************************
 * @brief
@@ -32,17 +32,15 @@ temperature_type   temperature;
 */
 void ds18TSK(void *pPrm){
 	(void)pPrm;
-    uint8_t errorcnt = 0;
+	uint8_t errorcnt = 0;
 
-    uart_init(OW_UART, 9600);   //1WIRE
+	ow_init();
+	temperature.state = temp_Ok;
 
-    ow_init();
-    temperature.state = temp_Ok;
-
-    /*****************************
-    * DS18B20 INIT
-    */
-    while(1){
+	/*****************************
+	* DS18B20 INIT
+	*/
+	while(1){
 		ds18b20state_type resInit = ds18b20Init();
 		if(resInit == ds18b20st_ok){
 			temperature.state = temp_Ok;
@@ -56,12 +54,12 @@ void ds18TSK(void *pPrm){
 			}
 			vTaskDelay(pdMS_TO_TICKS(1000));
 		}
-    }
+	}
 
-    while(1){
-    	uint8_t bff[9];
+	while(1){
+		uint8_t bff[9];
 
-    	owSt_type st =  ow_reset();
+		owSt_type st =  ow_reset();
 		bff[0] = SKIP_ROM;
 		ow_write(bff, 1);
 		bff[0] = CONVERT_T;
@@ -71,9 +69,9 @@ void ds18TSK(void *pPrm){
 		memset(bff, 0, 9);
 		vTaskDelay(pdMS_TO_TICKS(1000));
 
-    	ow_setOutOpenDrain();
-    	st = ow_reset();
-        if(st != owOk)
+		ow_setOutOpenDrain();
+		st = ow_reset();
+		if(st != owOk)
 			goto error;
 
 		bff[0] = SKIP_ROM;
@@ -94,16 +92,16 @@ void ds18TSK(void *pPrm){
 		if(crc != 0)
 			goto error;
 
-		uint16_t scratchpad = bff[1];
+		int16_t scratchpad = bff[1];
 		scratchpad <<= 8;
 		scratchpad |= bff[0];
-		temperature.temperature = (scratchpad * 10 + (16/2)) / 16;   //Division with rounding
+		temperature.temperature = (scratchpad * 10 + (16/2)) / 16; //Division with rounding
 		temperature.state = temp_Ok;
 		errorcnt = 0;
 
-        continue;
+	continue;
 
-        error:
+	error:
 			if(errorcnt < DS18_MAX_ERROR){
 				errorcnt++;
 			}else{

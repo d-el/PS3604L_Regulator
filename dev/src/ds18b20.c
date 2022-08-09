@@ -1,9 +1,9 @@
 ﻿/*!****************************************************************************
- * @file    	ds18b20.c
- * @author  	Storozhenko Roman - D_EL
- * @version 	V2.1
- * @date    	30.03.2014
- * @copyright 	The MIT License (MIT). Copyright (c) 2020 Storozhenko Roman
+ * @file		ds18b20.c
+ * @author		Storozhenko Roman - D_EL
+ * @version		V2.1
+ * @date		30.03.2014
+ * @copyright	The MIT License (MIT). Copyright (c) 2020 Storozhenko Roman
  */
 
 /*!****************************************************************************

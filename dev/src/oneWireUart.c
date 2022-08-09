@@ -1,10 +1,10 @@
 ﻿/*!****************************************************************************
  * @file		oneWireUart.c
  * @author		d_el
- * @version		V1.0
- * @date		21.07.2016
+ * @version		V1.1
+ * @date		06.04.2022
  * @brief
- * @copyright	The MIT License (MIT). Copyright (c) 2021 Storozhenko Roman
+ * @copyright	The MIT License (MIT). Copyright (c) 2022 Storozhenko Roman
  */
 
 /*!****************************************************************************
@@ -38,6 +38,8 @@ static void uartRxHook(uart_type *puart){
 * @brief    Initialization one wire interface
 */
 void ow_init(void){
+	uart_init(OW_UART, 9600);	//1WIRE
+
 	// Create Semaphore for UART
 	vSemaphoreCreateBinary(oneWireUartSem);
 	assert(oneWireUartSem != NULL);
@@ -67,26 +69,24 @@ void ow_setOutOpenDrain(void){
 * @retval   owSt_type
 */
 owSt_type ow_reset(void){
-    BaseType_t  res;
+	if(gppin_get(GP_DS18B20) == 0){
+		return owShortCircle; //Check on the Short Circle bus
+	}
 
-    if(gppin_get(GP_DS18B20) == 0){
-        return owShortCircle;       //Check on the Short Circle bus
-    }
-
-    uart_setBaud(OW_UART, 9600);
-    OW_UART->pTxBff[0] = 0xF0;
-    uart_read(OW_UART, OW_UART->pRxBff, 1 + 1);
-    uart_write(OW_UART, OW_UART->pTxBff, 1);
-    res = xSemaphoreTake(oneWireUartSem, pdMS_TO_TICKS(OW_TIMEOUT));
-    if(res != pdTRUE){
+	uart_setBaud(OW_UART, 9600);
+	OW_UART->pTxBff[0] = 0xF0;
+	uart_read(OW_UART, OW_UART->pRxBff, 1 + 1);
+	uart_write(OW_UART, OW_UART->pTxBff, 1);
+	BaseType_t res = xSemaphoreTake(oneWireUartSem, pdMS_TO_TICKS(OW_TIMEOUT));
+	if(res != pdTRUE){
 		return owUartTimeout;
 	}
 
-    if(((OW_UART->pRxBff[0] >= 0x90)&&(OW_UART->pRxBff[0] <= 0xE0))||(OW_UART->pRxBff[0] == 0)){
-        return owOk;
-    }else{
-        return owNotFound;
-    }
+	if(((OW_UART->pRxBff[0] >= 0x90)&&(OW_UART->pRxBff[0] <= 0xE0))||(OW_UART->pRxBff[0] == 0)){
+		return owOk;
+	}else{
+		return owNotFound;
+	}
 }
 
 /*!***************************************************************************
@@ -96,30 +96,29 @@ owSt_type ow_reset(void){
 * @retval None
 */
 owSt_type ow_write(const void *src, uint8_t len){
-    uint8_t *pSrc       = (uint8_t*)src;
-    uint8_t *pSrcEnd    = pSrc + len;
-    uint8_t *pBff       = OW_UART->pTxBff;
-    uint8_t mask, byteTrans = len << 3;
+	uint8_t* pSrc = (uint8_t*)src;
+	uint8_t* pSrcEnd = pSrc + len;
+	uint8_t* pBff = OW_UART->pTxBff;
+	while(pSrc < pSrcEnd){
+		for(uint8_t mask = 1; mask != 0; mask <<= 1){
+			if((*pSrc & mask) != 0){
+				*pBff++ = 0xFF;
+			}else{
+				*pBff++ = 0x00;
+			}
+		}
+		pSrc++;
+	}
 
-    while(pSrc < pSrcEnd){
-        for(mask = 1; mask != 0; mask <<= 1){
-            if((*pSrc & mask) != 0){
-                *pBff++ = 0xFF;
-            }else{
-                *pBff++ = 0x00;
-            }
-        }
-        pSrc++;
-    }
-
-    uart_setBaud(OW_UART, 115200);
-    uart_read(OW_UART, OW_UART->pRxBff, byteTrans);
-    uart_write(OW_UART, OW_UART->pTxBff, byteTrans);
-    BaseType_t res = xSemaphoreTake(oneWireUartSem, pdMS_TO_TICKS(OW_TIMEOUT));
-    if(res != pdTRUE){
-    	return owUartTimeout;
-    }
-    return owOk;
+	uart_setBaud(OW_UART, 115200);
+	uint8_t byteTrans = len << 3;
+	uart_read(OW_UART, OW_UART->pRxBff, byteTrans);
+	uart_write(OW_UART, OW_UART->pTxBff, byteTrans);
+	BaseType_t res = xSemaphoreTake(oneWireUartSem, pdMS_TO_TICKS(OW_TIMEOUT));
+	if(res != pdTRUE){
+		return owUartTimeout;
+	}
+	return owOk;
 }
 
 /*!***************************************************************************
@@ -129,35 +128,32 @@ owSt_type ow_write(const void *src, uint8_t len){
 * @retval None
 */
 owSt_type ow_read(void *dst, uint8_t len){
-	BaseType_t  res;
-    uint8_t 	*pDst       = dst;
-    uint8_t 	*pDstEnd    = pDst + len;
-    uint8_t 	*pBff       = OW_UART->pRxBff;
-    uint8_t 	mask, byteTrans = len << 3;
+	uint8_t byteTrans = len << 3;
+	memset(OW_UART->pTxBff, 0xFF, byteTrans);
+	uart_setBaud(OW_UART, 115200);
+	uart_read(OW_UART, OW_UART->pRxBff, byteTrans);
+	uart_write(OW_UART, OW_UART->pTxBff, byteTrans);
+	BaseType_t res = xSemaphoreTake(oneWireUartSem, pdMS_TO_TICKS(OW_TIMEOUT));
 
-    memset(OW_UART->pTxBff, 0xFF, byteTrans);
-
-    uart_setBaud(OW_UART, 115200);
-    uart_read(OW_UART, OW_UART->pRxBff, byteTrans);
-    uart_write(OW_UART, OW_UART->pTxBff, byteTrans);
-    res = xSemaphoreTake(oneWireUartSem, pdMS_TO_TICKS(OW_TIMEOUT));
-
-    if(res == pdTRUE){
+	if(res == pdTRUE){
+		uint8_t* pDst = dst;
+		uint8_t* pDstEnd = pDst + len;
+		uint8_t* pBff = OW_UART->pRxBff;
 		while(pDst < pDstEnd){
 			*pDst = 0;
-			for(mask = 1; mask != 0; mask <<= 1){
+			for(uint8_t mask = 1; mask != 0; mask <<= 1){
 				if(*pBff++ == 0xFF){
-					*pDst |= mask;     //Read '1'
+					*pDst |= mask; //Read '1'
 				}
 			}
 			pDst++;
 		}
-    }
-    else{
-    	return owUartTimeout;
-    }
+	}
+	else{
+		return owUartTimeout;
+	}
 
-    return owOk;
+	return owOk;
 }
 
 /*!***************************************************************************
@@ -167,20 +163,19 @@ owSt_type ow_read(void *dst, uint8_t len){
  * Final Xor Value:	0x00
  */
 uint8_t ow_crc8(uint8_t *mas, uint8_t n){
-    uint8_t j , i, tmp, data, crc = 0;
-
-    for(i = 0; i < n; i++){
-        data = *mas;
-        for(j = 0; j < 8; j++){
-            tmp = (crc ^ data) & 0x01;
-            if (tmp == 0x01) crc = crc ^ 0x18;
-            crc = (crc >> 1) & 0x7F;
-            if (tmp == 0x01) crc = crc | 0x80;
-            data = data >> 1;
-        }
-        mas++;
-    }
-    return crc;
+	uint8_t crc = 0;
+	for(uint8_t i = 0; i < n; i++){
+		uint8_t data = *mas;
+		for(uint8_t j = 0; j < 8; j++){
+			uint8_t tmp = (crc ^ data) & 0x01;
+			if (tmp == 0x01) crc = crc ^ 0x18;
+			crc = (crc >> 1) & 0x7F;
+			if (tmp == 0x01) crc = crc | 0x80;
+			data = data >> 1;
+		}
+		mas++;
+	}
+	return crc;
 }
 
 /******************************** END OF FILE ********************************/

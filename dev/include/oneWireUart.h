@@ -1,10 +1,10 @@
 ﻿/*!****************************************************************************
  * @file		oneWireUart.h
  * @author		d_el
- * @version		V1.0
- * @date		21.07.2016
+ * @version		V1.1
+ * @date		06.04.2022
  * @brief
- * @copyright	The MIT License (MIT). Copyright (c) 2021 Storozhenko Roman
+ * @copyright	The MIT License (MIT). Copyright (c) 2022 Storozhenko Roman
  */
 #ifndef oneWireUart_H
 #define oneWireUart_H

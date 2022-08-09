@@ -21,7 +21,7 @@
 
 #define COOLER_PWM_START	(0.3)	///<[k PWM]
 #define TEMP_FAN_OFF		(35.0)	///<[°C]
-#define TEMP_FAN_ON			(40.0)	///<[°C]
+#define TEMP_FAN_ON			(43.0)	///<[°C]
 #define TEMP_FAN_MAX		(60.0)	///<[°C]
 #define TEMP_DISABLE		(80.0)	///<[°C]
 

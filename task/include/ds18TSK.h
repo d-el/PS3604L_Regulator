@@ -1,10 +1,10 @@
 ﻿/*!****************************************************************************
  * @file		ds18TSK.h
  * @author		d_el
- * @version		V1.0
- * @date		26.07.2016
+ * @version		V1.1
+ * @date		06.04.2022
  * @brief
- * @copyright	The MIT License (MIT). Copyright (c) 2021 Storozhenko Roman
+ * @copyright	The MIT License (MIT). Copyright (c) 2022 Storozhenko Roman
  */
 #ifndef ds18TSK_H
 #define ds18TSK_H
@@ -31,14 +31,14 @@ extern "C" {
 * User typedef
 */
 typedef enum{
-    temp_Ok,
+	temp_Ok,
 	temp_NoInit,
-    temp_ErrSensor
+	temp_ErrSensor
 }temperatureState_type;
 
 typedef struct{
-    temperatureState_type   state;
-    uint16_t                temperature;    //[X_X °C]
+	temperatureState_type	state;
+	int16_t					temperature;	//[X_X °C]
 }temperature_type;
 
 /*!****************************************************************************
