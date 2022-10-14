@@ -393,8 +393,6 @@ void systemTSK(void *pPrm){
 
 		if(Prm::enable){
 			Prm::time = (xTaskGetTickCount() - timeOffset) / configTICK_RATE_HZ;
-		}else{
-			Prm::time = 0;
 		}
 
 		/**************************************
