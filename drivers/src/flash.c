@@ -81,6 +81,7 @@ flashState_type flash_write(void *dst, uint16_t *src, uint32_t num){
 
     while(pWr < pEnd){
         *pWr++ = *pRd++;
+        __DSB();
         while(flash_busy());
     }
 

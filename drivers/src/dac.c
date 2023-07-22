@@ -23,13 +23,13 @@ void dac_init(void){
 	gppin_init(GPIOA, 4, analogMode, pullDisable, 0, 0);
 	gppin_init(GPIOA, 5, analogMode, pullDisable, 0, 0);
 
-    RCC->APB1ENR	|= RCC_APB1ENR_DAC1EN;                		//Включить тактирование
-    DAC1->CR		|= DAC_CR_BOFF1;                            //DAC channel1 output buffer disable
-    DAC1->CR		|= DAC_CR_BOFF2;                            //DAC channel2 output buffer disable
-    DAC1->CR		|= DAC_CR_EN1;                              //Включить канал №1
-    DAC1->CR		|= DAC_CR_EN2;                              //Включить канал №2
-    DAC1->DHR12R1	= 0;                                        //На выходе канала1 0В
-    DAC1->DHR12R2	= 0;                                        //На выходе канала2 0В
+	RCC->APB1ENR	|= RCC_APB1ENR_DAC1EN;						// Clock enable
+	DAC1->CR		|= DAC_CR_BOFF1;							// DAC channel1 output buffer disable
+	DAC1->CR		|= DAC_CR_BOFF2;							// DAC channel2 output buffer disable
+	DAC1->CR		|= DAC_CR_EN1;								// Enable channel 1
+	DAC1->CR		|= DAC_CR_EN2;								// Enable channel 2
+	DAC1->DHR12R1	= 0;
+	DAC1->DHR12R2	= 0;
 }
 
 /******************************** END OF FILE ********************************/

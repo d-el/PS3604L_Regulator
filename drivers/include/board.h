@@ -45,8 +45,8 @@
 /*!****************************************************************************
 * Macro functions
 */
-#define setDacI(u16val)		setDacCh1(u16val)
-#define setDacU(u16val)		setDacCh2(u16val)
+#define setDacU(u16val)		setDacCh1(u16val)
+#define setDacI(u16val)		setDacCh2(u16val)
 #define LED_ON()			gppin_set(GP_LED)
 #define LED_OFF()			gppin_reset(GP_LED)
 #define LED_TOGGLE()		gppin_togle(GP_LED)

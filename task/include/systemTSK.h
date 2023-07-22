@@ -27,7 +27,7 @@
 
 #define VTASK_FILTER_K		(3)
 
-#define MIN_VIN_VOLTAGE		(35.0)		//[V]
+#define MIN_VIN_VOLTAGE		(30.0)		//[V]
 
 /*!****************************************************************************
 * Prototypes for the functions

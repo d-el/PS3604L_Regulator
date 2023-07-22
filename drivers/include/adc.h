@@ -21,7 +21,7 @@ extern "C" {
 * User define
 */
 #define ADC_TIM_FREQUENCY			(24000000) // [Hz]
-#define SDADC_DR_TO_LSB_ADD			32767
+#define SDADC_DR_TO_LSB_ADD			32768
 
 enum{
 	CH_UINADC,
@@ -35,6 +35,7 @@ enum{
 */
 typedef struct adcStct{
 	uint16_t		sampleRate;			// [us]
+	int16_t			adcdr[CH_NUMBER];
 	uint16_t		adcreg[CH_NUMBER];
 	void (*tcHoock)(struct adcStct *adc);
 }adcStct_type;

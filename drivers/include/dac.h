@@ -36,8 +36,8 @@ extern "C" {
 /*!****************************************************************************
 * Macro functions
 */
-#define setDacCh1(u16val)     DAC->DHR12R1 = (u16val)
-#define setDacCh2(u16val)     DAC->DHR12R2 = (u16val)
+#define setDacCh1(u16val)	DAC->DHR12R1 = (u16val)
+#define setDacCh2(u16val)	DAC->DHR12R2 = (u16val)
 
 /*!****************************************************************************
 * Prototypes for the functions

@@ -15,10 +15,13 @@
 template<class T, size_t MaxSize>
 class MovingAverageFilter {
 public:
-	MovingAverageFilter(T _defValue, size_t _size = MaxSize){
-		size = _size;
+	MovingAverageFilter(T _defValue, size_t _size = MaxSize):
+		size(_size), index(0), acc(0)
+	{
+
 		for(size_t i = 0; i < size; i++){
 			buffer[i] = _defValue;
+			acc += _defValue;
 		}
 	};
 

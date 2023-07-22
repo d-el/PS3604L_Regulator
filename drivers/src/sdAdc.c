@@ -21,6 +21,8 @@ adcStct_type adcStct = {
 	.sampleRate = 10000,	//Default sample Rate
 };
 
+SDADC_TypeDef* sdadc1;
+
 /*!****************************************************************************
 * TIM3 -> SDADC1 -> DMA2_Channel3 -> DMA2_Channel3_IRQHandler
 * SDADC1_IN4P
@@ -61,6 +63,7 @@ void adc_init(void){
 	/**********************************
 	 * SDADC
 	 */
+	sdadc1 = SDADC1;
 	SDADC1->CR1		|= SDADC_CR1_JDMAEN;						//The DMA channel is enabled to read regular data
 	SDADC1->CR1		&= ~SDADC_CR1_REFV;							//External reference where the VREF pin must be forced externally
 	for(int i = 0; i < 360000; i++) __NOP();
@@ -70,13 +73,21 @@ void adc_init(void){
 	for(int i = 0; i < 360000; i++) __NOP();
 
 	SDADC1->CR1		|= SDADC_CR1_INIT;							//Enter initialization mode
-	while((SDADC1->ISR & SDADC_ISR_INITRDY) == 0);				//Wait for The SDADC is in initialization mode
+	while((SDADC1->ISR & SDADC_ISR_INITRDY) == 0) __NOP();		//Wait for The SDADC is in initialization mode
 
+	{
 	SDADC1->CONF0R	|= SDADC_CONF0R_SE0;						//Conversions are executed in single-ended zero-volt reference mode
+	SDADC1->CONF0R	|= SDADC_CONF0R_GAIN0;						//0.5x gain
+	}
 
-	SDADC1->CONFCHR1 &= ~SDADC_CONFCHR1_CONFCH4;				//Channel 4 uses the configuration specified in SDADC_CONF0R
-	SDADC1->CONFCHR1 &= ~SDADC_CONFCHR1_CONFCH5;				//Channel 5 uses the configuration specified in SDADC_CONF0R
-	SDADC1->CONFCHR1 &= ~SDADC_CONFCHR1_CONFCH6;				//Channel 6 uses the configuration specified in SDADC_CONF0R
+	{
+	SDADC1->CONF1R	|= SDADC_CONF0R_SE0;						//Conversions are executed in single-ended zero-volt reference mode
+	SDADC1->CONF1R	&= ~SDADC_CONF0R_GAIN0;						//1x gain
+	}
+
+	SDADC1->CONFCHR1 |= 1 << SDADC_CONFCHR1_CONFCH4_Pos;		//Channel 4 uses the configuration specified in SDADC_CONF1R
+	SDADC1->CONFCHR1 |= 0 << SDADC_CONFCHR1_CONFCH5_Pos;		//Channel 5 uses the configuration specified in SDADC_CONF0R
+	SDADC1->CONFCHR1 |= 1 << SDADC_CONFCHR1_CONFCH6_Pos;		//Channel 6 uses the configuration specified in SDADC_CONF1R
 
 	SDADC1->JCHGR	=	SDADC_JCHGR_JCHG_4 |					//Channel 4 is not part of the injected group
 						SDADC_JCHGR_JCHG_5 |					//Channel 5 is not part of the injected group
@@ -85,6 +96,8 @@ void adc_init(void){
 	SDADC1->CR2		|= SDADC_CR2_JEXTEN_0;						//Each rising edge on the selected trigger makes a request to launch a injected conversion
 	SDADC1->CR2		|= SDADC_CR2_JEXTSEL_0 |					//Trigger signal selection for launching injected conversions TIM3_CH1
 						SDADC_CR2_JEXTSEL_1;
+
+	SDADC1->CR2		|= SDADC_CR2_CALIBCNT_0;					//Two calibration sequences will be performed to calculate OFFSET0[11:0] and OFFSET1[11:0]
 
 	SDADC1->CR1		&= ~SDADC_CR1_INIT;							//Exit initialization mode
 	while((SDADC1->ISR & SDADC_ISR_INITRDY) != 0);
@@ -108,7 +121,7 @@ void adc_init(void){
 	DMA2_Channel3->CCR |= DMA_CCR_TCIE;							//Transfer complete interrupt enable
 	DMA2_Channel3->CNDTR = CH_NUMBER;							//Number of data
 	DMA2_Channel3->CPAR = (uint32_t)&(SDADC1->JDATAR);			//Peripheral address
-	DMA2_Channel3->CMAR = (uint32_t)&adcStct.adcreg[0];			//Memory address
+	DMA2_Channel3->CMAR = (uint32_t)&adcStct.adcdr[0];			//Memory address
 	NVIC_EnableIRQ(DMA2_Channel3_IRQn);
 	NVIC_SetPriority(DMA2_Channel3_IRQn, DMA2_Channel3_IRQn_Priority);
 	DMA2_Channel3->CCR |= DMA_CCR_EN;
@@ -161,9 +174,9 @@ void adc_setCallback(adcCallback_type tcHoock){
 *---> DMA for SAADC Interrupt Handler
 */
 void DMA2_Channel3_IRQHandler(void){
-	adcStct.adcreg[0] += SDADC_DR_TO_LSB_ADD;
-	adcStct.adcreg[1] += SDADC_DR_TO_LSB_ADD;
-	adcStct.adcreg[2] += SDADC_DR_TO_LSB_ADD;
+	adcStct.adcreg[0] = adcStct.adcdr[0] + SDADC_DR_TO_LSB_ADD;
+	adcStct.adcreg[1] = adcStct.adcdr[1] + SDADC_DR_TO_LSB_ADD;
+	adcStct.adcreg[2] = adcStct.adcdr[2] + SDADC_DR_TO_LSB_ADD;
 	if(adcStct.tcHoock != NULL){
 		adcStct.tcHoock(&adcStct);
 	}

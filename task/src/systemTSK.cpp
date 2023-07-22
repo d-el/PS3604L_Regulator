@@ -47,7 +47,6 @@ static uint16_t base[] = {
 
 extern uint8_t _suser_settings;
 bool currentirq;
-bool flagsave;
 
 /*!****************************************************************************
  * @brief	main output ON
@@ -137,14 +136,17 @@ void irqCallback(pinMode_type *gpio){
 /*!****************************************************************************
  * @brief
  */
+uint8_t settingbuf[512];
 bool savePrm(void){
 	size_t settingsize = Prm::getSerialSize(Prm::savesys);
 	uint8_t settingbuf[settingsize];
 	Prm::serialize(Prm::savesys, settingbuf);
+	taskENTER_CRITICAL();
 	flash_unlock();
 	flash_erasePage(&_suser_settings);
-	flashState_type memState = flash_write(&_suser_settings, (uint16_t *)settingbuf, (settingsize + 1) /sizeof(uint16_t));
+	flashState_type memState = flash_write(&_suser_settings, (uint16_t *)settingbuf, (settingsize + 1) / sizeof(uint16_t));
 	flash_lock();
+	taskEXIT_CRITICAL();
 	if(memState != flash_ok){
 		return false;
 	}
@@ -573,7 +575,9 @@ void systemTSK(void *pPrm){
 			disablecause = Prm::v_none;
 		}
 
-		if((status & Prm::m_lowInputVoltage || flagsave) && modbus_needSave(false)){
+		if(status & Prm::m_lowInputVoltage && modbus_needSave(false)){
+			LED_OFF();
+			savePrm();
 			if(savePrm()){
 				modbus_needSave(true);
 			}

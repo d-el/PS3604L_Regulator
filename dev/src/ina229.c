@@ -93,7 +93,7 @@ bool ina229_init(void){
 		return false;
 	}
 
-	ina229_writeReg16u(CONFIG, 1 << 4/*Shunt full scale range selection across IN+ and IN–. 1h = ± 40.96 mV*/);
+	ina229_writeReg16u(CONFIG, 1 << 4/*Shunt full scale range selection across IN+ and IN–. 1h = ±40.96 mV*/);
 
 	return true;
 }
@@ -103,6 +103,10 @@ bool ina229_init(void){
 * @retval
 */
 bool ina229_trig(void){
+//	uint16_t adcconfig =	0xA /*Continuous shunt voltage only*/ << 12 |
+//							7 /*4120 µs*/ << 6 |
+//							0 /*averaging 1*/ << 0;
+
 	uint16_t adcconfig =	2 /*Triggered shunt voltage triggered, single shot*/ << 12 |
 							2 /*150 µs*/ << 6 |
 							1 /*averaging 4*/ << 0;
@@ -114,7 +118,21 @@ bool ina229_trig(void){
 * @retval
 */
 bool ina229_readShuntVoltage(int32_t *v){
-	return ina229_readReg24s(VSHUNT, v);
+	int32_t vshunt;
+	if(!ina229_readReg24s(VSHUNT, &vshunt)){ // bit 23-4, 3-0 reserved
+		return false;
+	}
+	*v = vshunt / 16;
+	return true;
+}
+
+bool ina229_readCNVRF(bool *c){
+	int16_t cnvrf;
+	if(!ina229_readReg16s(DIAG_ALRT, &cnvrf)){ // bit 23-4, 3-0 reserved
+		return false;
+	}
+	*c = cnvrf & 0x02;
+	return true;
 }
 
 /******************************** END OF FILE ********************************/

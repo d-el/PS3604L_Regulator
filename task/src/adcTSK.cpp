@@ -44,7 +44,7 @@ void adcTSK(void *pPrm){
 	vSemaphoreCreateBinary(AdcEndConversionSem);
 	xSemaphoreTake(AdcEndConversionSem, portMAX_DELAY);
 
-	static MovingAverageFilter<uint16_t, 64> f_vin(40);
+	static MovingAverageFilter<uint16_t, 16> f_vin(45000); // 55.5V init
 	static MovingAverageFilter<uint16_t, 256> f_iadc(0);
 	static MovingAverageFilter<uint16_t, 256> f_uadc(0);
 	static MovingAverageFilter<int32_t, 512> f_iex(0);
@@ -54,13 +54,17 @@ void adcTSK(void *pPrm){
 	adc_setSampleRate(1000);
 	adc_startSampling();
 
+	int32_t shunt = 0;
+
 	while(1){
 		xSemaphoreTake(AdcEndConversionSem, portMAX_DELAY);
 
-		int32_t shunt = 0;
 		if(a.externalSensorOk != 0){
-			ina229_readShuntVoltage(&shunt);
-			shunt = shunt / 16;
+			bool inaConverted = false;
+			ina229_readCNVRF(&inaConverted);
+			if(inaConverted){
+				ina229_readShuntVoltage(&shunt);
+			}
 			ina229_trig();
 		}
 

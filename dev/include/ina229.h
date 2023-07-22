@@ -64,6 +64,7 @@ typedef enum{
 bool ina229_init(void);
 bool ina229_trig(void);
 bool ina229_readShuntVoltage(int32_t *v);
+bool ina229_readCNVRF(bool *c);
 
 #ifdef __cplusplus
 }

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.6)
 
 PROJECT(PS3604LR
-	VERSION 1.8.2
+	VERSION 1.8.4
 	LANGUAGES CXX C
 	)
 	
@@ -29,7 +29,6 @@ add_compile_options(
 	)
 
 add_link_options(
-	-Wl,--gc-sections
 	-Wl,--print-memory-usage
 	-Wl,--undefined=uxTopUsedPriority
 	-Wl,-Map=${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.map
@@ -51,11 +50,7 @@ add_subdirectory(systems)
 add_subdirectory(task)
 add_subdirectory(utils)
 
-set(SOURCE_FILES
-	main.cpp
-	)
-
-add_executable(${PROJECT_NAME}.elf ${SOURCE_FILES})
+add_executable(${PROJECT_NAME}.elf main.cpp)
 
 include_directories(PUBLIC
 	app/include
