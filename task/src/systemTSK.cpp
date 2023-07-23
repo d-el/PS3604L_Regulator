@@ -577,7 +577,6 @@ void systemTSK(void *pPrm){
 
 		if(status & Prm::m_lowInputVoltage && modbus_needSave(false)){
 			LED_OFF();
-			savePrm();
 			if(savePrm()){
 				modbus_needSave(true);
 			}
