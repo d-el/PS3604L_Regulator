@@ -1,9 +1,9 @@
 ﻿/*!****************************************************************************
- * @file    	flash.h
- * @author  	Storozhenko Roman - D_EL
- * @version 	V1.0
- * @date    	07.02.2015
- * @copyright 	The MIT License (MIT). Copyright (c) 2020 Storozhenko Roman
+ * @file		flash.h
+ * @author		Storozhenko Roman - D_EL
+ * @version		V1.1
+ * @date		17.08.2023
+ * @copyright	The MIT License (MIT). Copyright (c) 2023 Storozhenko Roman
  */
 #ifndef FLASH_H
 #define FLASH_H
@@ -16,18 +16,7 @@ extern "C" {
 * Include
 */
 #include <stdint.h>
-
-/*!****************************************************************************
-* User typedef
-*/
-typedef enum{
-    flash_ok,
-    flash_signatureError,
-    flash_CRCError,
-    flash_ErrorSizeMem,
-    flash_error
-}flashState_type;
-
+#include <stdbool.h>
 
 /*!****************************************************************************
 * Prototypes for the functions
@@ -35,8 +24,8 @@ typedef enum{
 void flash_unlock(void);
 void flash_lock(void);
 void flash_eraseAllPages(void);
-void flash_erasePage(void *address);
-flashState_type flash_write(void *dst, uint16_t *src, uint32_t num);
+bool flash_erasePage(void *address);
+bool flash_write(void *dst, uint16_t *src, uint32_t num);
 
 #ifdef __cplusplus
 }

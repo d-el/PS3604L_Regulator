@@ -136,7 +136,6 @@ void irqCallback(pinMode_type *gpio){
 /*!****************************************************************************
  * @brief
  */
-uint8_t settingbuf[512];
 bool savePrm(void){
 	size_t settingsize = Prm::getSerialSize(Prm::savesys);
 	uint8_t settingbuf[settingsize];
@@ -144,10 +143,10 @@ bool savePrm(void){
 	taskENTER_CRITICAL();
 	flash_unlock();
 	flash_erasePage(&_suser_settings);
-	flashState_type memState = flash_write(&_suser_settings, (uint16_t *)settingbuf, (settingsize + 1) / sizeof(uint16_t));
+	bool memState = flash_write(&_suser_settings, (uint16_t *)settingbuf, (settingsize + 1) / sizeof(uint16_t));
 	flash_lock();
 	taskEXIT_CRITICAL();
-	if(memState != flash_ok){
+	if(!memState){
 		return false;
 	}
 	return true;
@@ -180,7 +179,6 @@ void systemTSK(void *pPrm){
 	assert(pdTRUE == xTaskCreate(ds18TSK, "ds18TSK", DS18B_TSK_SZ_STACK, NULL, DS18B_TSK_PRIO, NULL));
 	vTaskDelay(pdMS_TO_TICKS(300));
 
-	_iq qtemp;
 	auto prevenable = Prm::enable.val;
 
 	///========================================================
@@ -297,11 +295,11 @@ void systemTSK(void *pPrm){
 		}
 
 		/*
-		 * Calculate resistens
+		 * Calculate resistance
 		 */
 		if(Prm::enable && (current > _IQ(0.001))
 				&& (voltage > _IQ(0.05))){
-			qtemp = _IQ14div(_IQtoIQ14(voltage), _IQtoIQ14(current));
+			_iq qtemp = _IQ14div(_IQtoIQ14(voltage), _IQtoIQ14(current));
 			if(qtemp > _IQ14(99999)){  //limit 99999 Ohm
 				qtemp = _IQ14(99999);
 			}

@@ -1,9 +1,9 @@
 ﻿/*!****************************************************************************
- * @file    	flash.c
- * @author  	Storozhenko Roman - D_EL
- * @version 	V1.0
- * @date    	07.02.2015
- * @copyright 	The MIT License (MIT). Copyright (c) 2020 Storozhenko Roman
+ * @file		flash.c
+ * @author		Storozhenko Roman - D_EL
+ * @version		V1.1
+ * @date		17.08.2023
+ * @copyright	The MIT License (MIT). Copyright (c) 2023 Storozhenko Roman
  */
 
 /*!****************************************************************************
@@ -21,22 +21,22 @@
 * @brief    Unlock flash
 */
 void flash_unlock(void){
-    FLASH->KEYR = FLASH_KEY1;
-    FLASH->KEYR = FLASH_KEY2;
+	FLASH->KEYR = FLASH_KEY1;
+	FLASH->KEYR = FLASH_KEY2;
 }
 
 /*!****************************************************************************
 * @brief    Lock flash
 */
 void flash_lock(void){
-    FLASH->CR |= FLASH_CR_LOCK;
+	FLASH->CR |= FLASH_CR_LOCK;
 }
 
 /*!****************************************************************************
  * @brief    Returned not 0 if flash busy
  */
 uint32_t flash_busy(void){
-    return (FLASH->SR & FLASH_SR_BSY);
+	return (FLASH->SR & FLASH_SR_BSY);
 }
 
 /*!****************************************************************************
@@ -53,12 +53,19 @@ void flash_eraseAllPages(void){
 * @brief    	Erase one page
 * @param[in]    addr - address allocable in page
 */
-void flash_erasePage(void *addr){
-    FLASH->CR|= FLASH_CR_PER;
-    FLASH->AR = (uint32_t)addr;
-    FLASH->CR|= FLASH_CR_STRT;
-    while(flash_busy());
-    FLASH->CR&= ~FLASH_CR_PER;
+bool flash_erasePage(void *addr){
+	while(flash_busy());
+	FLASH->CR|= FLASH_CR_PER;
+	FLASH->AR = (uint32_t)addr;
+	FLASH->CR|= FLASH_CR_STRT;
+	__NOP(); // Wait one CPU cycle
+	while(flash_busy());
+	FLASH->CR&= ~FLASH_CR_PER;
+	if(FLASH->SR & FLASH_SR_EOP){
+		FLASH->SR &= ~FLASH_SR_EOP;
+		return true;
+	}
+	return false;
 }
 
 /*!****************************************************************************
@@ -67,26 +74,27 @@ void flash_erasePage(void *addr){
 * @param    src[in] - source
 * @param    num[in] - number half word (2 byte)
 */
-flashState_type flash_write(void *dst, uint16_t *src, uint32_t num){
-    uint16_t    *pRd;
-    uint16_t    *pWr;
-    uint16_t    *pEnd;
+bool flash_write(void *dst, uint16_t *src, uint32_t num){
+	while(flash_busy());
+	FLASH->CR |= FLASH_CR_PG;
+	while(flash_busy());
 
-    FLASH->CR |= FLASH_CR_PG;
-    while(flash_busy());
+	uint16_t* pRd     = src;
+	uint16_t* pWr     = dst;
+	uint16_t* pEnd    = pWr + num;
 
-    pRd     = src;
-    pWr     = dst;
-    pEnd    = pWr + num;
+	while(pWr < pEnd){
+		*pWr++ = *pRd++;
+		__DSB();
+		while(flash_busy());
+	}
 
-    while(pWr < pEnd){
-        *pWr++ = *pRd++;
-        __DSB();
-        while(flash_busy());
-    }
-
-    FLASH->CR &= ~FLASH_CR_PG;
-    return flash_ok;
+	FLASH->CR &= ~FLASH_CR_PG;
+	if(FLASH->SR & FLASH_SR_EOP){
+		FLASH->SR &= ~FLASH_SR_EOP;
+		return true;
+	}
+	return false;
 }
 
 /******************************** END OF FILE ********************************/

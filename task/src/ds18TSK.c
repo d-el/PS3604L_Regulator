@@ -41,7 +41,7 @@ void ds18TSK(void *pPrm){
 	* DS18B20 INIT
 	*/
 	while(1){
-		ds18b20state_type resInit = ds18b20Init();
+		ds18b20state_type resInit = ds18b20Init(NULL);
 		if(resInit == ds18b20st_ok){
 			temperature.state = temp_Ok;
 			break;
@@ -57,45 +57,17 @@ void ds18TSK(void *pPrm){
 	}
 
 	while(1){
-		uint8_t bff[9];
+		vTaskDelay(pdMS_TO_TICKS(10));
+		ds18b20ConvertTemp(NULL);
 
-		owSt_type st =  ow_reset();
-		bff[0] = SKIP_ROM;
-		ow_write(bff, 1);
-		bff[0] = CONVERT_T;
-		ow_write(bff, 1);
-
-		ow_setOutHi();
-		memset(bff, 0, 9);
 		vTaskDelay(pdMS_TO_TICKS(1000));
 
-		ow_setOutOpenDrain();
-		st = ow_reset();
-		if(st != owOk)
+		uint8_t scratchpad[9];
+		ds18b20state_type res = ds18b20ReadScratchpad(NULL, scratchpad);
+		if(res != ds18b20st_ok)
 			goto error;
 
-		bff[0] = SKIP_ROM;
-		st = ow_write(bff, 1);
-		if(st != owOk)
-			goto error;
-
-		bff[0] = READ_SCRATCHPAD;
-		st = ow_write(bff, 1);
-		if(st != owOk)
-			goto error;
-
-		st = ow_read(bff, 9);
-		if(st != owOk)
-			goto error;
-
-		uint8_t crc = crc8Calc(&crc1Wire, bff, 9);
-		if(crc != 0)
-			goto error;
-
-		int16_t scratchpad = bff[1];
-		scratchpad <<= 8;
-		scratchpad |= bff[0];
-		temperature.temperature = (scratchpad * 10 + (16/2)) / 16; //Division with rounding
+		temperature.temperature = ds18b20Reg2tmpr(scratchpad[0], scratchpad[1]);
 		temperature.state = temp_Ok;
 		errorcnt = 0;
 
