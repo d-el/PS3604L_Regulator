@@ -24,8 +24,8 @@ extern "C" {
  */
 
 //SPI3
-#define     SPI3_USE                    (1)
-#define     SPI3_RxDmaInterruptPrior    (15)
+#define		SPI3_USE					(1)
+#define		SPI3_RxDmaInterruptPrior	(14)
 #define		SPI3_PINAFMOSI				(6)
 #define		SPI3_PINAFMISO				(6)
 #define		SPI3_PINAFCLK				(6)
@@ -34,10 +34,10 @@ extern "C" {
  * Typedef
  */
 typedef enum{
-    spiFree,
-    spiRun,
-    spiTCSuccess,
-    spiTCErr
+	spiFree,
+	spiRun,
+	spiTCSuccess,
+	spiTCErr
 }spiState_type;
 
 typedef enum{
@@ -52,12 +52,12 @@ typedef enum{
 }spiDiv_t;
 
 typedef struct spiStruct{
-    SPI_TypeDef             *spi	;
-    DMA_Channel_TypeDef		*pSpiTxDmaCh;
+	SPI_TypeDef				*spi	;
+	DMA_Channel_TypeDef		*pSpiTxDmaCh;
 	DMA_Channel_TypeDef		*pSpiRxDmaCh;
-    void (*tcHoock)(struct spiStruct *spix);
-    uint8_t                 clockDiv;
-    spiState_type           state       :8;
+	void (*tcHoock)(struct spiStruct *spix);
+	uint8_t					clockDiv;
+	volatile spiState_type			state	:8;
 }spi_type;
 
 typedef void (*spiCallback_type)(spi_type *spix);
@@ -66,15 +66,15 @@ typedef void (*spiCallback_type)(spi_type *spix);
  * Exported variables
  */
 #if (SPI1_USE > 0)
-extern spi_type             *spi1;
+extern spi_type				*spi1;
 #endif //SPI1_USE
 
 #if (SPI2_USE > 0)
-extern spi_type             *spi2;
+extern spi_type				*spi2;
 #endif //SPI2_USE
 
 #if (SPI3_USE > 0)
-extern spi_type             *spi3;
+extern spi_type				*spi3;
 #endif //SPI3_USE
 
 /*!****************************************************************************

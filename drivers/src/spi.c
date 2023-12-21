@@ -75,22 +75,22 @@ void spi_init(spi_type *spix, spiDiv_t divClock){
 		/************************************************
 		* DMA clock
 		*/
-        RCC->AHBENR |= RCC_AHBENR_DMA2EN;
+		RCC->AHBENR |= RCC_AHBENR_DMA2EN;
 	}
 	#endif //SPI3_USE
 
-    /************************************************
+	/************************************************
     * SPI
     */
 	spix->spi->CR1 |= SPI_CR1_MSTR;                             // Master configuration
 	spix->spi->CR1 |= SPI_CR1_SSM;                              // Software slave management enabled
 	spix->spi->CR1 |= SPI_CR1_SSI;                              // Internal slave select
-	spix->spi->CR1 |= SPI_CR1_CPHA;								// Clock phase
+	spix->spi->CR1 |= SPI_CR1_CPHA;                             // Clock phase
 	spix->spi->CR1 |= divClock << SPI_CR1_BR_Pos;               // BR
 	spix->spi->CR2 |= SPI_CR2_FRXTH;                            // RXNE event is generated if the FIFO level is greater than or equal to 1/4 (8-bit)
 	spix->spi->CR2 |= SPI_CR2_DS_0 |
 							SPI_CR2_DS_1 |
-							SPI_CR2_DS_2;						//Data size 8-bit
+							SPI_CR2_DS_2;                       //Data size 8-bit
 	spix->spi->CR2 |= SPI_CR2_TXDMAEN;                          // Tx buffer DMA enabled
 	spix->spi->CR2 |= SPI_CR2_RXDMAEN;                          // Rx buffer DMA enabled
 
@@ -111,7 +111,7 @@ void spi_init(spi_type *spix, spiDiv_t divClock){
 	spix->pSpiTxDmaCh->CCR |= DMA_CCR_DIR;                         //Read from memory
 	spix->pSpiTxDmaCh->CCR &= ~DMA_CCR_TCIE;                       //Transfer complete interrupt disable
 	spix->pSpiTxDmaCh->CNDTR = 0;                                  //Number of data
-	spix->pSpiTxDmaCh->CPAR = (uint32_t) &(spix->spi->DR);    		//Peripheral address
+	spix->pSpiTxDmaCh->CPAR = (uint32_t) &(spix->spi->DR);         //Peripheral address
 	spix->pSpiTxDmaCh->CMAR = (uint32_t) NULL;                      //Memory address
 	//DMA Channel SPI RX
 	spix->pSpiRxDmaCh->CCR &= ~DMA_CCR_EN;                         //Channel disabled
@@ -124,7 +124,7 @@ void spi_init(spi_type *spix, spiDiv_t divClock){
 	spix->pSpiRxDmaCh->CCR &= ~DMA_CCR_DIR;                        //Read from peripheral
 	spix->pSpiRxDmaCh->CCR |= DMA_CCR_TCIE;                        //Transfer complete interrupt enable
 	spix->pSpiRxDmaCh->CNDTR = 0;                                  //Number of data
-	spix->pSpiRxDmaCh->CPAR = (uint32_t) &(spix->spi->DR);    		//Peripheral address
+	spix->pSpiRxDmaCh->CPAR = (uint32_t) &(spix->spi->DR);         //Peripheral address
 	spix->pSpiRxDmaCh->CMAR = (uint32_t)NULL;                      //Memory address
 }
 

@@ -20,7 +20,6 @@ extern "C" {
 /*!****************************************************************************
 * User define
 */
-#define ADC_TIM_FREQUENCY			(24000000) // [Hz]
 #define SDADC_DR_TO_LSB_ADD			32768
 
 enum{

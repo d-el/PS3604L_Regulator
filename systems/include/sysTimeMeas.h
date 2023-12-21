@@ -12,6 +12,10 @@
 #ifndef sysTimeMeas_H
 #define sysTimeMeas_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*!****************************************************************************
  * Include
  */
@@ -22,7 +26,6 @@
  * Define
  */
 #define NUMBER_MEASURES		(8)
-#define CORE_FREQUENCY		(168000000)
 
 /*!****************************************************************************
  * Enumeration
@@ -82,6 +85,10 @@ void sysTimeMeasDisable(void);
 uint32_t sysTimeMeasGet_cycles(sysTimeNumber_type n);
 uint64_t sysTimeMeasTo_ms(uint64_t cycles);
 uint64_t sysTimeMeasTo_us(uint64_t cycles);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif //sysTimeMeas_H
 /*************** LGPL ************** END OF FILE *********** D_EL ************/

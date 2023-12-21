@@ -16,13 +16,7 @@
 /*!****************************************************************************
  * User define
  */
-#define AdcVref							3.3		//[V]
-#define UDC_Rh							47		//[kOhm]
-#define UDC_Rl							2		//[kOhm]
 
-#define REVERSE_VOLTAGE_THRESHOLD		10		//[adc lsb with oversampling]
-#define CURRENT_SENSOR_THRESHOLD_UP		100		//[X_XXX A]
-#define CURRENT_SENSOR_THRESHOLD_DOWN	90		//[X_XXX A]
 
 /*!****************************************************************************
  * User typedef

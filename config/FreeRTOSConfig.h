@@ -112,7 +112,7 @@ See http://www.FreeRTOS.org/RTOS-Cortex-M3-M4.html. */
 /*-------NAME--------------------size [4 byte Word] */
 #define ADC_TSK_PRIO            4
 #define SYSTEM_TSK_PRIO         3
-#define MODBUS_TSK_PRIO         2
+#define MODBUS_TSK_PRIO         5
 #define DS18B_TSK_PRIO          1
 
 /* A header file that defines trace macro can be included here. */

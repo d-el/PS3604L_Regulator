@@ -207,6 +207,7 @@ void Val<T>::stepsize(int32_t step, T stepsize){
 }
 
 IVal *getbyaddress(uint16_t address);
+IVal *getNext();
 size_t getSerialSize(Save save);
 bool serialize(Save save, uint8_t *dst);
 bool deserialize(Save save, const uint8_t *src, size_t size);

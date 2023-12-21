@@ -27,7 +27,7 @@
 /*!****************************************************************************
 * MEMORY
 */
-static SemaphoreHandle_t connUartRxSem;
+static SemaphoreHandle_t connUartTcSem;
 static bool needSave;
 
 /******************************************************************************
@@ -42,18 +42,18 @@ void modbusTSK(void *pPrm){
 	(void)pPrm;
 
 	// Create Semaphore for UART
-	vSemaphoreCreateBinary(connUartRxSem);
-	xSemaphoreTake(connUartRxSem, portMAX_DELAY);
-	assert(connUartRxSem != NULL);
+	vSemaphoreCreateBinary(connUartTcSem);
+	xSemaphoreTake(connUartTcSem, portMAX_DELAY);
+	assert(connUartTcSem != NULL);
 
-	uart_init(uart1, 230400);
+	uart_init(uart1, 921600);
 	uart_setCallback(connectUart, uartTskHook, uartTskHook);
-	eMBInit(MB_RTU, 0x01, 0, 230400, MB_PAR_NONE);
+	eMBInit(MB_RTU, 0x01, 0, 0, MB_PAR_NONE);
 	eMBEnable();
 
 	while(1){
 		uart_read(connectUart, connectUart->pRxBff, PIECE_BUF_RX);
-		BaseType_t res = xSemaphoreTake(connUartRxSem, portMAX_DELAY);
+		BaseType_t res = xSemaphoreTake(connUartTcSem, portMAX_DELAY);
 		size_t numRx = PIECE_BUF_RX - uartGetRemainRx(connectUart);
 
 		if((numRx != 0)&&(res == pdTRUE)){
@@ -63,11 +63,11 @@ void modbusTSK(void *pPrm){
 				uint8_t txsize = mbSlaveGetTransmit(connectUart->pTxBff);
 				if(txsize > 0){
 					uart_write(connectUart, connectUart->pTxBff, txsize);
-					xSemaphoreTake(connUartRxSem, pdMS_TO_TICKS(100));
+					xSemaphoreTake(connUartTcSem, pdMS_TO_TICKS(100));
 				}
-	}
-	LED_OFF();
-}
+			}
+			LED_OFF();
+		}
 	}
 }
 
@@ -81,9 +81,9 @@ eMBErrorCode eMBRegHoldingCB(UCHAR *pucRegBuffer, USHORT usAddress, USHORT usNRe
 	usAddress--;
 	switch(eMode){
 		/* Pass current register values to the protocol stack. */
-		case MB_REG_READ:
+		case MB_REG_READ:{
+			Prm::IVal *ph = Prm::getbyaddress(usAddress);
 			while(usNRegs > 0){
-				auto *ph = Prm::getbyaddress(usAddress);
 				if(ph == nullptr){
 					P_LOGW(logTag, "read: illegal register address [%04X], regs %u", usAddress, usNRegs);
 					return MB_ENOREG;
@@ -95,11 +95,8 @@ eMBErrorCode eMBRegHoldingCB(UCHAR *pucRegBuffer, USHORT usAddress, USHORT usNRe
 					return MB_EINVAL;
 				}
 
-				//char string[32];
-				//ph->tostring(string, sizeof(string));
-				//P_LOGD(logTag, "read: [%04X] %u %s %s %s", usAddress, usNRegs, ph->label, string, ph->units);
-
 				(*ph)(true, nullptr);
+
 				uint8_t buffer[4] = {};
 				ph->serialize(buffer);
 				switch(prmsize){
@@ -119,14 +116,15 @@ eMBErrorCode eMBRegHoldingCB(UCHAR *pucRegBuffer, USHORT usAddress, USHORT usNRe
 						usNRegs -= 2;
 						break;
 				}
+				ph = Prm::getNext();
 			}
-			break;
+		}
+		break;
 
-			/* Update current register values with new values from the
-			 * protocol stack. */
-		case MB_REG_WRITE:
+			/* Update current register values with new values from the protocol stack. */
+		case MB_REG_WRITE:{
+			Prm::IVal *ph = Prm::getbyaddress(usAddress);
 			while(usNRegs > 0){
-				auto *ph = Prm::getbyaddress(usAddress);
 				if(ph == nullptr){
 					P_LOGW(logTag, "write: illegal register address [%04X]", usAddress);
 					return MB_ENOREG;
@@ -162,16 +160,16 @@ eMBErrorCode eMBRegHoldingCB(UCHAR *pucRegBuffer, USHORT usAddress, USHORT usNRe
 					P_LOGW(logTag, "write [%04X]: out of range", usAddress);
 					return MB_EINVAL;
 				}
+
 				(*ph)(false, nullptr);
-				//char string[32];
-				//ph->tostring(string, sizeof(string));
-				//P_LOGD(logTag, "write: [%04X] %u %s %s %s", usAddress, usNRegs, ph->label, string, ph->units);
 
 				if(ph->getsave() == Prm::savesys){
 					needSave = true;
 				}
+				ph = Prm::getNext();
 			}
-			break;
+		}
+		break;
 	}
 	return MB_ENOERR;
 }
@@ -192,9 +190,8 @@ bool modbus_needSave(bool clear){
  */
 static void uartTskHook(uart_type *puart){
 	(void)puart;
-	BaseType_t xHigherPriorityTaskWoken;
-	xHigherPriorityTaskWoken = pdFALSE;
-	xSemaphoreGiveFromISR(connUartRxSem, &xHigherPriorityTaskWoken);
+	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+	xSemaphoreGiveFromISR(connUartTcSem, &xHigherPriorityTaskWoken);
 	portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
 }
 

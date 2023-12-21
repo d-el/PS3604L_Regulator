@@ -27,6 +27,14 @@
 #include "adcTSK.h"
 #include "ds18TSK.h"
 
+#define AdcVref							3.3		// [V]
+#define UDC_Rh							47		// [kOhm]
+#define UDC_Rl							2		// [kOhm]
+
+#define REVERSE_VOLTAGE_THRESHOLD		150		// [adc lsb with oversampling]
+#define CURRENT_SENSOR_THRESHOLD_UP		100		// [X_XXX A]
+#define CURRENT_SENSOR_THRESHOLD_DOWN	90		// [X_XXX A]
+
 /*!****************************************************************************
 * Memory
 */
@@ -164,6 +172,7 @@ void systemTSK(void *pPrm){
 	adcTaskStct_type& a = adcTaskStct;
 	uint8_t limitCnt = 0;
 	bool enableState = false;
+	bool reverseVoltage = false;
 
 	print_init(stdOut_semihost);
 
@@ -174,12 +183,12 @@ void systemTSK(void *pPrm){
 		__NOP();
 	}
 
+	auto prevenable = Prm::enable.val;
+
 	assert(pdTRUE == xTaskCreate(modbusTSK, "modbusTSK", MODBUS_TSK_SZ_STACK,  NULL, MODBUS_TSK_PRIO, NULL));
 	assert(pdTRUE == xTaskCreate(adcTSK, "adcTSK", ADC_TSK_SZ_STACK, NULL, ADC_TSK_PRIO, NULL));
 	assert(pdTRUE == xTaskCreate(ds18TSK, "ds18TSK", DS18B_TSK_SZ_STACK, NULL, DS18B_TSK_PRIO, NULL));
 	vTaskDelay(pdMS_TO_TICKS(300));
-
-	auto prevenable = Prm::enable.val;
 
 	///========================================================
 	_iq					udc = 0;
@@ -191,7 +200,7 @@ void systemTSK(void *pPrm){
 	_iq14				resistens = 0;			//[Ohm]
 	uint32_t 			capacity = 0;			//[mAh]
 	adcCurrentSensor_type	currentSensor = adcCurrentSensorInternal;
-	uint8_t				reverseVoltage = 0;
+
 
 	while(1){
 
@@ -238,11 +247,11 @@ void systemTSK(void *pPrm){
 		/*
 		 * Detect revers voltage
 		 */
-//		if(a.adcFilt[CH_UADC].recursiveFilterOut > REVERSE_VOLTAGE_THRESHOLD){
-//			a.reverseVoltage = 0;
-//		}else{
-//			a.reverseVoltage = 1;
-//		}
+		if(a.filtered.u < REVERSE_VOLTAGE_THRESHOLD){
+			reverseVoltage = true;
+		}else{
+			reverseVoltage = false;
+		}
 
 		/*
 		 * Calculate current
@@ -358,7 +367,7 @@ void systemTSK(void *pPrm){
 		}
 
 		if(reverseVoltage){
-			status |= Prm::v_reverseVoltage;
+			status |= Prm::m_reverseVoltage;
 		}
 
 		if(udc < _IQ(MIN_VIN_VOLTAGE)){

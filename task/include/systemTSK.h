@@ -15,9 +15,8 @@
 /*!****************************************************************************
 * User define
 */
-#define SYSTEM_TSK_PERIOD	(4)		///<[ms]
+#define SYSTEM_TSK_PERIOD	(5)	///<[ms]
 #define CUR_OFF_TIME		(1000)	///<[ms]
-#define MAX_WAIT_RxRequest	(20)	///<[ms]
 
 #define COOLER_PWM_START	(0.3)	///<[k PWM]
 #define TEMP_FAN_OFF		(35.0)	///<[°C]

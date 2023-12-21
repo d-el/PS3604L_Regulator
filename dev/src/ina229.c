@@ -26,18 +26,17 @@ SemaphoreHandle_t spiSem;
  */
 static void spiTC_Hook(spi_type *spix){
 	(void)spix;
-    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-    xSemaphoreGiveFromISR(spiSem, &xHigherPriorityTaskWoken);
-    portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
+	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+	xSemaphoreGiveFromISR(spiSem, &xHigherPriorityTaskWoken);
+	portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
 }
 
 bool ina229_spi(void *dst, void *src, uint16_t len){
 	gppin_reset(GP_SPI3_NSS);
 	spi_transfer(spi3, dst, src, len);
-	const uint32_t maxWait_ms = 10;
-	BaseType_t res = xSemaphoreTake(spiSem, pdMS_TO_TICKS(maxWait_ms));
+	BaseType_t res = xSemaphoreTake(spiSem, pdMS_TO_TICKS(portMAX_DELAY));
 	gppin_set(GP_SPI3_NSS);
-	return res == pdTRUE;
+	return res == pdTRUE && spi3->state == spiTCSuccess;
 }
 
 bool ina229_readReg16s(ina229_registers_t reg, int16_t *val){
@@ -73,7 +72,7 @@ bool ina229_init(void){
 	vSemaphoreCreateBinary(spiSem);
 	xSemaphoreTake(spiSem, portMAX_DELAY);
 
-	spi_init(spi3, spiDiv8);
+	spi_init(spi3, spiDiv4);
 	spi_setCallback(spi3, spiTC_Hook);
 
 	int16_t val;

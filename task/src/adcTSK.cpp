@@ -17,6 +17,7 @@
 #include <ina229.h>
 #include "adcTSK.h"
 #include <movingAverageFilter.h>
+#include "sysTimeMeas.h"
 
 /*!****************************************************************************
  * MEMORY
@@ -37,6 +38,7 @@ static void adcHoock(adcStct_type *adc){
  * @param
  * @retval
  */
+uint32_t period, spitime;
 void adcTSK(void *pPrm){
 	(void)pPrm;
 	adcTaskStct_type& a = adcTaskStct;
@@ -47,7 +49,7 @@ void adcTSK(void *pPrm){
 	static MovingAverageFilter<uint16_t, 16> f_vin(45000); // 55.5V init
 	static MovingAverageFilter<uint16_t, 256> f_iadc(0);
 	static MovingAverageFilter<uint16_t, 256> f_uadc(0);
-	static MovingAverageFilter<int32_t, 512> f_iex(0);
+	static MovingAverageFilter<int32_t, 256> f_iex(0);
 
 	adc_setCallback(adcHoock);
 	a.externalSensorOk = ina229_init();
@@ -56,16 +58,24 @@ void adcTSK(void *pPrm){
 
 	int32_t shunt = 0;
 
+	sysTimeMeasEnable();
 	while(1){
+		sysTimeMeasStop(sysTime1);
+		period = sysTimeMeasTo_us(sysTimeMeasGet_cycles(sysTime1));
+		sysTimeMeasStart(sysTime1);
 		xSemaphoreTake(AdcEndConversionSem, portMAX_DELAY);
 
 		if(a.externalSensorOk != 0){
+			sysTimeMeasStart(sysTime2);
+
 			bool inaConverted = false;
 			ina229_readCNVRF(&inaConverted);
 			if(inaConverted){
 				ina229_readShuntVoltage(&shunt);
 			}
 			ina229_trig();
+			sysTimeMeasStop(sysTime2);
+			spitime = sysTimeMeasTo_us(sysTimeMeasGet_cycles(sysTime2));
 		}
 
 		a.filtered.uin = f_vin.proc(adcValue.adcreg[CH_UINADC]);

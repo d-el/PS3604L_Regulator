@@ -13,6 +13,7 @@
 /*!****************************************************************************
  * Include
  */
+#include <board.h>
 #include "sysTimeMeas.h"
 
 /*!****************************************************************************
@@ -51,7 +52,7 @@ uint32_t sysTimeMeasGet_cycles(sysTimeNumber_type n){
  * @return		time in milliseconds
  */
 uint64_t sysTimeMeasTo_ms(uint64_t cycles){
-	return  (cycles * 1000ULL) / CORE_FREQUENCY;
+	return  (cycles * 1000ULL) / SYSTEM_FREQ;
 }
 
 /*!****************************************************************************
@@ -60,7 +61,7 @@ uint64_t sysTimeMeasTo_ms(uint64_t cycles){
  * @return		time in microseconds
  */
 uint64_t sysTimeMeasTo_us(uint64_t cycles){
-	return  (cycles * 1000000ULL) / CORE_FREQUENCY;
+	return  (cycles * 1000000ULL) / SYSTEM_FREQ;
 }
 
 /*************** LGPL ************** END OF FILE *********** D_EL ************/

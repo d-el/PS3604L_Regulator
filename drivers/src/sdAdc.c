@@ -132,7 +132,7 @@ void adc_init(void){
 	RCC->APB1ENR	|= RCC_APB1ENR_TIM3EN;						//Enable clock
 	RCC->APB1RSTR	|= RCC_APB1RSTR_TIM3RST;					//Timer 3 reset
 	RCC->APB1RSTR	&= ~RCC_APB1RSTR_TIM3RST;
-	TIM3->PSC		= ADC_TIM_FREQUENCY / 1000000 - 1;			//Set prescaler
+	TIM3->PSC		= APB1_TIM_FREQ / 1000000 - 1;				//Set prescaler
 	TIM3->CR1		|= TIM_CR1_ARPE;							//TIMx_ARR register is buffered
 	TIM3->CR2		|= TIM_CR2_MMS_2;							//Compare - OC1REF signal is used as trigger output (TRGO)
 	TIM3->CCMR1		|= TIM_CCMR1_OC1M_2 | TIM_CCMR1_OC1M_1;		//PWM mode 1 (NORMAL PWM)

@@ -21,6 +21,7 @@ namespace Prm {
 
 using crc_t = uint16_t;
 constexpr uint16_t magic = 0x2805;
+static size_t currentIndex;
 
 #include "parameter.def"
 
@@ -97,12 +98,19 @@ size_t Val<float>::tostring(char *string, size_t size) const{
 }
 
 IVal *getbyaddress(uint16_t address){
+	currentIndex = 0;
 	for(auto *p : valuearray){
 		if(address == p->getaddress()){
 			return p;
 		}
+		currentIndex++;
 	}
 	return nullptr;
+}
+
+IVal *getNext(){
+	currentIndex++;
+	return valuearray[currentIndex];
 }
 
 size_t getSerialSize(Save save){
