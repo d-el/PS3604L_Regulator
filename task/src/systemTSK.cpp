@@ -401,7 +401,7 @@ void systemTSK(void *pPrm){
 		Prm::temperature = temperature.temperature;
 
 		if(Prm::enable){
-			Prm::time = (xTaskGetTickCount() - timeOffset) / configTICK_RATE_HZ;
+			Prm::time = xTaskGetTickCount() - timeOffset;
 		}
 
 		/**************************************
@@ -546,7 +546,7 @@ void systemTSK(void *pPrm){
 			}
 
 			// Disable on time
-			else if(Prm::mode == Prm::timeShutdown && Prm::time >= Prm::time_set){
+			else if(Prm::time_set > 0 && Prm::time >= Prm::time_set){
 				disablecause = Prm::v_timeShutdown;
 			}
 
@@ -565,6 +565,7 @@ void systemTSK(void *pPrm){
 		if(!enableState && Prm::enable){
 			setDacU(0);
 			switchON();
+			currentirq = false;
 			enableState = true;
 			timeOffset = xTaskGetTickCount();
 			Prm::disablecause = Prm::v_none;
