@@ -512,7 +512,7 @@ void systemTSK(void *pPrm){
 			irqLimitOff();
 		}
 
-
+		// Time low current
 		TickType_t lowCurrentDuration = 0;
 		if(enableState && Prm::current < (Prm::current_set / 10)){
 			lowCurrentDuration = xTaskGetTickCount() - lowCurrentTime;
@@ -521,42 +521,30 @@ void systemTSK(void *pPrm){
 		}
 
 		Prm::mask_disablecause disablecause = Prm::v_none;
-
-		if(enableState){
-			// On fails disable output if(state & (Prm::m_overheated | Prm::m_errorTemperatureSensor | Prm::m_lowInputVoltage | Prm::m_reverseVoltage)){
-			if(status & Prm::m_errorTemperatureSensor){
-				disablecause = Prm::v_errorTemperatureSensor;
-			}
-
-			else if(status & Prm::m_overheated){
-				disablecause = Prm::v_overheated;
-			}
-
-			else if(status & Prm::m_lowInputVoltage){
-				disablecause = Prm::v_lowInputVoltage;
-			}
-
-			else if(status & Prm::m_reverseVoltage){
-				disablecause = Prm::v_reverseVoltage;
-			}
-
-			else if(currentirq || (Prm::mode == Prm::overcurrentShutdown && MODE_IS_CC())){
-				disablecause = Prm::v_overCurrent;
-				currentirq = false;
-			}
-
-			// Disable on time
-			else if(Prm::time_set > 0 && Prm::time >= Prm::time_set){
-				disablecause = Prm::v_timeShutdown;
-			}
-
-			else if(Prm::mode == Prm::lowCurrentShutdown && lowCurrentDuration > pdMS_TO_TICKS(CUR_OFF_TIME)){
-				disablecause = Prm::v_lowCurrentShutdown;
-			}
-
-			else if(enableState && !Prm::enable){
-				disablecause = Prm::v_request;
-			}
+		if(status & Prm::m_errorTemperatureSensor){
+			disablecause = Prm::v_errorTemperatureSensor;
+		}
+		else if(status & Prm::m_overheated){
+			disablecause = Prm::v_overheated;
+		}
+		else if(status & Prm::m_lowInputVoltage){
+			disablecause = Prm::v_lowInputVoltage;
+		}
+		else if(status & Prm::m_reverseVoltage){
+			disablecause = Prm::v_reverseVoltage;
+		}
+		else if(currentirq || (Prm::mode == Prm::overcurrentShutdown && MODE_IS_CC())){
+			disablecause = Prm::v_overCurrent;
+			currentirq = false;
+		}
+		else if(Prm::time_set > 0 && Prm::time >= Prm::time_set){ // Disable on time
+			disablecause = Prm::v_timeShutdown;
+		}
+		else if(Prm::mode == Prm::lowCurrentShutdown && lowCurrentDuration > pdMS_TO_TICKS(CUR_OFF_TIME)){
+			disablecause = Prm::v_lowCurrentShutdown;
+		}
+		else if(enableState && !Prm::enable){
+			disablecause = Prm::v_request;
 		}
 
 		/**************************************
@@ -574,7 +562,7 @@ void systemTSK(void *pPrm){
 		/**************************************
 		 * Request disable
 		 */
-		if(disablecause > Prm::v_none){
+		if(enableState && disablecause > Prm::v_none){
 			setDacU(0);
 			switchOFF();
 			enableState = false;
