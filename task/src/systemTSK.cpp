@@ -400,7 +400,7 @@ void systemTSK(void *pPrm){
 		Prm::input_voltage = IQtoInt(udc, 1000000);
 		Prm::temperature = temperature.temperature;
 
-		if(Prm::enable){
+		if(enableState){
 			Prm::time = xTaskGetTickCount() - timeOffset;
 		}
 
@@ -537,7 +537,7 @@ void systemTSK(void *pPrm){
 			disablecause = Prm::v_overCurrent;
 			currentirq = false;
 		}
-		else if(Prm::time_set > 0 && Prm::time >= Prm::time_set){ // Disable on time
+		else if(enableState && Prm::time_set > 0 && Prm::time >= Prm::time_set){ // Disable on time
 			disablecause = Prm::v_timeShutdown;
 		}
 		else if(Prm::mode == Prm::lowCurrentShutdown && lowCurrentDuration > pdMS_TO_TICKS(CUR_OFF_TIME)){
@@ -551,7 +551,6 @@ void systemTSK(void *pPrm){
 		 * Request enable
 		 */
 		if(!enableState && Prm::enable){
-			setDacU(0);
 			switchON();
 			currentirq = false;
 			enableState = true;
@@ -563,7 +562,6 @@ void systemTSK(void *pPrm){
 		 * Request disable
 		 */
 		if(enableState && disablecause > Prm::v_none){
-			setDacU(0);
 			switchOFF();
 			enableState = false;
 			Prm::disablecause = disablecause;
