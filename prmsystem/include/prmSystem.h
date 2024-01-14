@@ -1,9 +1,9 @@
 /*!****************************************************************************
  * @file		prmSystem.h
  * @author		d_el - Storozhenko Roman
- * @version		V2.1
- * @date		25.01.2021
- * @copyright	The MIT License (MIT). Copyright (c) 2021 Storozhenko Roman
+ * @version		V2.2
+ * @date		07.01.2024
+ * @copyright	The MIT License (MIT). Copyright (c) 2024 Storozhenko Roman
  * @brief		Parameters system
  */
 #ifndef PRMSYSTEM_H
@@ -20,8 +20,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#include <inttypes.h>
-
 namespace Prm {
 
 /*!****************************************************************************
@@ -35,29 +33,29 @@ enum Save: uint8_t{
 
 class IText{
 public:
-    virtual const char* get(int i) const = 0;
+	virtual const char* get(int i) const = 0;
 };
 
 template<size_t n>
 class Text: public IText
 {
 public:
-    template <typename... Types>
-    constexpr Text(Types... ts) : textvalues{ { ts... } } {}
+	template <typename... Types>
+	constexpr Text(Types... ts) : textvalues{ { ts... } } {}
 
-    const char* get(int i) const {
-        for(auto &t : textvalues){
-            if(t.v == i) return t.t;
-        }
-        return nullptr;
-    }
+	const char* get(int i) const {
+		for(auto &t : textvalues){
+			if(t.v == i) return t.t;
+		}
+		return nullptr;
+	}
 
 private:
-    struct TextVal{
-        int v;
-        const char *t;
-    };
-    const std::array<TextVal, n> textvalues;
+	struct TextVal{
+		int v;
+		const char *t;
+	};
+	const std::array<TextVal, n> textvalues;
 };
 
 template <class T> class Val;
@@ -95,7 +93,7 @@ public:
 	const T bigstep;
 	const uint16_t addr;
 	constexpr static size_t size = sizeof(T);
-	void *const arg;
+	void* const arg;
 	const uint8_t power :4;
 	const Save save;
 	void (*callback)(Val<T>& prm, bool read, void *arg);
@@ -119,7 +117,8 @@ public:
 	virtual void operator()(bool read, void *arg) = 0;
 };
 
-template <class T> class Val: public IVal{
+template <class T> class Val: public IVal
+{
 public:
 	Val(const ValHandler<T> &_handler) :
 		handler(_handler)
@@ -165,7 +164,20 @@ public:
 		memcpy(dst, &val, sizeof(val));
 	}
 
-	bool deserialize(const void *src);
+	bool deserialize(const void *src){
+		T v = 0;
+		memcpy(&v, src, sizeof(v));
+		if constexpr(std::is_same_v<T, float>){
+			if(std::isnan(v)){
+				return false;
+			}
+		}
+		if(v > handler.max || v < handler.min){
+			return false;
+		}
+		val = v;
+		return true;
+	}
 
 	size_t tostring(char *string, size_t size) const;
 
@@ -184,7 +196,20 @@ public:
 	}
 
 private:
-	void stepsize(int32_t step, T stepsize);
+	void stepsize(int32_t step, T stepsize){
+		T result = stepsize * abs(step);
+		if(step < 0)
+			val = result > val - handler.min
+				? handler.min
+				: val - result;
+		else
+			val = result > handler.max - val
+				? handler.max
+				: val + result;
+	}
+
+	size_t uprintval(char *string, size_t size, uint8_t power, uint32_t var) const;
+	size_t iprintval(char *string, size_t size, uint8_t power, int32_t var) const;
 
 public:
 	T val;
@@ -192,19 +217,6 @@ public:
 private:
 	const ValHandler<T> &handler;
 };
-
-template<class T>
-void Val<T>::stepsize(int32_t step, T stepsize){
-	T result = stepsize * abs(step);
-	if(step < 0)
-		val = result > val - handler.min
-			? handler.min
-			: val - result;
-	else
-		val = result > handler.max - val
-			? handler.max
-			: val + result;
-}
 
 IVal *getbyaddress(uint16_t address);
 IVal *getNext();

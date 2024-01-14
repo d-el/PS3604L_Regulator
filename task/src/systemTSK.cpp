@@ -9,6 +9,7 @@
 /*!****************************************************************************
 * Include
 */
+#include <stdio.h>
 #include <assert.h>
 #include <FreeRTOS.h>
 #include <task.h>
@@ -20,7 +21,7 @@
 #include <flash.h>
 #include <board.h>
 #include <prmSystem.h>
-#include <printp.h>
+#include <plog.h>
 #include <prmSystem.h>
 #include "systemTSK.h"
 #include "modbusTSK.h"
@@ -34,6 +35,8 @@
 #define REVERSE_VOLTAGE_THRESHOLD		150		// [adc lsb with oversampling]
 #define CURRENT_SENSOR_THRESHOLD_UP		100		// [X_XXX A]
 #define CURRENT_SENSOR_THRESHOLD_DOWN	90		// [X_XXX A]
+
+extern "C" int _write(int fd, const void *buf, size_t count);
 
 /*!****************************************************************************
 * Memory
@@ -174,7 +177,8 @@ void systemTSK(void *pPrm){
 	bool enableState = false;
 	bool reverseVoltage = false;
 
-	print_init(stdOut_semihost);
+	plog_setVprintf(vsprintf);
+	plog_setWrite(_write);
 
 	irqSetCallback(irqCallback);
 

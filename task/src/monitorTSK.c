@@ -3,11 +3,7 @@
  * @author		d_el
  * @version		V1.0
  * @date		05.04.2018
- * @brief
- * @copyright	Copyright (C) 2017 Storozhenko Roman
- *				All rights reserved
- *				This software may be modified and distributed under the terms
- *				of the BSD license.	 See the LICENSE file for details
+ * @copyright	The MIT License (MIT). Copyright (c) 2017 Storozhenko Roman
  */
 
 /*!****************************************************************************
@@ -17,12 +13,15 @@
 #include <FreeRTOS.h>
 #include <task.h>
 #include <portable.h>
-#include <printp.h>
-#include <sysTimeMeas.h>
+#include "plog.h"
+#include "sysTimeMeas.h"
 
 /*!****************************************************************************
  * MEMORY
  */
+#define LOG_LOCAL_LEVEL P_LOG_VERBOSE
+static char *logTag = "MONITOR TSK";
+
 /*
  * Since at least FreeRTOS V7.5.3 uxTopUsedPriority is no longer
  * present in the kernel, so it has to be supplied by other means for
@@ -56,13 +55,13 @@ unsigned long vGetTimerForRunTimeStats(void){
 	// Return time in us
 	return counter;
 }
-uint32_t load;
+
 /*!****************************************************************************
  * @brief
  */
 void monitorTSK(void *pPrm){
 	(void)pPrm;
-		static const char *stateToChar[] = {
+	static const char *stateToChar[] = {
 		"Running",		/* A task is querying the state of itself, so must be running. */
 		"Ready",		/* The task being queried is in a read or pending ready list. */
 		"Blocked",		/* The task being queried is in the Blocked state. */
@@ -76,9 +75,9 @@ void monitorTSK(void *pPrm){
 	uint32_t taskTimePrev[maxTask];
 	memset(taskTimePrev, 0, sizeof(taskTimePrev));
 
-	while(1){
-		printp("\n---------- OS Monitor ------------\n");
+	P_LOGI(logTag, "Started monitorTSK");
 
+	while(1){
 		UBaseType_t taskCount = uxTaskGetNumberOfTasks();
 
 		if(taskCount <= maxTask){
@@ -98,7 +97,7 @@ void monitorTSK(void *pPrm){
 
 				taskTimePrev[task] = buffer[task].ulRunTimeCounter;
 
-				printp("[OS] %20s: %9s, %u, %6u, %u us\n",
+				P_LOGI(logTag, "%20s: %9s, %"PRIu32", %6"PRIu16" B, %"PRIu32" us",
 				buffer[task].pcTaskName,
 				stateToChar[buffer[task].eCurrentState],
 				buffer[task].uxCurrentPriority,
@@ -106,18 +105,19 @@ void monitorTSK(void *pPrm){
 				buffer[task].ulRunTimeCounter);
 			}
 
-			printp("[OS] Current Heap Free Size: %u\n", xPortGetFreeHeapSize());
-			printp("[OS] Total RunTime: %u us\n", totalRuntime);
-			printp("[OS] System Uptime: %u ms\n", xTaskGetTickCount() * portTICK_PERIOD_MS);
+			P_LOGI(logTag, "Current Heap Free Size: %u", xPortGetFreeHeapSize());
+			P_LOGI(logTag, "Minimal Heap Size: %u", xPortGetMinimumEverFreeHeapSize());
+			P_LOGI(logTag, "Total RunTime: %"PRIu32" us", totalRuntime);
+			P_LOGI(logTag, "System Uptime: %"PRIu32" ms", xTaskGetTickCount() * portTICK_PERIOD_MS);
 
-			printp("[OS] All task PeriodTime:  %u us\n", allTaskPeriodTime);
-			printp("[OS] Idle task PeriodTime: %u us\n", idleTaskPeriodTime);
+			P_LOGI(logTag, "All task PeriodTime:  %"PRIu32" us", allTaskPeriodTime);
+			P_LOGI(logTag, "Idle task PeriodTime: %"PRIu32" us", idleTaskPeriodTime);
 
 
 			if(allTaskPeriodTime >= idleTaskPeriodTime){
 				uint64_t effectiveTaskPeriodTime = allTaskPeriodTime - idleTaskPeriodTime;
-				load = (effectiveTaskPeriodTime * 100000) / allTaskPeriodTime;
-				printp("[OS] OS load: %u.%03u %%\n", load / 1000, load % 1000);
+				uint32_t load = (effectiveTaskPeriodTime * 100000) / allTaskPeriodTime;
+				P_LOGI(logTag, "OS load: %"PRIu32".%03"PRIu32" %%", load / 1000, load % 1000);
 			}
 		}
 
@@ -130,7 +130,7 @@ void monitorTSK(void *pPrm){
  */
 void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName){
 	(void)xTask;
-	printp("[OS] Stack Overflow on %s\n", pcTaskName);
+	P_LOGE(logTag, "Stack Overflow on %s", pcTaskName);
 	while(1);
 }
 
@@ -138,8 +138,34 @@ void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName){
  *
  */
 void vApplicationMallocFailedHook(void){
-	printp("[OS] Malloc Failed\n");
+	P_LOGE(logTag, "Malloc Failed");
 	while(1);
 }
 
-/***************** Copyright (C) Storozhenko Roman ******* END OF FILE *******/
+/* configSUPPORT_STATIC_ALLOCATION is set to 1, so the application must provide an
+implementation of vApplicationGetIdleTaskMemory() to provide the memory that is
+used by the Idle task. */
+void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer,
+									StackType_t **ppxIdleTaskStackBuffer,
+									uint32_t *pulIdleTaskStackSize )
+{
+/* If the buffers to be provided to the Idle task are declared inside this
+function then they must be declared static – otherwise they will be allocated on
+the stack and so not exists after this function exits. */
+static StaticTask_t xIdleTaskTCB;
+static StackType_t uxIdleTaskStack[ configMINIMAL_STACK_SIZE ];
+
+	/* Pass out a pointer to the StaticTask_t structure in which the Idle task’s
+    state will be stored. */
+	*ppxIdleTaskTCBBuffer = &xIdleTaskTCB;
+
+	/* Pass out the array that will be used as the Idle task’s stack. */
+	*ppxIdleTaskStackBuffer = uxIdleTaskStack;
+
+	/* Pass out the size of the array pointed to by *ppxIdleTaskStackBuffer.
+	Note that, as the array is necessarily of type StackType_t,
+	configMINIMAL_STACK_SIZE is specified in words, not bytes. */
+	*pulIdleTaskStackSize = configMINIMAL_STACK_SIZE;
+}
+
+/******************************** END OF FILE ********************************/

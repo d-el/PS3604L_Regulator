@@ -87,6 +87,15 @@ SECTIONS
     KEEP (*(.fini_array*))
     PROVIDE_HIDDEN (__fini_array_end = .);
   } >FLASH
+  
+    .rtti (NOLOAD) :
+  {
+    . = ALIGN(4);
+    PROVIDE(rtti_start = .);
+    *(.rtti*)
+    . = ALIGN(4);
+    PROVIDE(rtti_end = .);
+  } >RAM
 
   /* used by the startup to initialize data */
   _sidata = LOADADDR(.data);
