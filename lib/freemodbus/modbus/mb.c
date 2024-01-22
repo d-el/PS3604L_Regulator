@@ -107,6 +107,12 @@ static xMBFunctionHandler xFuncHandlers[MB_FUNC_HANDLERS_MAX] = {
 #if MB_FUNC_WRITE_HOLDING_ENABLED > 0
     {MB_FUNC_WRITE_REGISTER, eMBFuncWriteHoldingRegister},
 #endif
+#if MB_FUNC_READ_FILE_RECORD_ENABLED > 0
+    {MB_FUNC_READ_FILE_RECORD, eMBFuncReadFileRecord},
+#endif
+#if MB_FUNC_WRITE_FILE_RECORD_ENABLED > 0
+    {MB_FUNC_WRITE_FILE_RECORD, eMBFuncWriteFileRecord},
+#endif
 #if MB_FUNC_READWRITE_HOLDING_ENABLED > 0
     {MB_FUNC_READWRITE_MULTIPLE_REGISTERS, eMBFuncReadWriteMultipleHoldingRegister},
 #endif

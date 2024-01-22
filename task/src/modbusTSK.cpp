@@ -50,13 +50,13 @@ eMBErrorCode eMBRegHoldingCB(UCHAR *pucRegBuffer, USHORT usAddress, USHORT usNRe
 			Prm::IVal *ph = Prm::getbyaddress(usAddress);
 			while(usNRegs > 0){
 				if(ph == nullptr){
-					P_LOGW(logTag, "read: illegal register address [%04X], regs %u", usAddress, usNRegs);
+					P_LOGW(logTag, "r: illegal register address [%04X], regs %u", usAddress, usNRegs);
 					return MB_ENOREG;
 				}
 
 				auto prmsize = ph->getsize();
 				if(prmsize == 4 && usNRegs < 2){
-					P_LOGW(logTag, "read: [%04X] usNRegs < 2 in 4 Byte parameter", usAddress);
+					P_LOGW(logTag, "r: [%04X] usNRegs < 2 in 4 Byte parameter", usAddress);
 					return MB_EINVAL;
 				}
 
@@ -65,7 +65,7 @@ eMBErrorCode eMBRegHoldingCB(UCHAR *pucRegBuffer, USHORT usAddress, USHORT usNRe
 				if(LOG_LOCAL_LEVEL >= P_LOG_DEBUG){
 					char string[32];
 					ph->tostring(string, sizeof(string));
-					P_LOGD(logTag, "read: [%04X] %u %s: %s %s", usAddress, usNRegs, ph->getlabel(), string, ph->getunit());
+					P_LOGD(logTag, "r: [%04X] %u %s: %s %s", usAddress, usNRegs, ph->getlabel(), string, ph->getunit());
 				}
 
 				uint8_t buffer[4] = {};
@@ -97,13 +97,13 @@ eMBErrorCode eMBRegHoldingCB(UCHAR *pucRegBuffer, USHORT usAddress, USHORT usNRe
 			Prm::IVal *ph = Prm::getbyaddress(usAddress);
 			while(usNRegs > 0){
 				if(ph == nullptr){
-					P_LOGW(logTag, "write: illegal register address [%04X]", usAddress);
+					P_LOGW(logTag, "w: illegal register address [%04X]", usAddress);
 					return MB_ENOREG;
 				}
 
 				auto prmsize = ph->getsize();
 				if(prmsize == 4 && usNRegs < 2){
-					P_LOGW(logTag, "write: [%04X] usNRegs < 2 in 4 Byte parameter", usAddress);
+					P_LOGW(logTag, "w: [%04X] usNRegs < 2 in 4 Byte parameter", usAddress);
 					return MB_EINVAL;
 				}
 
@@ -128,7 +128,7 @@ eMBErrorCode eMBRegHoldingCB(UCHAR *pucRegBuffer, USHORT usAddress, USHORT usNRe
 				}
 
 				if(!ph->deserialize(buffer)){
-					P_LOGW(logTag, "write [%04X]: out of range", usAddress);
+					P_LOGW(logTag, "w [%04X]: out of range", usAddress);
 					return MB_EINVAL;
 				}
 
@@ -137,7 +137,7 @@ eMBErrorCode eMBRegHoldingCB(UCHAR *pucRegBuffer, USHORT usAddress, USHORT usNRe
 				if(LOG_LOCAL_LEVEL >= P_LOG_DEBUG){
 					char string[32];
 					ph->tostring(string, sizeof(string));
-					P_LOGD(logTag, "write: [%04X] %u %s: %s %s", usAddress, usNRegs, ph->getlabel(), string, ph->getunit());
+					P_LOGD(logTag, "w: [%04X] %u %s: %s %s", usAddress, usNRegs, ph->getlabel(), string, ph->getunit());
 				}
 
 				if(ph->getsave() == Prm::savesys){
