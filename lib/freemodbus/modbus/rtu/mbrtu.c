@@ -217,6 +217,9 @@ eMBRTUSend( UCHAR ucSlaveAddress, const UCHAR * pucFrame, USHORT usLength )
     vMBPortSerialEnable( FALSE, TRUE );
 
     setTransmitData((void*)ucRTUBuf, usSndBufferCount);
+    eSndState = STATE_TX_IDLE;
+
+    vMBPortSerialEnable( TRUE, FALSE );
 
     EXIT_CRITICAL_SECTION(  );
     return eStatus;
@@ -225,61 +228,7 @@ eMBRTUSend( UCHAR ucSlaveAddress, const UCHAR * pucFrame, USHORT usLength )
 BOOL
 xMBRTUReceiveFSM( void )
 {
-    BOOL            xTaskNeedSwitch = FALSE;
-    UCHAR           ucByte;
-
-    assert( eSndState == STATE_TX_IDLE );
-
-    /* Always read the character. */
-    ( void )xMBPortSerialGetByte( ( CHAR * ) & ucByte );
-
-    switch ( eRcvState )
-    {
-        /* If we have received a character in the init state we have to
-         * wait until the frame is finished.
-         */
-    case STATE_RX_INIT:
-        vMBPortTimersEnable(  );
-        break;
-
-        /* In the error state we wait until all characters in the
-         * damaged frame are transmitted.
-         */
-    case STATE_RX_ERROR:
-        vMBPortTimersEnable(  );
-        break;
-
-        /* In the idle state we wait for a new character. If a character
-         * is received the t1.5 and t3.5 timers are started and the
-         * receiver is in the state STATE_RX_RECEIVCE.
-         */
-    case STATE_RX_IDLE:
-        usRcvBufferPos = 0;
-        ucRTUBuf[usRcvBufferPos++] = ucByte;
-        eRcvState = STATE_RX_RCV;
-
-        /* Enable t3.5 timers. */
-        vMBPortTimersEnable(  );
-        break;
-
-        /* We are currently receiving a frame. Reset the timer after
-         * every character received. If more than the maximum possible
-         * number of bytes in a modbus frame is received the frame is
-         * ignored.
-         */
-    case STATE_RX_RCV:
-        if( usRcvBufferPos < MB_SER_PDU_SIZE_MAX )
-        {
-            ucRTUBuf[usRcvBufferPos++] = ucByte;
-        }
-        else
-        {
-            eRcvState = STATE_RX_ERROR;
-        }
-        vMBPortTimersEnable(  );
-        break;
-    }
-    return xTaskNeedSwitch;
+	return FALSE;
 }
 
 BOOL

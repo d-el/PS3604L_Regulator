@@ -107,12 +107,6 @@ static xMBFunctionHandler xFuncHandlers[MB_FUNC_HANDLERS_MAX] = {
 #if MB_FUNC_WRITE_HOLDING_ENABLED > 0
     {MB_FUNC_WRITE_REGISTER, eMBFuncWriteHoldingRegister},
 #endif
-#if MB_FUNC_READ_FILE_RECORD_ENABLED > 0
-    {MB_FUNC_READ_FILE_RECORD, eMBFuncReadFileRecord},
-#endif
-#if MB_FUNC_WRITE_FILE_RECORD_ENABLED > 0
-    {MB_FUNC_WRITE_FILE_RECORD, eMBFuncWriteFileRecord},
-#endif
 #if MB_FUNC_READWRITE_HOLDING_ENABLED > 0
     {MB_FUNC_READWRITE_MULTIPLE_REGISTERS, eMBFuncReadWriteMultipleHoldingRegister},
 #endif
@@ -362,20 +356,18 @@ eMBPoll( void )
             break;
 
         case EV_FRAME_RECEIVED:
-        case EV_EXECUTE:
             eStatus = peMBFrameReceiveCur( &ucRcvAddress, &ucMBFrame, &usLength );
             if( eStatus == MB_ENOERR )
             {
                 /* Check if the frame is for us. If not ignore the frame. */
-                if( ( ucRcvAddress != ucMBAddress ) && ( ucRcvAddress != MB_ADDRESS_BROADCAST ) )
+                if( ( ucRcvAddress == ucMBAddress ) || ( ucRcvAddress == MB_ADDRESS_BROADCAST ) )
                 {
-                    return MB_ENOERR;
+                    ( void )xMBPortEventPost( EV_EXECUTE );
                 }
             }
-            else{
-                return MB_EIO;
-            }
+            break;
 
+        case EV_EXECUTE:
             ucFunctionCode = ucMBFrame[MB_PDU_FUNC_OFF];
             eException = MB_EX_ILLEGAL_FUNCTION;
             for( i = 0; i < MB_FUNC_HANDLERS_MAX; i++ )

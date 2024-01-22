@@ -14,26 +14,16 @@
 #include <assert.h>
 #include <FreeRTOS.h>
 #include <task.h>
-#include <semphr.h>
-#include <uart.h>
-#include <crc.h>
 #include <mb.h>
 #include <prmSystem.h>
-#include <board.h>
-
-#define PIECE_BUF_RX		256	//[bytes]
-#define connectUart			uart1
+#include <plog.h>
 
 /*!****************************************************************************
 * MEMORY
 */
-static SemaphoreHandle_t connUartTcSem;
+#define LOG_LOCAL_LEVEL P_LOG_NONE
+static const char *logTag = "modbusTSK";
 static bool needSave;
-
-/******************************************************************************
- * Local function declaration
- */
-static void uartTskHook(uart_type *puart);
 
 /*!****************************************************************************
 * @brief	Connect program task
@@ -41,42 +31,17 @@ static void uartTskHook(uart_type *puart);
 void modbusTSK(void *pPrm){
 	(void)pPrm;
 
-	// Create Semaphore for UART
-	vSemaphoreCreateBinary(connUartTcSem);
-	xSemaphoreTake(connUartTcSem, portMAX_DELAY);
-	assert(connUartTcSem != NULL);
-
-	uart_init(uart1, 921600);
-	uart_setCallback(connectUart, uartTskHook, uartTskHook);
-	eMBInit(MB_RTU, 0x01, 0, 0, MB_PAR_NONE);
+	eMBInit(MB_RTU, 0x01, 0, 921600, MB_PAR_NONE);
 	eMBEnable();
 
 	while(1){
-		uart_read(connectUart, connectUart->pRxBff, PIECE_BUF_RX);
-		BaseType_t res = xSemaphoreTake(connUartTcSem, portMAX_DELAY);
-		size_t numRx = PIECE_BUF_RX - uartGetRemainRx(connectUart);
-
-		if((numRx != 0)&&(res == pdTRUE)){
-			LED_ON();
-			mbSlaveSetReceive(connectUart->pRxBff, numRx);
-			if(eMBPoll() == MB_ENOERR){
-				uint8_t txsize = mbSlaveGetTransmit(connectUart->pTxBff);
-				if(txsize > 0){
-					uart_write(connectUart, connectUart->pTxBff, txsize);
-					xSemaphoreTake(connUartTcSem, pdMS_TO_TICKS(100));
-				}
-			}
-			LED_OFF();
-		}
+		eMBPoll();
 	}
 }
 
 /*!****************************************************************************
  * @brief
  */
-#define P_LOGW(...)
-#define P_LOGD(...)
-
 eMBErrorCode eMBRegHoldingCB(UCHAR *pucRegBuffer, USHORT usAddress, USHORT usNRegs, eMBRegisterMode eMode){
 	usAddress--;
 	switch(eMode){
@@ -96,6 +61,10 @@ eMBErrorCode eMBRegHoldingCB(UCHAR *pucRegBuffer, USHORT usAddress, USHORT usNRe
 				}
 
 				(*ph)(true, nullptr);
+
+				char string[64];
+				ph->tostring(string, sizeof(string));
+				P_LOGD(logTag, "read: [%04X] %u %s: %s %s", usAddress, usNRegs, ph->getlabel(), string, ph->getunit());
 
 				uint8_t buffer[4] = {};
 				ph->serialize(buffer);
@@ -121,7 +90,7 @@ eMBErrorCode eMBRegHoldingCB(UCHAR *pucRegBuffer, USHORT usAddress, USHORT usNRe
 		}
 		break;
 
-			/* Update current register values with new values from the protocol stack. */
+		/* Update current register values with new values from the protocol stack. */
 		case MB_REG_WRITE:{
 			Prm::IVal *ph = Prm::getbyaddress(usAddress);
 			while(usNRegs > 0){
@@ -163,6 +132,10 @@ eMBErrorCode eMBRegHoldingCB(UCHAR *pucRegBuffer, USHORT usAddress, USHORT usNRe
 
 				(*ph)(false, nullptr);
 
+				char string[64];
+				ph->tostring(string, sizeof(string));
+				P_LOGD(logTag, "write: [%04X] %u %s: %s %s", usAddress, usNRegs, ph->getlabel(), string, ph->getunit());
+
 				if(ph->getsave() == Prm::savesys){
 					needSave = true;
 				}
@@ -183,16 +156,6 @@ bool modbus_needSave(bool clear){
 		needSave = false;
 	}
 	return cuurentState;
-}
-
-/*!****************************************************************************
- * @brief	uart RX TX callback
- */
-static void uartTskHook(uart_type *puart){
-	(void)puart;
-	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-	xSemaphoreGiveFromISR(connUartTcSem, &xHigherPriorityTaskWoken);
-	portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
 }
 
 /******************************** END OF FILE ********************************/
