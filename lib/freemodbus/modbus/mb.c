@@ -362,20 +362,18 @@ eMBPoll( void )
             break;
 
         case EV_FRAME_RECEIVED:
-        case EV_EXECUTE:
             eStatus = peMBFrameReceiveCur( &ucRcvAddress, &ucMBFrame, &usLength );
             if( eStatus == MB_ENOERR )
             {
                 /* Check if the frame is for us. If not ignore the frame. */
-                if( ( ucRcvAddress != ucMBAddress ) && ( ucRcvAddress != MB_ADDRESS_BROADCAST ) )
+                if( ( ucRcvAddress == ucMBAddress ) || ( ucRcvAddress == MB_ADDRESS_BROADCAST ) )
                 {
-                    return MB_ENOERR;
+                    ( void )xMBPortEventPost( EV_EXECUTE );
                 }
             }
-            else{
-                return MB_EIO;
-            }
+            break;
 
+        case EV_EXECUTE:
             ucFunctionCode = ucMBFrame[MB_PDU_FUNC_OFF];
             eException = MB_EX_ILLEGAL_FUNCTION;
             for( i = 0; i < MB_FUNC_HANDLERS_MAX; i++ )

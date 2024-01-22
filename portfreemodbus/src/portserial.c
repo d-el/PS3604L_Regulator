@@ -1,9 +1,15 @@
 /* ----------------------- Standard includes --------------------------------*/
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
+#include <FreeRTOS.h>
+#include <task.h>
+#include <semphr.h>
+#include <uart.h>
+#include <board.h>
 
 #include "port.h"
 
@@ -13,94 +19,68 @@
 #include "mbconfig.h"
 
 /* ----------------------- Defines  -----------------------------------------*/
-#if MB_ASCII_ENABLED == 1
-#define BUF_SIZE    513         /* must hold a complete ASCII frame. */
-#else
-#define BUF_SIZE    256         /* must hold a complete RTU frame. */
-#endif
+#define connectUart		uart1
+#define BUF_SIZE		UART1_RxBffSz         /* must hold a complete RTU frame. */
+#define TIMEOUT			100
 
 /* ----------------------- Static variables ---------------------------------*/
-static BOOL bRxEnabled;
-static BOOL bTxEnabled;
+static bool bRxEnabled, bTxEnabled;
+static SemaphoreHandle_t connUartTcSem;
+static size_t rxSize = 0;
+static UCHAR *rxBuffer;
+static SHORT rxBufferLen;
 
-static unsigned char rxBuffer[BUF_SIZE];
-static unsigned char *txPointer;
-
-//static int rxCount;
-static int txCount;
-
-static int rxSize = 0;
-
-static int uiRxBufferPos;
-static int uiTxBufferPos;
-
-static int rxDone = 0;
-static int txNotEmpty = 0;
-
-
-void mbSlaveSetReceive(void *data, size_t len){
-	memcpy(rxBuffer, data , len);
-	rxSize = len;
-	rxDone = 1;
-	xMBPortEventPost(EV_FRAME_RECEIVED);
+/*!****************************************************************************
+ * @brief	uart RX TX callback
+ */
+static void uartTskHook(uart_type *puart){
+	(void)puart;
+	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+	xSemaphoreGiveFromISR(connUartTcSem, &xHigherPriorityTaskWoken);
+	portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
 }
 
-size_t mbSlaveGetTransmit(void *data){
-	int len = 0;
-	if(txNotEmpty){
-		memcpy(data, txPointer, txCount);
-		len = txCount;
-		txNotEmpty = 0;
-		txCount = 0;
-	}
-
-	if(len > 0){
-	}
-	return len;
+int vMBPortReceive(void *data){
+	(void)data;
+	return rxSize;
 }
 
-int getReceiveData(void *data){
-	int len = 0;
-	if(rxDone){
-		memcpy(data, rxBuffer, rxSize);
-		len = rxSize;
-		rxDone = 0;
-		rxSize = 0;
-	}
-	return len;
-}
-
-int setTransmitData(void *data, int len){
-	txPointer = data;
-	txNotEmpty = 1;
-	txCount = len;
+int vMBPortSend(void *data, int len){
+	uart_write(connectUart, data, len);
+	xSemaphoreTake(connUartTcSem, pdMS_TO_TICKS(TIMEOUT));
+	LED_OFF();
 	return 0;
 }
 
-/* ----------------------- Begin implementation -----------------------------*/
 void vMBPortSerialEnable(BOOL bEnableRx, BOOL bEnableTx){
-	/* it is not allowed that both receiver and transmitter are enabled. */
-	assert( !bEnableRx || !bEnableTx );
-
 	if(bEnableRx){
-		uiRxBufferPos = 0;
-		bRxEnabled = TRUE;
+		bRxEnabled = true;
 	}else{
-		bRxEnabled = FALSE;
+		bRxEnabled = false;
 	}
+
 	if(bEnableTx){
-		bTxEnabled = TRUE;
-		uiTxBufferPos = 0;
+		bTxEnabled = true;
 	}else{
-		bTxEnabled = FALSE;
+		bTxEnabled = false;
 	}
 }
 
-BOOL xMBPortSerialInit(UCHAR ucPort, ULONG ulBaudRate, UCHAR ucDataBits, eMBParity eParity){
+BOOL xMBPortSerialInit(UCHAR ucPort, ULONG ulBaudRate, UCHAR ucDataBits, eMBParity eParity, UCHAR *buffer, SHORT bufferLen){
 	(void)ucPort;
-	(void)ulBaudRate;
 	(void)ucDataBits;
 	(void)eParity;
+
+	// Create Semaphore for UART
+	vSemaphoreCreateBinary(connUartTcSem);
+	xSemaphoreTake(connUartTcSem, portMAX_DELAY);
+	assert(connUartTcSem != NULL);
+
+	rxBuffer = buffer;
+	rxBufferLen = bufferLen;
+	uart_init(connectUart, ulBaudRate);
+	uart_setCallback(connectUart, uartTskHook, uartTskHook);
+
 	vMBPortSerialEnable( FALSE, FALSE );
 	return TRUE;
 }
@@ -110,27 +90,17 @@ void vMBPortClose(void){
 }
 
 BOOL xMBPortSerialPoll(){
-	if(bRxEnabled && rxDone){
-		if(rxSize > uiRxBufferPos){
-			pxMBFrameCBByteReceived();
+	BOOL bStatus = FALSE;
+	if(bRxEnabled){
+		uart_read(connectUart, rxBuffer, rxBufferLen);
+		BaseType_t res = xSemaphoreTake(connUartTcSem, portMAX_DELAY);
+		rxSize = rxBufferLen - uartGetRemainRx(connectUart);
+		if((rxSize != 0)&&(res == pdTRUE)){
+			LED_ON();
+			xMBPortEventPost(EV_FRAME_RECEIVED);
+			bStatus = TRUE;
 		}
+		pxMBFrameCBByteReceived();
 	}
-
-	BOOL bStatus = TRUE;
 	return bStatus;
-}
-
-BOOL xMBPortSerialPutByte(CHAR ucByte){
-	(void)ucByte;
-	return FALSE;
-}
-
-BOOL xMBPortSerialGetByte(CHAR *pucByte){
-	assert( uiRxBufferPos < BUF_SIZE );
-	*pucByte = rxBuffer[uiRxBufferPos];
-	uiRxBufferPos++;
-	if(uiRxBufferPos >= rxSize){
-		xMBPortEventPost(EV_FRAME_RECEIVED);
-	}
-	return TRUE;
 }

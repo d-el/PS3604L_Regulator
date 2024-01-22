@@ -19,7 +19,7 @@
 /*!****************************************************************************
  * MEMORY
  */
-#define LOG_LOCAL_LEVEL P_LOG_VERBOSE
+#define LOG_LOCAL_LEVEL P_LOG_NONE
 static char *logTag = "MONITOR TSK";
 
 /*

@@ -19,12 +19,16 @@ BOOL xMBPortEventPost(eMBEventType eEvent){
 
 BOOL xMBPortEventGet(eMBEventType *eEvent){
 	BOOL xEventHappened = FALSE;
-	xMBPortSerialPoll();
+
+	if(!(xEventInQueue && eQueuedEvent == EV_EXECUTE)){
+		xMBPortSerialPoll();
+	}
 
 	if(xEventInQueue){
 		*eEvent = eQueuedEvent;
 		xEventInQueue = FALSE;
 		xEventHappened = TRUE;
 	}
+
 	return xEventHappened;
 }

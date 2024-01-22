@@ -179,6 +179,7 @@ void systemTSK(void *pPrm){
 
 	plog_setVprintf(vsprintf);
 	plog_setWrite(_write);
+	plog_setTimestamp([]() -> uint32_t { return xTaskGetTickCount(); });
 
 	irqSetCallback(irqCallback);
 
