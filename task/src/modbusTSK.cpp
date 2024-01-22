@@ -62,9 +62,11 @@ eMBErrorCode eMBRegHoldingCB(UCHAR *pucRegBuffer, USHORT usAddress, USHORT usNRe
 
 				(*ph)(true, nullptr);
 
-				char string[64];
-				ph->tostring(string, sizeof(string));
-				P_LOGD(logTag, "read: [%04X] %u %s: %s %s", usAddress, usNRegs, ph->getlabel(), string, ph->getunit());
+				if(LOG_LOCAL_LEVEL >= P_LOG_DEBUG){
+					char string[32];
+					ph->tostring(string, sizeof(string));
+					P_LOGD(logTag, "read: [%04X] %u %s: %s %s", usAddress, usNRegs, ph->getlabel(), string, ph->getunit());
+				}
 
 				uint8_t buffer[4] = {};
 				ph->serialize(buffer);
@@ -132,9 +134,11 @@ eMBErrorCode eMBRegHoldingCB(UCHAR *pucRegBuffer, USHORT usAddress, USHORT usNRe
 
 				(*ph)(false, nullptr);
 
-				char string[64];
-				ph->tostring(string, sizeof(string));
-				P_LOGD(logTag, "write: [%04X] %u %s: %s %s", usAddress, usNRegs, ph->getlabel(), string, ph->getunit());
+				if(LOG_LOCAL_LEVEL >= P_LOG_DEBUG){
+					char string[32];
+					ph->tostring(string, sizeof(string));
+					P_LOGD(logTag, "write: [%04X] %u %s: %s %s", usAddress, usNRegs, ph->getlabel(), string, ph->getunit());
+				}
 
 				if(ph->getsave() == Prm::savesys){
 					needSave = true;

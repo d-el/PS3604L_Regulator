@@ -86,7 +86,7 @@ eMBRTUInit( UCHAR ucSlaveAddress, UCHAR ucPort, ULONG ulBaudRate, eMBParity ePar
     ENTER_CRITICAL_SECTION(  );
 
     /* Modbus RTU uses 8 Databits. */
-    if( xMBPortSerialInit( ucPort, ulBaudRate, 8, eParity ) != TRUE )
+    if( xMBPortSerialInit( ucPort, ulBaudRate, 8, eParity, ucRTUBuf, sizeof(ucRTUBuf) ) != TRUE )
     {
         eStatus = MB_EPORTERR;
     }
@@ -157,7 +157,7 @@ eMBRTUReceive( UCHAR * pucRcvAddress, UCHAR ** pucFrame, USHORT * pusLength )
     ENTER_CRITICAL_SECTION(  );
     //assert( usRcvBufferPos < MB_SER_PDU_SIZE_MAX );
 
-    int receiveLen = getReceiveData((void*)ucRTUBuf);
+    int receiveLen = vMBPortReceive((void*)ucRTUBuf);
 
     /* Length and CRC check */
     if( ( receiveLen >= MB_SER_PDU_SIZE_MIN )
@@ -216,7 +216,7 @@ eMBRTUSend( UCHAR ucSlaveAddress, const UCHAR * pucFrame, USHORT usLength )
     eSndState = STATE_TX_XMIT;
     vMBPortSerialEnable( FALSE, TRUE );
 
-    setTransmitData((void*)ucRTUBuf, usSndBufferCount);
+    vMBPortSend((void*)ucRTUBuf, usSndBufferCount);
     eSndState = STATE_TX_IDLE;
 
     vMBPortSerialEnable( TRUE, FALSE );

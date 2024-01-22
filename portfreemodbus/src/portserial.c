@@ -21,11 +21,14 @@
 /* ----------------------- Defines  -----------------------------------------*/
 #define connectUart		uart1
 #define BUF_SIZE		UART1_RxBffSz         /* must hold a complete RTU frame. */
+#define TIMEOUT			100
 
 /* ----------------------- Static variables ---------------------------------*/
 static bool bRxEnabled, bTxEnabled;
 static SemaphoreHandle_t connUartTcSem;
 static size_t rxSize = 0;
+static UCHAR *rxBuffer;
+static SHORT rxBufferLen;
 
 /*!****************************************************************************
  * @brief	uart RX TX callback
@@ -37,23 +40,19 @@ static void uartTskHook(uart_type *puart){
 	portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
 }
 
-int getReceiveData(void *data){
-	memcpy(data, connectUart->pRxBff, rxSize);
+int vMBPortReceive(void *data){
+	(void)data;
 	return rxSize;
 }
 
-int setTransmitData(void *data, int len){
+int vMBPortSend(void *data, int len){
 	uart_write(connectUart, data, len);
-	xSemaphoreTake(connUartTcSem, pdMS_TO_TICKS(100));
+	xSemaphoreTake(connUartTcSem, pdMS_TO_TICKS(TIMEOUT));
 	LED_OFF();
 	return 0;
 }
 
-/* ----------------------- Begin implementation -----------------------------*/
 void vMBPortSerialEnable(BOOL bEnableRx, BOOL bEnableTx){
-	/* it is not allowed that both receiver and transmitter are enabled. */
-	assert( !bEnableRx || !bEnableTx );
-
 	if(bEnableRx){
 		bRxEnabled = true;
 	}else{
@@ -67,7 +66,7 @@ void vMBPortSerialEnable(BOOL bEnableRx, BOOL bEnableTx){
 	}
 }
 
-BOOL xMBPortSerialInit(UCHAR ucPort, ULONG ulBaudRate, UCHAR ucDataBits, eMBParity eParity){
+BOOL xMBPortSerialInit(UCHAR ucPort, ULONG ulBaudRate, UCHAR ucDataBits, eMBParity eParity, UCHAR *buffer, SHORT bufferLen){
 	(void)ucPort;
 	(void)ucDataBits;
 	(void)eParity;
@@ -77,6 +76,8 @@ BOOL xMBPortSerialInit(UCHAR ucPort, ULONG ulBaudRate, UCHAR ucDataBits, eMBPari
 	xSemaphoreTake(connUartTcSem, portMAX_DELAY);
 	assert(connUartTcSem != NULL);
 
+	rxBuffer = buffer;
+	rxBufferLen = bufferLen;
 	uart_init(connectUart, ulBaudRate);
 	uart_setCallback(connectUart, uartTskHook, uartTskHook);
 
@@ -91,10 +92,9 @@ void vMBPortClose(void){
 BOOL xMBPortSerialPoll(){
 	BOOL bStatus = FALSE;
 	if(bRxEnabled){
-#warning "timeout"
-		uart_read(connectUart, connectUart->pRxBff, BUF_SIZE);
+		uart_read(connectUart, rxBuffer, rxBufferLen);
 		BaseType_t res = xSemaphoreTake(connUartTcSem, portMAX_DELAY);
-		rxSize = BUF_SIZE - uartGetRemainRx(connectUart);
+		rxSize = rxBufferLen - uartGetRemainRx(connectUart);
 		if((rxSize != 0)&&(res == pdTRUE)){
 			LED_ON();
 			xMBPortEventPost(EV_FRAME_RECEIVED);

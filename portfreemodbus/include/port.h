@@ -46,8 +46,8 @@ void            vMBPortExitCritical( void );
 void            vMBPortLog( eMBPortLogLevel eLevel, const CHAR * szModule, const CHAR * szFmt, ... );
 BOOL            xMBPortSerialPoll(  );
 
-int getReceiveData(void *data);
-int setTransmitData(void *data, int len);
+int vMBPortReceive(void *data);
+int vMBPortSend(void *data, int len);
 
 void mbSlaveSetReceive(void *data, size_t len);
 size_t mbSlaveGetTransmit(void *data);

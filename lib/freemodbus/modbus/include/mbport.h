@@ -1,4 +1,4 @@
-/* 
+/*
  * FreeModbus Libary: A portable Modbus implementation for Modbus ASCII/RTU.
  * Copyright (c) 2006-2018 Christian Walter <cwalter@embedded-solutions.at>
  * All rights reserved.
@@ -68,7 +68,7 @@ BOOL            xMBPortEventGet(  /*@out@ */ eMBEventType * eEvent );
 /* ----------------------- Serial port functions ----------------------------*/
 
 BOOL            xMBPortSerialInit( UCHAR ucPort, ULONG ulBaudRate,
-                                   UCHAR ucDataBits, eMBParity eParity );
+                                   UCHAR ucDataBits, eMBParity eParity, UCHAR *buffer, SHORT bufferLen );
 
 void            vMBPortClose( void );
 
