@@ -141,7 +141,7 @@ typedef void (*gpioCallback_type)(pinMode_type *gpio);
                         NVIC_SetPriority(PIN_TO_EXTI_IRQn(PIN),NVIC_PRIORITY);\
                         (EXTI_MODE>0)? NVIC_EnableIRQ(PIN_TO_EXTI_IRQn(PIN)): NVIC_DisableIRQ(PIN_TO_EXTI_IRQn(PIN));\
                         EXTI->PR = 1UL<<PIN;\
-                        BIT_BAND_PER(EXTI->IMR,1UL<<PIN)=!!(EXTI_MODE);\
+                        /*BIT_BAND_PER(EXTI->IMR,1UL<<PIN)=!!(EXTI_MODE);*/\
                         }while(0)
 #define EXTI_INIT(GPIO, PIN, EXTI_MODE, NVIC_PRIORITY)  _EXTI_INIT(GPIO, PIN, EXTI_MODE, NVIC_PRIORITY)
 //example: EXTI_INIT(GPIOA, 9, EXTI_MODE_BOTH, 15);

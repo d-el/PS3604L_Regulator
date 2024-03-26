@@ -50,7 +50,7 @@ void adc_init(void){
 	for(int i = 0; i < 360000; i++) __NOP();
 
 	RCC->CFGR		&= ~RCC_CFGR_SDADCPRE;
-	RCC->CFGR		|=	RCC_CFGR_SDADCPRE_DIV48;				//SDADC CLK divided
+	RCC->CFGR		|=	RCC_CFGR_SDADCPRE_DIV24;				//SDADC CLK divided
 	for(int i = 0; i < 360000; i++) __NOP();
 
 	RCC->APB2ENR	|= RCC_APB2ENR_SDADC1EN;					//SDADC1 clock Enable

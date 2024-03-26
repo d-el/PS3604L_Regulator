@@ -35,7 +35,7 @@ static gpioCallback_type gpioCallback;
 */
 void EXTI0_IRQHandler(void){
 	SWITCH_OFF();
-	EXTI->PR	|= EXTI_PR_PR0;	//Pending
+	EXTI->PR = EXTI_PR_PR0;	//Pending
 	if(gpioCallback != NULL){
 		gpioCallback(NULL);
 	}
@@ -135,13 +135,13 @@ void gppin_init(GPIO_TypeDef *port, uint8_t npin, gpioMode_type mode, gpioPull_t
 		case alternateFunctionPushPull:
 			port->MODER |= GPIO_AF_MODE << (2*npin);
 			port->OTYPER |= GPIO_PUSH_PULL << npin;
-			port->OSPEEDR |= 3 << (2*npin);	//High speed
+			port->OSPEEDR |= 0 << (2*npin);	//High speed
 			break;
 
 		case alternateFunctionOpenDrain:
 			port->MODER |= GPIO_AF_MODE << (2*npin);
 			port->OTYPER |= GPIO_OPEN_DRAIN << npin;
-			port->OSPEEDR |= 3 << (2*npin);	//High speed
+			port->OSPEEDR |= 0 << (2*npin);	//High speed
 			break;
 	}
 

@@ -46,14 +46,14 @@ void adcTSK(void *pPrm){
 	xSemaphoreTake(AdcEndConversionSem, portMAX_DELAY);
 
 	static MovingAverageFilter<uint16_t, 16> f_vin(45000); // 55.5V init
-	static MovingAverageFilter<uint16_t, 256> f_iadc(0);
-	static MovingAverageFilter<uint16_t, 256> f_uadc(0);
+	static MovingAverageFilter<uint16_t, 1024> f_iadc(0);
+	static MovingAverageFilter<uint16_t, 1024> f_uadc(0);
 	static MovingAverageFilter<int32_t, 128> f_iex(0);
 
 	adc_setCallback(adcHoock);
 	a.externalSensorOk = ina229_init();
 	ina229_trig();
-	adc_setSampleRate(1000);
+	adc_setSampleRate(500);
 	adc_startSampling();
 
 	while(1){

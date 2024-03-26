@@ -190,7 +190,7 @@ bool ina229_trig(void){
 	ADC_CONFIG_t adcconfig = {
 			.bit.AVG = AVG_4,
 			.bit.VSHCT = CT_2074µs,
-			.bit.MODE = MODE_i_continuous
+			.bit.MODE = MODE_iv_continuous
 	};
 	return ina229_writeReg16u(ADC_CONFIG, adcconfig.all);
 }
