@@ -20,6 +20,10 @@
 * @brief    initialization DAC1 CH1, CH2
 */
 void dac_init(void){
+	gppin_init(GPIOA, 4, digitalInput, pullDisable, 0, 0);
+	gppin_init(GPIOA, 5, digitalInput, pullDisable, 0, 0);
+	return;
+
 	gppin_init(GPIOA, 4, analogMode, pullDisable, 0, 0);
 	gppin_init(GPIOA, 5, analogMode, pullDisable, 0, 0);
 

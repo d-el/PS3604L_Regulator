@@ -208,7 +208,6 @@ void systemTSK(void *pPrm){
 	_iq14				q14Resistance = 0;			// [Ohm]
 	uint32_t 			capacity = 0;				// [mAh]
 	adcCurrentSensor_type	currentSensor = adcCurrentSensorInternal;
-	uint16_t 			idacPrev = 0, udacPrev = 0;
 	bool				irqEnable = false;
 	bool 				enableState = false;
 	bool 				reverseVoltage = false;
@@ -298,8 +297,6 @@ void systemTSK(void *pPrm){
 		}
 
 		qCurrent = currentSensor == adcCurrentSensorInternal ? qCurrentInternal : qCurrentExternal;
-		//qCurrent = _IQsat(qCurrent - (qVoltage - _IQ(0.02)) / (120000 + 5000), MAX_IQ_POS, 0);
-
 
 		/*
 		 * Calculate input voltage
@@ -491,22 +488,8 @@ void systemTSK(void *pPrm){
 			}
 		}
 
-		// Setting DAC value
-		if(idac > DAC_MAX_VALUE){
-			idac = DAC_MAX_VALUE;
-		}
-		if(idacPrev != idac){
-			dac_ch2(idac);
-			idacPrev = idac;
-		}
-
-		if(udac > DAC_MAX_VALUE){
-			udac = DAC_MAX_VALUE;
-		}
-		if(udacPrev != udac){
-			dac_ch1(udac);
-			udacPrev = udac;
-		}
+		a.dacI = idac;
+		a.dacU = udac;
 
 		// Time low current
 		TickType_t lowCurrentDuration = 0;

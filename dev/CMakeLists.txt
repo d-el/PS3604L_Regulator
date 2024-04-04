@@ -1,4 +1,5 @@
 add_library(dev STATIC
+	src/ad5663.c
 	src/ds18b20.c
 	src/ina229.c
 	src/oneWireUart.c

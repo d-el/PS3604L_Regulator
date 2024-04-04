@@ -90,7 +90,7 @@ void spi_init(spi_type *spix, spiDiv_t divClock){
 	spix->spi->CR2 |= SPI_CR2_FRXTH;                            // RXNE event is generated if the FIFO level is greater than or equal to 1/4 (8-bit)
 	spix->spi->CR2 |= SPI_CR2_DS_0 |
 							SPI_CR2_DS_1 |
-							SPI_CR2_DS_2;                       //Data size 8-bit
+							SPI_CR2_DS_2;                       // Data size 8-bit
 	spix->spi->CR2 |= SPI_CR2_TXDMAEN;                          // Tx buffer DMA enabled
 	spix->spi->CR2 |= SPI_CR2_RXDMAEN;                          // Rx buffer DMA enabled
 

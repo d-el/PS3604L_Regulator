@@ -12,16 +12,13 @@
 #include <FreeRTOS.h>
 #include <task.h>
 #include <semphr.h>
-#include <spi.h>
 #include "ina229.h"
 #include <gpio.h>
 
 /*!****************************************************************************
 * User define
 */
-#define ina226I2c		(i2c1)
 #define ina226Addr		(0x80)
-#define ina22_MAX_WAIT  (200)		///<[ms]
 
 /*!****************************************************************************
 * User typedef
@@ -102,50 +99,51 @@ enum averagingCount{
 };
 
 /*!****************************************************************************
-* MEMORY
-*/
-SemaphoreHandle_t spiSem;
+ * MEMORY
+ */
+static ina229_spi_t spi;
 
 /*!****************************************************************************
- * @brief	I2C callback
+ * @brief
  */
-static void spiTC_Hook(spi_type *spix){
-	(void)spix;
-	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-	xSemaphoreGiveFromISR(spiSem, &xHigherPriorityTaskWoken);
-	portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
-}
-
-bool ina229_spi(void *dst, void *src, uint16_t len){
+static bool ina229_spi_loc(void *dst, void *src, uint16_t len){
 	gppin_reset(GP_SPI3_NSS);
-	spi_transfer(spi3, dst, src, len);
-	BaseType_t res = xSemaphoreTake(spiSem, pdMS_TO_TICKS(portMAX_DELAY));
+	bool res = spi(dst, src, len);
 	gppin_set(GP_SPI3_NSS);
-	return res == pdTRUE && spi3->state == spiTCSuccess;
+	return res;
 }
 
-bool ina229_readReg16s(ina229_registers_t reg, int16_t *val){
+/*!****************************************************************************
+ * @brief
+ */
+static bool ina229_readReg16s(ina229_registers_t reg, int16_t *val){
 	uint8_t tx[3] = { (reg << 2) | 1 };
 	uint8_t rx[3] = {};
-	if(!ina229_spi(rx, tx, 3)) return false;
+	if(!ina229_spi_loc(rx, tx, 3)) return false;
 	*val = (int16_t) rx[1] << 8 | rx[2];
 	return true;
 }
 
-bool ina229_readReg24s(ina229_registers_t reg, int32_t *val){
+/*!****************************************************************************
+ * @brief
+ */
+static bool ina229_readReg24s(ina229_registers_t reg, int32_t *val){
 	uint8_t tx[4] = { (reg << 2) | 1 };
 	uint8_t rx[4] = {};
-	if(!ina229_spi(rx, tx, 4)) return false;
+	if(!ina229_spi_loc(rx, tx, 4)) return false;
 	int32_t signedval = (int32_t) rx[1] << 16 | rx[2] << 8 | rx[3];
 	if(signedval & 0x800000) signedval |= 0xFF000000;
 	*val = signedval;
 	return true;
 }
 
-bool ina229_writeReg16u(ina229_registers_t reg, uint16_t val){
+/*!****************************************************************************
+ * @brief
+ */
+static bool ina229_writeReg16u(ina229_registers_t reg, uint16_t val){
 	uint8_t tx[3] = { (reg << 2) | 0, val >> 8, val & 0xFF };
 	uint8_t rx[3] = {};
-	if(!ina229_spi(rx, tx, 3)) return false;
+	if(!ina229_spi_loc(rx, tx, 3)) return false;
 	return true;
 }
 
@@ -153,12 +151,8 @@ bool ina229_writeReg16u(ina229_registers_t reg, uint16_t val){
 * @brief
 * @retval
 */
-bool ina229_init(void){
-	vSemaphoreCreateBinary(spiSem);
-	xSemaphoreTake(spiSem, portMAX_DELAY);
-
-	spi_init(spi3, spiDiv4);
-	spi_setCallback(spi3, spiTC_Hook);
+bool ina229_init(ina229_spi_t _spi){
+	spi = _spi;
 
 	int16_t val;
 	if(!ina229_readReg16s(DEVICE_ID, &val)){
@@ -208,6 +202,9 @@ bool ina229_readShuntVoltage(int32_t *v){
 	return true;
 }
 
+/*!****************************************************************************
+ * @brief
+ */
 bool ina229_readCNVRF(bool *c){
 	int16_t cnvrf;
 	if(!ina229_readReg16s(DIAG_ALRT, &cnvrf)){
