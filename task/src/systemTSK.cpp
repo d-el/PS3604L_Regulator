@@ -221,11 +221,11 @@ void systemTSK(void *pPrm){
 		/*
 		 * Detect reverse voltage
 		 */
-//		if(a.filtered.u < REVERSE_VOLTAGE_THRESHOLD){
-//			reverseVoltage = true;
-//		}else{
-//			reverseVoltage = false;
-//		}
+		if(a.filtered.u < REVERSE_VOLTAGE_THRESHOLD){
+			reverseVoltage = true;
+		}else{
+			reverseVoltage = false;
+		}
 
 		/*
 		 * Calculate voltage
