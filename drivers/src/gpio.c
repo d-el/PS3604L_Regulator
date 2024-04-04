@@ -21,10 +21,11 @@
 */
 pinMode_type   const pinsMode[] = {
 	/*0 */	makepin(GPIOF,	6,		outPushPull,				pullDisable,	1,	0),	//LED
-	/*1 */	makepin(GPIOB,	7,		outOpenDrain,				pullDisable,	1,	0),	//ON_OFF
-	/*2 */	makepin(GPIOA,	0,		digitalInput,				pullDisable,	0,	0),	//CC_CV
-	/*3 */	makepin(GPIOA,	2,		alternateFunctionOpenDrain,	pullDisable,	1,	7),	//DS18B20
-	/*4 */	makepin(GPIOA,	15,		outPushPull,				pullDisable,	1,	0),	//SPI3_NSS
+	/*1 */	makepin(GPIOF,	7,		outPushPull,				pullDisable,	1,	0),	//AD5663_SYNC
+	/*2 */	makepin(GPIOB,	7,		outOpenDrain,				pullDisable,	1,	0),	//ON_OFF
+	/*3 */	makepin(GPIOA,	0,		digitalInput,				pullDisable,	0,	0),	//CC_CV
+	/*4 */	makepin(GPIOA,	2,		alternateFunctionOpenDrain,	pullDisable,	1,	7),	//DS18B20
+	/*5 */	makepin(GPIOA,	15,		outPushPull,				pullDisable,	1,	0),	//SPI3_NSS
 };
 static const uint32_t pinNum = sizeof(pinsMode) / sizeof(pinMode_type);
 
@@ -35,7 +36,7 @@ static gpioCallback_type gpioCallback;
 */
 void EXTI0_IRQHandler(void){
 	SWITCH_OFF();
-	EXTI->PR	|= EXTI_PR_PR0;	//Pending
+	EXTI->PR = EXTI_PR_PR0;	//Pending
 	if(gpioCallback != NULL){
 		gpioCallback(NULL);
 	}
@@ -135,13 +136,13 @@ void gppin_init(GPIO_TypeDef *port, uint8_t npin, gpioMode_type mode, gpioPull_t
 		case alternateFunctionPushPull:
 			port->MODER |= GPIO_AF_MODE << (2*npin);
 			port->OTYPER |= GPIO_PUSH_PULL << npin;
-			port->OSPEEDR |= 3 << (2*npin);	//High speed
+			port->OSPEEDR |= 0 << (2*npin);	//Low speed
 			break;
 
 		case alternateFunctionOpenDrain:
 			port->MODER |= GPIO_AF_MODE << (2*npin);
 			port->OTYPER |= GPIO_OPEN_DRAIN << npin;
-			port->OSPEEDR |= 3 << (2*npin);	//High speed
+			port->OSPEEDR |= 0 << (2*npin);	//Low speed
 			break;
 	}
 

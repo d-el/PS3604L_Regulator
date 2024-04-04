@@ -1,5 +1,5 @@
 add_library(math STATIC
-	specificMath.c
+	specificMath.cpp
 	)
 
 target_include_directories(math PUBLIC

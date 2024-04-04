@@ -45,13 +45,11 @@
 /*!****************************************************************************
 * Macro functions
 */
-#define setDacU(u16val)		setDacCh1(u16val)
-#define setDacI(u16val)		setDacCh2(u16val)
 #define LED_ON()			gppin_set(GP_LED)
 #define LED_OFF()			gppin_reset(GP_LED)
 #define LED_TOGGLE()		gppin_togle(GP_LED)
 #define SWITCH_OFF()		_gppin_set(GPIOB, pinm9)
-#define MODE_IS_CC()		((gppin_get(GP_CC_CV)) ? 1:0)   //Определяет проверка режима ограничения
+#define MODE_IS_CC()		((gppin_get(GP_CC_CV)) ? 1:0)	// is CC mode
 
 /*!****************************************************************************
 * Prototypes for the functions
