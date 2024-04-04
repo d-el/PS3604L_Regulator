@@ -77,17 +77,12 @@ void adc_init(void){
 
 	{
 	SDADC1->CONF0R	|= SDADC_CONF0R_SE0;						//Conversions are executed in single-ended zero-volt reference mode
-	SDADC1->CONF0R	|= SDADC_CONF0R_GAIN0;						//0.5x gain
+	SDADC1->CONF0R	&= ~SDADC_CONF0R_GAIN0;						//1x gain
 	}
 
-	{
-	SDADC1->CONF1R	|= SDADC_CONF0R_SE0;						//Conversions are executed in single-ended zero-volt reference mode
-	SDADC1->CONF1R	&= ~SDADC_CONF0R_GAIN0;						//1x gain
-	}
-
-	SDADC1->CONFCHR1 |= 1 << SDADC_CONFCHR1_CONFCH4_Pos;		//Channel 4 uses the configuration specified in SDADC_CONF1R
+	SDADC1->CONFCHR1 |= 0 << SDADC_CONFCHR1_CONFCH4_Pos;		//Channel 4 uses the configuration specified in SDADC_CONF0R
 	SDADC1->CONFCHR1 |= 0 << SDADC_CONFCHR1_CONFCH5_Pos;		//Channel 5 uses the configuration specified in SDADC_CONF0R
-	SDADC1->CONFCHR1 |= 1 << SDADC_CONFCHR1_CONFCH6_Pos;		//Channel 6 uses the configuration specified in SDADC_CONF1R
+	SDADC1->CONFCHR1 |= 0 << SDADC_CONFCHR1_CONFCH6_Pos;		//Channel 6 uses the configuration specified in SDADC_CONF0R
 
 	SDADC1->JCHGR	=	SDADC_JCHGR_JCHG_4 |					//Channel 4 is not part of the injected group
 						SDADC_JCHGR_JCHG_5 |					//Channel 5 is not part of the injected group
@@ -97,7 +92,7 @@ void adc_init(void){
 	SDADC1->CR2		|= SDADC_CR2_JEXTSEL_0 |					//Trigger signal selection for launching injected conversions TIM3_CH1
 						SDADC_CR2_JEXTSEL_1;
 
-	SDADC1->CR2		|= SDADC_CR2_CALIBCNT_0;					//Two calibration sequences will be performed to calculate OFFSET0[11:0] and OFFSET1[11:0]
+	SDADC1->CR2		&= ~SDADC_CR2_CALIBCNT;						//One calibration sequence will be performed to calculate OFFSET0[11:0]
 
 	SDADC1->CR1		&= ~SDADC_CR1_INIT;							//Exit initialization mode
 	while((SDADC1->ISR & SDADC_ISR_INITRDY) != 0);
