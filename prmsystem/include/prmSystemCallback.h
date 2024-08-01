@@ -19,8 +19,9 @@
  */
 void getFwVer(Prm::Val<uint16_t>& prm, bool read, void *arg);
 
-void vsave(Prm::Val<uint32_t>& prm, bool read, void *arg);
-void isave(Prm::Val<uint32_t>& prm, bool read, void *arg);
+void vsave(Prm::Val<int32_t>& prm, bool read, void *arg);
+void isave(Prm::Val<int32_t>& prm, bool read, void *arg);
+void micro_isave(Prm::Val<int32_t>& prm, bool read, void *arg);
 
 #endif //prmSystemCallback_H
 

@@ -11,6 +11,7 @@
 */
 #include <stdio.h>
 #include <assert.h>
+#include <algorithm>
 #include <FreeRTOS.h>
 #include <task.h>
 #include <semphr.h>
@@ -80,7 +81,7 @@ static inline void switchOFF(void){
 /*!****************************************************************************
  * @brief	Set Voltage calibration point
  */
-void vsave(Prm::Val<uint32_t>& prm, bool read, void *arg){
+void vsave(Prm::Val<int32_t>& prm, bool read, void *arg){
 	(void)arg;
 	if(read){
 		return;
@@ -112,7 +113,7 @@ void vsave(Prm::Val<uint32_t>& prm, bool read, void *arg){
 /*!****************************************************************************
  * @brief	Set Current calibration point
  */
-void isave(Prm::Val<uint32_t>& prm, bool read, void *arg){
+void isave(Prm::Val<int32_t>& prm, bool read, void *arg){
 	(void)arg;
 	if(read){
 		return;
@@ -123,28 +124,43 @@ void isave(Prm::Val<uint32_t>& prm, bool read, void *arg){
 			Prm::i0_adc = adcTaskStct.filtered.i;
 			Prm::i0_dac = Prm::idac.val;
 			Prm::iext0_adc = adcTaskStct.filtered.iex;
-			Prm::iext0_i = Prm::i0_i.val;
 			break;
 
 		case 1:
 			Prm::i1_adc = adcTaskStct.filtered.i;
 			Prm::i1_dac = Prm::idac.val;
 			Prm::iext1_adc = adcTaskStct.filtered.iex;
-			Prm::iext1_i = Prm::i1_i.val;
 			break;
 
 		case 2:
 			Prm::i2_adc = adcTaskStct.filtered.i;
 			Prm::i2_dac = Prm::idac.val;
 			Prm::iext2_adc = adcTaskStct.filtered.iex;
-			Prm::iext2_i = Prm::i2_i.val;
 			break;
 
 		case 3:
 			Prm::i3_adc = adcTaskStct.filtered.i;
 			Prm::i3_dac = Prm::idac.val;
 			Prm::iext3_adc = adcTaskStct.filtered.iex;
-			Prm::iext3_i = Prm::i3_i.val;
+			break;
+	}
+}
+
+/*!****************************************************************************
+ * @brief	Set Current calibration point
+ */
+void micro_isave(Prm::Val<int32_t>& prm, bool read, void *arg){
+	(void)arg;
+	if(read){
+		return;
+	}
+
+	switch(reinterpret_cast<uint32_t>(prm.getarg())){
+		case 0:
+			Prm::micro_iext0_adc = adcTaskStct.filtered.iex;
+			break;
+		case 1:
+			Prm::micro_iext1_adc = adcTaskStct.filtered.iex;
 			break;
 	}
 }
@@ -175,7 +191,7 @@ bool savePrm(void){
 	}
 	return true;
 }
-
+float fv , fi, fr;
 /*!****************************************************************************
  * @brief	Main dispatcher task
  */
@@ -205,7 +221,7 @@ void systemTSK(void *pPrm){
 	_iq					qCurrentExternal = 0;		// [A]
 	_iq					qWireResistens = 0;			// [Ohm]
 	_iq14				q20OutPower = 0;			// [W]
-	_iq14				q14Resistance = 0;			// [Ohm]
+	uint32_t			resistance = 0;				// [Ohm]
 	uint32_t 			capacity = 0;				// [mAh]
 	adcCurrentSensor_type	currentSensor = adcCurrentSensorInternal;
 	bool				irqEnable = false;
@@ -247,7 +263,6 @@ void systemTSK(void *pPrm){
 		}
 		qWireResistens = IntToIQ(Prm::wireResistance.val, 10000);
 		qVoltage  = qVoltage - _IQmpy(qWireResistens, qCurrent);
-		qVoltage = _IQsat(qVoltage, MAX_IQ_POS, 0);
 
 		/*
 		 * Calculate current
@@ -267,22 +282,25 @@ void systemTSK(void *pPrm){
 											Prm::i3_adc, IntToIQ(Prm::i3_i, 1000000),
 											a.filtered.i);
 		}
-		qCurrentInternal = _IQsat(qCurrentInternal, MAX_IQ_POS, 0);
 
 		/*
 		 * Calculate current on external ADC
 		 */
-		if(a.filtered.iex <= Prm::iext1_adc){
-			qCurrentExternal = s32iq_lerp(	Prm::iext0_adc, IntToIQ(Prm::iext0_i, 1000000),
-											Prm::iext1_adc, IntToIQ(Prm::iext1_i, 1000000),
+		if(a.filtered.iex <= Prm::micro_iext1_adc){
+			qCurrentExternal = s32iq_lerp(	Prm::micro_iext0_adc, IntToIQ(Prm::micro_i0_i, 1000000),
+											Prm::micro_iext1_adc, IntToIQ(Prm::micro_i1_i, 1000000),
+											a.filtered.iex);
+		}
+		else if(a.filtered.iex <= Prm::iext1_adc){
+			qCurrentExternal = s32iq_lerp(	Prm::iext0_adc, IntToIQ(Prm::i0_i, 1000000),
+											Prm::iext1_adc, IntToIQ(Prm::i1_i, 1000000),
 											a.filtered.iex);
 		}
 		else{
-			qCurrentExternal = s32iq_lerp(	Prm::iext1_adc, IntToIQ(Prm::iext1_i, 1000000),
-											Prm::iext2_adc, IntToIQ(Prm::iext2_i, 1000000),
+			qCurrentExternal = s32iq_lerp(	Prm::iext1_adc, IntToIQ(Prm::i1_i, 1000000),
+											Prm::iext2_adc, IntToIQ(Prm::i2_i, 1000000),
 											a.filtered.iex);
 		}
-		qCurrentExternal = _IQsat(qCurrentExternal, MAX_IQ_POS, 0);
 
 		/*
 		 * Select current sensor
@@ -307,7 +325,7 @@ void systemTSK(void *pPrm){
 		 * Calculate output power
 		 */
 		if(Prm::enable){
-			q20OutPower = _IQ20mpy(_IQtoIQ20(qVoltage), _IQtoIQ20(qCurrent));
+			q20OutPower = _IQ22mpy(_IQtoIQ22(_IQabs(qVoltage)), _IQtoIQ22(_IQabs(qCurrent)));
 		}else{
 			q20OutPower = 0;
 		}
@@ -315,21 +333,26 @@ void systemTSK(void *pPrm){
 		/*
 		 * Calculate resistance
 		 */
-		if(Prm::enable && (qCurrent > _IQ(0.01))
-				/*&& (voltage > _IQ(0.05))*/){
-			q14Resistance = _IQ14div(_IQtoIQ14(qVoltage), _IQtoIQ14(qCurrent));
-			if(q14Resistance > _IQ14(99999)){  //limit 99999 Ohm
-				q14Resistance = _IQ14(99999);
+		uint32_t resistance_max = 2147483647;
+		if(Prm::enable && qCurrent >= _IQ(0.00001)){
+			float fv = qVoltage / float(1 << 24);
+			float fi = qCurrent / float(1 << 24);
+			float fr = (fv * 10000) / fi;
+			fr = std::clamp(fr, (float)0, (float)resistance_max);
+			if(fr <= resistance_max){
+				resistance = fr;
+			}else{
+				resistance = -1;
 			}
 		}else{
-			q14Resistance = _IQ14(99999);
+			resistance = -1;
 		}
 
 		/*
 		 * Calculate capacity
 		 */
 		static uint64_t lcapacity;
-		if(Prm::enable){
+		if(Prm::enable && qCurrent > 0){
 			lcapacity += qCurrent;
 			constexpr uint32_t loopPeriod = SYSTEM_TSK_PERIOD * 1000;
 			if(lcapacity >= ((uint64_t) _IQ(0.001) * (1000000 / loopPeriod) * 60 * 60)){
@@ -348,7 +371,7 @@ void systemTSK(void *pPrm){
 		uint16_t status = 0;
 
 		if(Prm::calibration_time.val == 0){
-			status |= Prm::m_notCalibrated;
+			status |= Prm::m_сalibrationEmpty;
 		}
 
 		// Temperature sensor
@@ -405,8 +428,8 @@ void systemTSK(void *pPrm){
 		Prm::iexternaladc = a.filtered.iex;
 		Prm::voltage = IQtoInt(qVoltage, 1000000);
 		Prm::current = IQtoInt(qCurrent, 1000000);
-		Prm::power = IQtoInt(q20OutPower, 1000, 20);
-		Prm::resistance = IQtoInt(q14Resistance, 10000, 14);
+		Prm::power = IQtoInt(q20OutPower, 1000000, 22);
+		Prm::resistance = resistance;
 		Prm::capacity = capacity;
 		Prm::input_voltage = IQtoInt(qInVoltage, 1000000);
 		Prm::temperature = temperature.temperature;

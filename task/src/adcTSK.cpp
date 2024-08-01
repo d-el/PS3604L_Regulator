@@ -102,12 +102,12 @@ void adcTSK(void *pPrm){
 		}
 
 		if(dacU != a.dacU){
-			ad5663_set_a(a.dacU);
+			ad5663_set_b(a.dacU);
 			dacU = a.dacU;
 		}
 
 		if(dacI != a.dacI){
-			ad5663_set_b(a.dacI);
+			ad5663_set_a(a.dacI);
 			dacI = a.dacI;
 		}
 	}

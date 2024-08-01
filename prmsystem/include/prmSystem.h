@@ -107,6 +107,7 @@ public:
 	virtual void bigstep(int32_t step) = 0;
 	virtual const char* getlabel() const = 0;
 	virtual const char* getunit() const = 0;
+
 	virtual size_t getsize() const = 0;
 	virtual void* getarg() const = 0;
 	virtual uint16_t getaddress() const = 0;
