@@ -92,20 +92,25 @@ void vsave(Prm::Val<int32_t>& prm, bool read, void *arg){
 			Prm::v0_adc = adcTaskStct.filtered.u;
 			Prm::v0_dac = Prm::vdac.val;
 			break;
-
 		case 1:
 			Prm::v1_adc = adcTaskStct.filtered.u;
 			Prm::v1_dac = Prm::vdac.val;
 			break;
-
 		case 2:
 			Prm::v2_adc = adcTaskStct.filtered.u;
 			Prm::v2_dac = Prm::vdac.val;
 			break;
-
 		case 3:
 			Prm::v3_adc = adcTaskStct.filtered.u;
 			Prm::v3_dac = Prm::vdac.val;
+			break;
+		case 4:
+			Prm::v4_adc = adcTaskStct.filtered.u;
+			Prm::v4_dac = Prm::vdac.val;
+			break;
+		case 5:
+			Prm::v5_adc = adcTaskStct.filtered.u;
+			Prm::v5_dac = Prm::vdac.val;
 			break;
 	}
 }
@@ -125,23 +130,30 @@ void isave(Prm::Val<int32_t>& prm, bool read, void *arg){
 			Prm::i0_dac = Prm::idac.val;
 			Prm::iext0_adc = adcTaskStct.filtered.iex;
 			break;
-
 		case 1:
 			Prm::i1_adc = adcTaskStct.filtered.i;
 			Prm::i1_dac = Prm::idac.val;
 			Prm::iext1_adc = adcTaskStct.filtered.iex;
 			break;
-
 		case 2:
 			Prm::i2_adc = adcTaskStct.filtered.i;
 			Prm::i2_dac = Prm::idac.val;
 			Prm::iext2_adc = adcTaskStct.filtered.iex;
 			break;
-
 		case 3:
 			Prm::i3_adc = adcTaskStct.filtered.i;
 			Prm::i3_dac = Prm::idac.val;
 			Prm::iext3_adc = adcTaskStct.filtered.iex;
+			break;
+		case 4:
+			Prm::i4_adc = adcTaskStct.filtered.i;
+			Prm::i4_dac = Prm::idac.val;
+			Prm::iext4_adc = adcTaskStct.filtered.iex;
+			break;
+		case 5:
+			Prm::i5_adc = adcTaskStct.filtered.i;
+			Prm::i5_dac = Prm::idac.val;
+			Prm::iext5_adc = adcTaskStct.filtered.iex;
 			break;
 	}
 }
@@ -256,9 +268,19 @@ void systemTSK(void *pPrm){
 									Prm::v2_adc, IntToIQ(Prm::v2_u, 1000000),
 									a.filtered.u);
 		}
-		else{
+		else if(a.filtered.u <= Prm::v3_adc){
 			qVoltage = s32iq_lerp(	Prm::v2_adc, IntToIQ(Prm::v2_u, 1000000),
 									Prm::v3_adc, IntToIQ(Prm::v3_u, 1000000),
+									a.filtered.u);
+		}
+		else if(a.filtered.u <= Prm::v4_adc){
+			qVoltage = s32iq_lerp(	Prm::v3_adc, IntToIQ(Prm::v3_u, 1000000),
+									Prm::v4_adc, IntToIQ(Prm::v4_u, 1000000),
+									a.filtered.u);
+		}
+		else{
+			qVoltage = s32iq_lerp(	Prm::v4_adc, IntToIQ(Prm::v4_u, 1000000),
+									Prm::v5_adc, IntToIQ(Prm::v5_u, 1000000),
 									a.filtered.u);
 		}
 		qWireResistens = IntToIQ(Prm::wireResistance.val, 10000);
@@ -277,9 +299,19 @@ void systemTSK(void *pPrm){
 											Prm::i2_adc, IntToIQ(Prm::i2_i, 1000000),
 											a.filtered.i);
 		}
-		else{
+		else if(a.filtered.i <= Prm::i3_adc){
 			qCurrentInternal = s32iq_lerp(	Prm::i2_adc, IntToIQ(Prm::i2_i, 1000000),
 											Prm::i3_adc, IntToIQ(Prm::i3_i, 1000000),
+											a.filtered.i);
+		}
+		else if(a.filtered.i <= Prm::i4_adc){
+			qCurrentInternal = s32iq_lerp(	Prm::i3_adc, IntToIQ(Prm::i3_i, 1000000),
+											Prm::i4_adc, IntToIQ(Prm::i4_i, 1000000),
+											a.filtered.i);
+		}
+		else{
+			qCurrentInternal = s32iq_lerp(	Prm::i4_adc, IntToIQ(Prm::i4_i, 1000000),
+											Prm::i5_adc, IntToIQ(Prm::i5_i, 1000000),
 											a.filtered.i);
 		}
 
@@ -291,14 +323,24 @@ void systemTSK(void *pPrm){
 											Prm::micro_iext1_adc, IntToIQ(Prm::micro_i1_i, 1000000),
 											a.filtered.iex);
 		}
-		else if(a.filtered.iex <= Prm::iext1_adc){
-			qCurrentExternal = s32iq_lerp(	Prm::iext0_adc, IntToIQ(Prm::i0_i, 1000000),
-											Prm::iext1_adc, IntToIQ(Prm::i1_i, 1000000),
+		else if(a.filtered.iex <= Prm::iext2_adc){
+			qCurrentExternal = s32iq_lerp(	Prm::iext1_adc, IntToIQ(Prm::i1_i, 1000000),
+											Prm::iext2_adc, IntToIQ(Prm::i2_i, 1000000),
+											a.filtered.iex);
+		}
+		else if(a.filtered.iex <= Prm::iext3_adc){
+			qCurrentExternal = s32iq_lerp(	Prm::iext2_adc, IntToIQ(Prm::i2_i, 1000000),
+											Prm::iext3_adc, IntToIQ(Prm::i3_i, 1000000),
+											a.filtered.iex);
+		}
+		else if(a.filtered.iex <= Prm::iext4_adc){
+			qCurrentExternal = s32iq_lerp(	Prm::iext3_adc, IntToIQ(Prm::i3_i, 1000000),
+											Prm::iext4_adc, IntToIQ(Prm::i4_i, 1000000),
 											a.filtered.iex);
 		}
 		else{
-			qCurrentExternal = s32iq_lerp(	Prm::iext1_adc, IntToIQ(Prm::i1_i, 1000000),
-											Prm::iext2_adc, IntToIQ(Prm::i2_i, 1000000),
+			qCurrentExternal = s32iq_lerp(	Prm::iext4_adc, IntToIQ(Prm::i4_i, 1000000),
+											Prm::iext5_adc, IntToIQ(Prm::i5_i, 1000000),
 											a.filtered.iex);
 		}
 
@@ -482,9 +524,19 @@ void systemTSK(void *pPrm){
 								IntToIQ(Prm::i2_i, 1000000), Prm::i2_dac,
 								qI);
 			}
-			else{
+			else if(qI <= IntToIQ(Prm::i3_i, 1000000)){
 				idac = iq_lerp(	IntToIQ(Prm::i2_i, 1000000), Prm::i2_dac,
 								IntToIQ(Prm::i3_i, 1000000), Prm::i3_dac,
+								qI);
+			}
+			else if(qI <= IntToIQ(Prm::i4_i, 1000000)){
+				idac = iq_lerp(	IntToIQ(Prm::i3_i, 1000000), Prm::i3_dac,
+								IntToIQ(Prm::i4_i, 1000000), Prm::i4_dac,
+								qI);
+			}
+			else{
+				idac = iq_lerp(	IntToIQ(Prm::i4_i, 1000000), Prm::i4_dac,
+								IntToIQ(Prm::i5_i, 1000000), Prm::i5_dac,
 								qI);
 			}
 
@@ -494,19 +546,29 @@ void systemTSK(void *pPrm){
 			if(qU == 0){
 				udac = 0;
 			}
-			else if(qU < IntToIQ(Prm::v1_u, 1000000)){
+			else if(qU <= IntToIQ(Prm::v1_u, 1000000)){
 				udac = iq_lerp(	IntToIQ(Prm::v0_u, 1000000), Prm::v0_dac,
 								IntToIQ(Prm::v1_u, 1000000), Prm::v1_dac,
 								qU);
 			}
-			else if(qU < IntToIQ(Prm::v2_u, 1000000)){
+			else if(qU <= IntToIQ(Prm::v2_u, 1000000)){
 				udac = iq_lerp(	IntToIQ(Prm::v1_u, 1000000), Prm::v1_dac,
 								IntToIQ(Prm::v2_u, 1000000), Prm::v2_dac,
 								qU);
 			}
-			else{
+			else if(qU <= IntToIQ(Prm::v3_u, 1000000)){
 				udac = iq_lerp(	IntToIQ(Prm::v2_u, 1000000), Prm::v2_dac,
 								IntToIQ(Prm::v3_u, 1000000), Prm::v3_dac,
+								qU);
+			}
+			else if(qU <= IntToIQ(Prm::v4_u, 1000000)){
+				udac = iq_lerp(	IntToIQ(Prm::v3_u, 1000000), Prm::v3_dac,
+								IntToIQ(Prm::v4_u, 1000000), Prm::v4_dac,
+								qU);
+				}
+			else{
+				udac = iq_lerp(	IntToIQ(Prm::v4_u, 1000000), Prm::v4_dac,
+								IntToIQ(Prm::v5_u, 1000000), Prm::v5_dac,
 								qU);
 			}
 		}
