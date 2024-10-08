@@ -475,6 +475,7 @@ void systemTSK(void *pPrm){
 		Prm::capacity = capacity;
 		Prm::input_voltage = IQtoInt(qInVoltage, 1000000);
 		Prm::temperature = temperature.temperature;
+		Prm::debug_u16.val = a.filtered.vrefm;
 
 		if(enableState){
 			Prm::time.val = xTaskGetTickCount() - timeOffset;

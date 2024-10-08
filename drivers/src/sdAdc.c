@@ -1,10 +1,10 @@
 ﻿/*!****************************************************************************
-* @file			sdAdc.c
-* @author		Storozhenko Roman - D_EL
-* @version		V1.0
-* @date			07.03.2017
-* @copyright	GNU Public License
-*/
+ * @file		sdAdc.c
+ * @author		Storozhenko Roman - D_EL
+ * @version		V1.1
+ * @date		08.10.2024
+ * @copyright	The MIT License (MIT). Copyright (c) 2024 Storozhenko Roman
+ */
 
 /*!****************************************************************************
 * Include
@@ -25,9 +25,6 @@ SDADC_TypeDef* sdadc1;
 
 /*!****************************************************************************
 * TIM3 -> SDADC1 -> DMA2_Channel3 -> DMA2_Channel3_IRQHandler
-* SDADC1_IN4P
-* SDADC1_IN5P
-* SDADC1_IN6P
 */
 void adc_init(void){
 	/**********************************
@@ -39,6 +36,8 @@ void adc_init(void){
 	gppin_init(GPIOB, 1, analogMode, pullDisable, 0,  0);
 	//Analog Input
 	gppin_init(GPIOB, 2, analogMode, pullDisable, 0, 0);
+	//Analog Input
+	gppin_init(GPIOE, 9, analogMode, pullDisable, 0, 0);
 
 	for(int i = 0; i < 360000; i++) __NOP();
 
@@ -50,7 +49,7 @@ void adc_init(void){
 	for(int i = 0; i < 360000; i++) __NOP();
 
 	RCC->CFGR		&= ~RCC_CFGR_SDADCPRE;
-	RCC->CFGR		|=	RCC_CFGR_SDADCPRE_DIV24;				//SDADC CLK divided
+	RCC->CFGR		|=	RCC_CFGR_SDADCPRE_DIV12;				//SDADC CLK divided
 	for(int i = 0; i < 360000; i++) __NOP();
 
 	RCC->APB2ENR	|= RCC_APB2ENR_SDADC1EN;					//SDADC1 clock Enable
@@ -83,10 +82,12 @@ void adc_init(void){
 	SDADC1->CONFCHR1 |= 0 << SDADC_CONFCHR1_CONFCH4_Pos;		//Channel 4 uses the configuration specified in SDADC_CONF0R
 	SDADC1->CONFCHR1 |= 0 << SDADC_CONFCHR1_CONFCH5_Pos;		//Channel 5 uses the configuration specified in SDADC_CONF0R
 	SDADC1->CONFCHR1 |= 0 << SDADC_CONFCHR1_CONFCH6_Pos;		//Channel 6 uses the configuration specified in SDADC_CONF0R
+	SDADC1->CONFCHR1 |= 0 << SDADC_CONFCHR1_CONFCH7_Pos;		//Channel 7 uses the configuration specified in SDADC_CONF0R
 
-	SDADC1->JCHGR	=	SDADC_JCHGR_JCHG_4 |					//Channel 4 is not part of the injected group
-						SDADC_JCHGR_JCHG_5 |					//Channel 5 is not part of the injected group
-						SDADC_JCHGR_JCHG_6;						//Channel 6 is not part of the injected group
+	SDADC1->JCHGR	=	SDADC_JCHGR_JCHG_4 |					//Channel 4 is part of the injected group
+						SDADC_JCHGR_JCHG_5 |					//Channel 5 is part of the injected group
+						SDADC_JCHGR_JCHG_6 |					//Channel 6 is part of the injected group
+						SDADC_JCHGR_JCHG_7;						//Channel 7 is part of the injected group
 
 	SDADC1->CR2		|= SDADC_CR2_JEXTEN_0;						//Each rising edge on the selected trigger makes a request to launch a injected conversion
 	SDADC1->CR2		|= SDADC_CR2_JEXTSEL_0 |					//Trigger signal selection for launching injected conversions TIM3_CH1
@@ -96,10 +97,6 @@ void adc_init(void){
 
 	SDADC1->CR1		&= ~SDADC_CR1_INIT;							//Exit initialization mode
 	while((SDADC1->ISR & SDADC_ISR_INITRDY) != 0);
-
-	SDADC1->CR2		|= SDADC_CR2_STARTCALIB;
-	while((SDADC1->ISR & SDADC_ISR_EOCALF) == 0);				//Wait for Calibration has completed and the offsets have been updated
-	SDADC1->CLRISR	= SDADC_ISR_CLREOCALF;
 
 	/**********************************
 	 * DMA Init
@@ -172,6 +169,7 @@ void DMA2_Channel3_IRQHandler(void){
 	adcStct.adcreg[0] = adcStct.adcdr[0] + SDADC_DR_TO_LSB_ADD;
 	adcStct.adcreg[1] = adcStct.adcdr[1] + SDADC_DR_TO_LSB_ADD;
 	adcStct.adcreg[2] = adcStct.adcdr[2] + SDADC_DR_TO_LSB_ADD;
+	adcStct.adcreg[3] = adcStct.adcdr[3] + SDADC_DR_TO_LSB_ADD;
 	if(adcStct.tcHoock != NULL){
 		adcStct.tcHoock(&adcStct);
 	}

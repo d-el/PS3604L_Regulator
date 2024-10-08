@@ -1,24 +1,25 @@
 ﻿/*!****************************************************************************
-* @file			board.h
+ * @file		board.h
  * @author		Storozhenko Roman - D_EL
-* @version 		V1.0
-* @date			10.01.2021, Storozhenko Roman
-* @copyright 	The MIT License (MIT). Copyright (c) 2020 Storozhenko Roman
-*
-* TIM12_CH1 (PB14)				-> LED
-* TIM3_CH1 						-> ADC TRIGGER
-* TIM4_CH2 (PA12)				-> FAN_PWM
-*
-* SDADC1_IN4P 					-> UDC_MEAS
-* SDADC1_IN5P 					-> I_MEAS
-* SDADC1_IN6P 					-> U_MEAS
-*
-* UART3 TX - (PD8)				-> 1Wire
-* UART1 TX - (PA9), RX - (PA10)	-> UART CONNECT
-*
-* GPIO (PB5) 					-> ON_OFF
-* GPIO (PA0)					-> CC_CV
-*/
+ * @version		V1.1
+ * @date		08.10.2024, Storozhenko Roman
+ * @copyright	The MIT License (MIT). Copyright (c) 2024 Storozhenko Roman
+ *
+ * TIM12_CH1 (PB14)				-> LED
+ * TIM3_CH1						-> ADC TRIGGER
+ * TIM4_CH2(PA12)				-> FAN_PWM
+ *
+ * SDADC1_IN4P					-> UDC_MEAS
+ * SDADC1_IN5P					-> I_MEAS
+ * SDADC1_IN6P					-> U_MEAS
+ * SDADC1_IN7P					-> VREF-
+ *
+ * UART3 TX - (PD8)				-> 1Wire
+ * UART1 TX - (PA9), RX - (PA10)-> UART CONNECT
+ *
+ * GPIO (PB5)					-> ON_OFF
+ * GPIO (PA0)					-> CC_CV
+ */
 #ifndef board_H
 #define board_H
 

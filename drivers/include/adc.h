@@ -1,9 +1,9 @@
 ﻿/*!****************************************************************************
- * @file    	adc.h
- * @author  	Storozhenko Roman - D_EL
- * @version 	V1.0
- * @date    	07.03.2017
- * @copyright 	The MIT License (MIT). Copyright (c) 2020 Storozhenko Roman
+ * @file		sdAdc.h
+ * @author		Storozhenko Roman - D_EL
+ * @version		V1.1
+ * @date		08.10.2024
+ * @copyright	The MIT License (MIT). Copyright (c) 2024 Storozhenko Roman
  */
 #ifndef ADC_H
 #define ADC_H
@@ -26,6 +26,7 @@ enum{
 	CH_UINADC,
 	CH_IADC,
 	CH_UADC,
+	CH_VREFM,
 	CH_NUMBER
 };
 

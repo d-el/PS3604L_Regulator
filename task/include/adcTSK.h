@@ -28,6 +28,7 @@ typedef struct {
 		uint16_t u;
 		uint16_t i;
 		int32_t iex;
+		uint16_t vrefm;
 	}filtered;
 	bool externalSensorOk;
 

@@ -73,6 +73,7 @@ void adcTSK(void *pPrm){
 	static MovingAverageFilter<uint16_t, 1024> f_iadc(0);
 	static MovingAverageFilter<uint16_t, 1024> f_uadc(0);
 	static MovingAverageFilter<int32_t, 128> f_iex(0);
+	static MovingAverageFilter<int16_t, 128> f_common(820);
 
 	decltype(a.dacU) dacU = 0;
 	decltype(a.dacI) dacI = 0;
@@ -87,9 +88,10 @@ void adcTSK(void *pPrm){
 	while(1){
 		xSemaphoreTake(AdcEndConversionSem, portMAX_DELAY);
 
-		a.filtered.uin = f_vin.proc(adcValue.adcreg[CH_UINADC]);
-		a.filtered.i = f_iadc.proc(adcValue.adcreg[CH_IADC]);
-		a.filtered.u = f_uadc.proc(adcValue.adcreg[CH_UADC]);
+		a.filtered.vrefm = f_common.proc(adcValue.adcreg[CH_VREFM]);
+		a.filtered.uin = f_vin.proc(adcValue.adcreg[CH_UINADC]) - a.filtered.vrefm;
+		a.filtered.i = f_iadc.proc(adcValue.adcreg[CH_IADC]) - a.filtered.vrefm;
+		a.filtered.u = f_uadc.proc(adcValue.adcreg[CH_UADC]) - a.filtered.vrefm;
 
 		if(a.externalSensorOk != 0){
 			bool inaConverted = false;
