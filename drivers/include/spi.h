@@ -82,7 +82,7 @@ extern spi_type				*spi3;
  */
 void spi_init(spi_type *spix, spiDiv_t divClock);
 void spi_setCallback(spi_type *spix, spiCallback_type tcHoock);
-void spi_transfer(spi_type *spix, void *dst, void *src, uint16_t len);
+void spi_transfer(spi_type *spix, void *dst, const void *src, uint16_t len);
 
 #ifdef __cplusplus
 }

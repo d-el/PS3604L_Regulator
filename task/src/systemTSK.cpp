@@ -79,6 +79,20 @@ static inline void switchOFF(void){
 }
 
 /*!****************************************************************************
+ * @brief	Set current measurement range Hi
+ */
+static inline void setCRangeHi(void){
+	gppin_reset(GP_RNG_HI);
+}
+
+/*!****************************************************************************
+ * @brief	Set current measurement range Auto
+ */
+static inline void setCRangeAuto(void){
+	gppin_set(GP_RNG_HI);
+}
+
+/*!****************************************************************************
  * @brief	Set Voltage calibration point
  */
 void vsave(Prm::Val<int32_t>& prm, bool read, void *arg){
@@ -128,32 +142,26 @@ void isave(Prm::Val<int32_t>& prm, bool read, void *arg){
 		case 0:
 			Prm::i0_adc = adcTaskStct.filtered.i;
 			Prm::i0_dac = Prm::idac.val;
-			Prm::iext0_adc = adcTaskStct.filtered.iex;
 			break;
 		case 1:
 			Prm::i1_adc = adcTaskStct.filtered.i;
 			Prm::i1_dac = Prm::idac.val;
-			Prm::iext1_adc = adcTaskStct.filtered.iex;
 			break;
 		case 2:
 			Prm::i2_adc = adcTaskStct.filtered.i;
 			Prm::i2_dac = Prm::idac.val;
-			Prm::iext2_adc = adcTaskStct.filtered.iex;
 			break;
 		case 3:
 			Prm::i3_adc = adcTaskStct.filtered.i;
 			Prm::i3_dac = Prm::idac.val;
-			Prm::iext3_adc = adcTaskStct.filtered.iex;
 			break;
 		case 4:
 			Prm::i4_adc = adcTaskStct.filtered.i;
 			Prm::i4_dac = Prm::idac.val;
-			Prm::iext4_adc = adcTaskStct.filtered.iex;
 			break;
 		case 5:
 			Prm::i5_adc = adcTaskStct.filtered.i;
 			Prm::i5_dac = Prm::idac.val;
-			Prm::iext5_adc = adcTaskStct.filtered.iex;
 			break;
 	}
 }
@@ -169,10 +177,13 @@ void micro_isave(Prm::Val<int32_t>& prm, bool read, void *arg){
 
 	switch(reinterpret_cast<uint32_t>(prm.getarg())){
 		case 0:
-			Prm::micro_iext0_adc = adcTaskStct.filtered.iex;
+			Prm::micro_iext0_adc = adcTaskStct.filtered.i;
 			break;
 		case 1:
-			Prm::micro_iext1_adc = adcTaskStct.filtered.iex;
+			Prm::micro_iext1_adc = adcTaskStct.filtered.i;
+			break;
+		case 2:
+			Prm::micro_iext2_adc = adcTaskStct.filtered.i;
 			break;
 	}
 }
@@ -230,12 +241,10 @@ void systemTSK(void *pPrm){
 	_iq					qVoltage = 0;				// [V]
 	_iq					qCurrent = 0;				// [A]
 	_iq					qCurrentInternal = 0;		// [A]
-	_iq					qCurrentExternal = 0;		// [A]
 	_iq					qWireResistens = 0;			// [Ohm]
 	_iq14				q20OutPower = 0;			// [W]
 	uint32_t			resistance = 0;				// [Ohm]
 	uint32_t 			capacity = 0;				// [mAh]
-	adcCurrentSensor_type	currentSensor = adcCurrentSensorInternal;
 	bool				irqEnable = false;
 	bool 				enableState = false;
 	bool 				reverseVoltage = false;
@@ -249,11 +258,12 @@ void systemTSK(void *pPrm){
 		/*
 		 * Detect reverse voltage
 		 */
-		if(a.filtered.u < REVERSE_VOLTAGE_THRESHOLD){
-			reverseVoltage = true;
-		}else{
-			reverseVoltage = false;
-		}
+#warning
+//		if(a.filtered.u < REVERSE_VOLTAGE_THRESHOLD){
+//			reverseVoltage = true;
+//		}else{
+//			reverseVoltage = false;
+//		}
 
 		/*
 		 * Calculate voltage
@@ -289,74 +299,48 @@ void systemTSK(void *pPrm){
 		/*
 		 * Calculate current
 		 */
-		if(a.filtered.i <= Prm::i1_adc){
-			qCurrentInternal = s32iq_lerp(	Prm::i0_adc, IntToIQ(Prm::i0_i, 1000000),
-											Prm::i1_adc, IntToIQ(Prm::i1_i, 1000000),
-											a.filtered.i);
+		if(/* check signal RNG_OVF */gppin_get(GP_RNG_DETECT) && Prm::crange.val == Prm::mask_crange::crange_auto){
+			if(a.filtered.i <= Prm::micro_iext1_adc){
+				qCurrentInternal = s32iq_lerp(	Prm::micro_iext0_adc, IntToIQ(Prm::micro_i0_i, 1000000),
+												Prm::micro_iext1_adc, IntToIQ(Prm::micro_i1_i, 1000000),
+												a.filtered.i);
+			}
+			else{
+				qCurrentInternal = s32iq_lerp(	Prm::micro_iext1_adc, IntToIQ(Prm::micro_i1_i, 1000000),
+												Prm::micro_iext2_adc, IntToIQ(Prm::micro_i2_i, 1000000),
+												a.filtered.i);
+			}
 		}
-		else if(a.filtered.i <= Prm::i2_adc){
-			qCurrentInternal = s32iq_lerp(	Prm::i1_adc, IntToIQ(Prm::i1_i, 1000000),
-											Prm::i2_adc, IntToIQ(Prm::i2_i, 1000000),
-											a.filtered.i);
-		}
-		else if(a.filtered.i <= Prm::i3_adc){
-			qCurrentInternal = s32iq_lerp(	Prm::i2_adc, IntToIQ(Prm::i2_i, 1000000),
-											Prm::i3_adc, IntToIQ(Prm::i3_i, 1000000),
-											a.filtered.i);
-		}
-		else if(a.filtered.i <= Prm::i4_adc){
-			qCurrentInternal = s32iq_lerp(	Prm::i3_adc, IntToIQ(Prm::i3_i, 1000000),
-											Prm::i4_adc, IntToIQ(Prm::i4_i, 1000000),
-											a.filtered.i);
-		}
+
 		else{
-			qCurrentInternal = s32iq_lerp(	Prm::i4_adc, IntToIQ(Prm::i4_i, 1000000),
-											Prm::i5_adc, IntToIQ(Prm::i5_i, 1000000),
-											a.filtered.i);
+			if(a.filtered.i <= Prm::i1_adc){
+				qCurrentInternal = s32iq_lerp(	Prm::i0_adc, IntToIQ(Prm::i0_i, 1000000),
+												Prm::i1_adc, IntToIQ(Prm::i1_i, 1000000),
+												a.filtered.i);
+			}
+			else if(a.filtered.i <= Prm::i2_adc){
+				qCurrentInternal = s32iq_lerp(	Prm::i1_adc, IntToIQ(Prm::i1_i, 1000000),
+												Prm::i2_adc, IntToIQ(Prm::i2_i, 1000000),
+												a.filtered.i);
+			}
+			else if(a.filtered.i <= Prm::i3_adc){
+				qCurrentInternal = s32iq_lerp(	Prm::i2_adc, IntToIQ(Prm::i2_i, 1000000),
+												Prm::i3_adc, IntToIQ(Prm::i3_i, 1000000),
+												a.filtered.i);
+			}
+			else if(a.filtered.i <= Prm::i4_adc){
+				qCurrentInternal = s32iq_lerp(	Prm::i3_adc, IntToIQ(Prm::i3_i, 1000000),
+												Prm::i4_adc, IntToIQ(Prm::i4_i, 1000000),
+												a.filtered.i);
+			}
+			else{
+				qCurrentInternal = s32iq_lerp(	Prm::i4_adc, IntToIQ(Prm::i4_i, 1000000),
+												Prm::i5_adc, IntToIQ(Prm::i5_i, 1000000),
+												a.filtered.i);
+			}
 		}
 
-		/*
-		 * Calculate current on external ADC
-		 */
-		if(a.filtered.iex <= Prm::micro_iext1_adc){
-			qCurrentExternal = s32iq_lerp(	Prm::micro_iext0_adc, IntToIQ(Prm::micro_i0_i, 1000000),
-											Prm::micro_iext1_adc, IntToIQ(Prm::micro_i1_i, 1000000),
-											a.filtered.iex);
-		}
-		else if(a.filtered.iex <= Prm::iext2_adc){
-			qCurrentExternal = s32iq_lerp(	Prm::iext1_adc, IntToIQ(Prm::i1_i, 1000000),
-											Prm::iext2_adc, IntToIQ(Prm::i2_i, 1000000),
-											a.filtered.iex);
-		}
-		else if(a.filtered.iex <= Prm::iext3_adc){
-			qCurrentExternal = s32iq_lerp(	Prm::iext2_adc, IntToIQ(Prm::i2_i, 1000000),
-											Prm::iext3_adc, IntToIQ(Prm::i3_i, 1000000),
-											a.filtered.iex);
-		}
-		else if(a.filtered.iex <= Prm::iext4_adc){
-			qCurrentExternal = s32iq_lerp(	Prm::iext3_adc, IntToIQ(Prm::i3_i, 1000000),
-											Prm::iext4_adc, IntToIQ(Prm::i4_i, 1000000),
-											a.filtered.iex);
-		}
-		else{
-			qCurrentExternal = s32iq_lerp(	Prm::iext4_adc, IntToIQ(Prm::i4_i, 1000000),
-											Prm::iext5_adc, IntToIQ(Prm::i5_i, 1000000),
-											a.filtered.iex);
-		}
-
-		/*
-		 * Select current sensor
-		 */
-		if((qCurrentInternal >= _IQ(CURRENT_SENSOR_THRESHOLD_UP))
-				|| (a.externalSensorOk == 0)){
-			currentSensor = adcCurrentSensorInternal;
-		}
-		if((qCurrentInternal < _IQ(CURRENT_SENSOR_THRESHOLD_DOWN))
-				&& (a.externalSensorOk != 0)){
-			currentSensor = adcCcurrentSensorExternal;
-		}
-
-		qCurrent = currentSensor == adcCurrentSensorInternal ? qCurrentInternal : qCurrentExternal;
+		qCurrent = qCurrentInternal;
 
 		/*
 		 * Calculate input voltage
@@ -448,14 +432,6 @@ void systemTSK(void *pPrm){
 
 		if(qInVoltage < _IQ(MIN_VIN_VOLTAGE)){
 			status |= Prm::m_lowInputVoltage;
-		}
-
-		if(currentSensor == adcCcurrentSensorExternal){
-			status |= Prm::m_externaIAdc;
-		}
-
-		if(!a.externalSensorOk){
-			status |= Prm::m_errorExternalIAdc;
 		}
 
 		if(Prm::enable && limited){
@@ -618,6 +594,22 @@ void systemTSK(void *pPrm){
 			irqEnable = true;
 		}
 
+		if(Prm::crange.val == Prm::mask_crange::crange_hi){
+			setCRangeHi();
+		}else{
+			setCRangeAuto();
+		}
+
+		if(!gppin_get(GP_RNG_DETECT)){
+			status |= Prm::mask_status::m_cRangeLoOverflow;
+		}
+
+		if(Prm::crange.val == Prm::mask_crange::crange_auto && gppin_get(GP_RNG_DETECT)){
+			gppin_set(GP_RNG_MEAS_SELECT);
+		}else{
+			gppin_reset(GP_RNG_MEAS_SELECT);
+		}
+
 		/**************************************
 		 * Request enable
 		 */
@@ -641,10 +633,17 @@ void systemTSK(void *pPrm){
 			disablecause = Prm::v_none;
 		}
 
-		if(status & Prm::m_lowInputVoltage && modbus_needSave(false)){
-			LED_OFF();
-			if(savePrm()){
-				modbus_needSave(true);
+		if(Prm::save_settings.val == Prm::save_do){
+			if(modbus_needSave(false)){
+				LED_OFF();
+				if(savePrm()){
+					modbus_needSave(true);
+					Prm::save_settings.val = Prm::save_ok;
+				}else{
+					Prm::save_settings.val = Prm::save_error;
+				}
+			}else{
+				Prm::save_settings.val = Prm::save_nothing;
 			}
 		}
 

@@ -20,7 +20,7 @@ extern "C" {
  */
 #include <stdbool.h>
 
-typedef bool (*ad5663_spi_t)(void* dst, void* src, uint16_t len);
+typedef bool (*ad5663_spi_t)(void* dst, const void* src, uint16_t len);
 
 /*!****************************************************************************
  * Function declaration

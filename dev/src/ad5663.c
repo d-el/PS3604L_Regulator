@@ -16,7 +16,6 @@
 #include <spi.h>
 #include <gpio.h>
 #include "ad5663.h"
-#include "ina229.h"
 
 typedef struct __attribute__((packed)){
 	union{

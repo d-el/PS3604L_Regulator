@@ -9,17 +9,18 @@
 /*!****************************************************************************
  * Include
  */
+#include <array>
 #include <FreeRTOS.h>
 #include <task.h>
 #include <queue.h>
 #include <semphr.h>
 #include <adc.h>
 #include <spi.h>
-#include <ina229.h>
 #include <ad5663.h>
 #include "adcTSK.h"
 #include <movingAverageFilter.h>
 #include "sysTimeMeas.h"
+#include <ad468x.h>
 
 /*!****************************************************************************
  * MEMORY
@@ -39,7 +40,7 @@ static void spiTC_Hook(spi_type *spix){
 	portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
 }
 
-static bool spi(void *dst, void *src, uint16_t len){
+static bool spi(void *dst, const void *src, uint16_t len){
 	spi_transfer(spi3, dst, src, len);
 	BaseType_t res = xSemaphoreTake(spiSem, pdMS_TO_TICKS(portMAX_DELAY));
 	return res == pdTRUE && spi3->state == spiTCSuccess;
@@ -70,44 +71,33 @@ void adcTSK(void *pPrm){
 	spi_setCallback(spi3, spiTC_Hook);
 
 	static MovingAverageFilter<uint16_t, 16> f_vin(45000); // 55.5V init
-	static MovingAverageFilter<uint16_t, 1024> f_iadc(0);
-	static MovingAverageFilter<uint16_t, 1024> f_uadc(0);
-	static MovingAverageFilter<int32_t, 128> f_iex(0);
-	static MovingAverageFilter<int16_t, 128> f_common(820);
+	static MovingAverageFilter<uint32_t, 1000> f_iadc(0);
+	static MovingAverageFilter<uint32_t, 1000> f_uadc(0);
+
+	static MovingAverageFilter<int32_t, 16> f_iex(0);
+	static MovingAverageFilter<int16_t, 16> f_common(820);
 
 	decltype(a.dacU) dacU = 0;
 	decltype(a.dacI) dacI = 0;
 
 	adc_setCallback(adcHoock);
-	a.externalSensorOk = ina229_init(spi);
 	ad5663_init(spi);
-	ina229_trig();
-	adc_setSampleRate(500);
+	ad468x_init(spi);
+	adc_setSampleRate(1000);
 	adc_startSampling();
 
 	while(1){
 		xSemaphoreTake(AdcEndConversionSem, portMAX_DELAY);
-
+		int32_t resa = 0, resb = 0;
+		ad468x_convRead(&resa, &resb);
+		a.filtered.i = f_iadc.proc(resb);
+		a.filtered.u = f_uadc.proc(resa);
 		a.filtered.vrefm = f_common.proc(adcValue.adcreg[CH_VREFM]);
 		a.filtered.uin = f_vin.proc(adcValue.adcreg[CH_UINADC]) - a.filtered.vrefm;
-		a.filtered.i = f_iadc.proc(adcValue.adcreg[CH_IADC]) - a.filtered.vrefm;
-		a.filtered.u = f_uadc.proc(adcValue.adcreg[CH_UADC]) - a.filtered.vrefm;
-
-		if(a.externalSensorOk != 0){
-			bool inaConverted = false;
-			ina229_readCNVRF(&inaConverted);
-			if(inaConverted){
-				int32_t shunt = 0;
-				ina229_readShuntVoltage(&shunt);
-				a.filtered.iex = f_iex.proc(shunt);
-			}
-		}
-
 		if(dacU != a.dacU){
 			ad5663_set_b(a.dacU);
 			dacU = a.dacU;
 		}
-
 		if(dacI != a.dacI){
 			ad5663_set_a(a.dacI);
 			dacI = a.dacI;

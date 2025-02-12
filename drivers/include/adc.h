@@ -24,8 +24,6 @@ extern "C" {
 
 enum{
 	CH_UINADC,
-	CH_IADC,
-	CH_UADC,
 	CH_VREFM,
 	CH_NUMBER
 };

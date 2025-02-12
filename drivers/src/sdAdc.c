@@ -31,10 +31,6 @@ void adc_init(void){
 	 * IO
 	 */
 	//Analog Input
-	gppin_init(GPIOB, 0, analogMode, pullDisable, 0, 0);
-	//Analog Input
-	gppin_init(GPIOB, 1, analogMode, pullDisable, 0,  0);
-	//Analog Input
 	gppin_init(GPIOB, 2, analogMode, pullDisable, 0, 0);
 	//Analog Input
 	gppin_init(GPIOE, 9, analogMode, pullDisable, 0, 0);
@@ -80,13 +76,9 @@ void adc_init(void){
 	}
 
 	SDADC1->CONFCHR1 |= 0 << SDADC_CONFCHR1_CONFCH4_Pos;		//Channel 4 uses the configuration specified in SDADC_CONF0R
-	SDADC1->CONFCHR1 |= 0 << SDADC_CONFCHR1_CONFCH5_Pos;		//Channel 5 uses the configuration specified in SDADC_CONF0R
-	SDADC1->CONFCHR1 |= 0 << SDADC_CONFCHR1_CONFCH6_Pos;		//Channel 6 uses the configuration specified in SDADC_CONF0R
 	SDADC1->CONFCHR1 |= 0 << SDADC_CONFCHR1_CONFCH7_Pos;		//Channel 7 uses the configuration specified in SDADC_CONF0R
 
 	SDADC1->JCHGR	=	SDADC_JCHGR_JCHG_4 |					//Channel 4 is part of the injected group
-						SDADC_JCHGR_JCHG_5 |					//Channel 5 is part of the injected group
-						SDADC_JCHGR_JCHG_6 |					//Channel 6 is part of the injected group
 						SDADC_JCHGR_JCHG_7;						//Channel 7 is part of the injected group
 
 	SDADC1->CR2		|= SDADC_CR2_JEXTEN_0;						//Each rising edge on the selected trigger makes a request to launch a injected conversion
@@ -168,8 +160,8 @@ void adc_setCallback(adcCallback_type tcHoock){
 void DMA2_Channel3_IRQHandler(void){
 	adcStct.adcreg[0] = adcStct.adcdr[0] + SDADC_DR_TO_LSB_ADD;
 	adcStct.adcreg[1] = adcStct.adcdr[1] + SDADC_DR_TO_LSB_ADD;
-	adcStct.adcreg[2] = adcStct.adcdr[2] + SDADC_DR_TO_LSB_ADD;
-	adcStct.adcreg[3] = adcStct.adcdr[3] + SDADC_DR_TO_LSB_ADD;
+	//adcStct.adcreg[2] = adcStct.adcdr[2] + SDADC_DR_TO_LSB_ADD;
+	//adcStct.adcreg[3] = adcStct.adcdr[3] + SDADC_DR_TO_LSB_ADD;
 	if(adcStct.tcHoock != NULL){
 		adcStct.tcHoock(&adcStct);
 	}

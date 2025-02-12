@@ -131,7 +131,7 @@ void spi_init(spi_type *spix, spiDiv_t divClock){
 /*!****************************************************************************
 * @brief    spi transfer data
 */
-void spi_transfer(spi_type *spix, void *dst, void *src, uint16_t len){
+void spi_transfer(spi_type *spix, void *dst, const void *src, uint16_t len){
 	spix->pSpiTxDmaCh->CCR &= ~DMA_CCR_EN;
 	spix->pSpiRxDmaCh->CCR &= ~DMA_CCR_EN;
 

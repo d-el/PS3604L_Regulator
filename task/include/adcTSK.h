@@ -25,8 +25,8 @@ typedef enum {
 typedef struct {
 	struct {
 		uint16_t uin;
-		uint16_t u;
-		uint16_t i;
+		int32_t u;
+		int32_t i;
 		int32_t iex;
 		uint16_t vrefm;
 	}filtered;

@@ -83,6 +83,7 @@ bool flash_write(void *dst, uint16_t *src, uint32_t num){
 	uint16_t* pWr     = dst;
 	uint16_t* pEnd    = pWr + num;
 
+	__DSB();
 	while(pWr < pEnd){
 		*pWr++ = *pRd++;
 		__DSB();
