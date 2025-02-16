@@ -1,5 +1,6 @@
 add_library(drivers STATIC
 	src/clock.c
+	src/cm4.c
 	src/dac.c
 	src/drivers.c
 	src/flash.c

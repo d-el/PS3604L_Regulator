@@ -649,6 +649,11 @@ void systemTSK(void *pPrm){
 
 		Prm::status = status;
 
+		if(Prm::reboot.val == Prm::mask_reboot::reboot_do){
+			vTaskDelay(pdMS_TO_TICKS(2));
+			NVIC_SystemReset();
+		}
+
 		vTaskDelayUntil(&pxPreviousWakeTime, pdMS_TO_TICKS(SYSTEM_TSK_PERIOD));
 	}
 }

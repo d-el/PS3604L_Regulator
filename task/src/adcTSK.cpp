@@ -83,7 +83,7 @@ void adcTSK(void *pPrm){
 	adc_setCallback(adcHoock);
 	ad5663_init(spi);
 	ad468x_init(spi);
-	adc_setSampleRate(1000);
+	adc_setSampleRate(500);
 	adc_startSampling();
 
 	while(1){

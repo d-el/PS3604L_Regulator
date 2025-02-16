@@ -63,6 +63,7 @@ bool flash_erasePage(void *addr){
 	FLASH->CR&= ~FLASH_CR_PER;
 	if(FLASH->SR & FLASH_SR_EOP){
 		FLASH->SR &= ~FLASH_SR_EOP;
+		__DSB();
 		return true;
 	}
 	return false;
@@ -74,7 +75,7 @@ bool flash_erasePage(void *addr){
 * @param    src[in] - source
 * @param    num[in] - number half word (2 byte)
 */
-bool flash_write(void *dst, uint16_t *src, uint32_t num){
+bool flash_write(void* dst, void* const src, uint32_t num){
 	while(flash_busy());
 	FLASH->CR |= FLASH_CR_PG;
 	while(flash_busy());
