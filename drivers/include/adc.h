@@ -23,8 +23,10 @@ extern "C" {
 #define SDADC_DR_TO_LSB_ADD			32768
 
 enum{
-	CH_UINADC,
+	CH_TSH2,
+	CH_TSH1,
 	CH_VREFM,
+	CH_UINADC,
 	CH_NUMBER
 };
 

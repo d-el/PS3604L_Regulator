@@ -29,7 +29,7 @@
 void hardInit(void){
 	clock_init();
 	gpio_init();
-	pwmFan_init();
+	dac_init();
 	adc_init();
 	externalInterrupt_CcCv_init();
 }

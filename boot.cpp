@@ -42,7 +42,8 @@ int main(void){
 		if(checkProgram(main_flash_start)){
 			if(imageHeader->versionMajor != storageImageHeader->versionMajor ||
 				imageHeader->versionMinor != storageImageHeader->versionMinor ||
-				imageHeader->versionPach != storageImageHeader->versionPach){
+				imageHeader->versionPach != storageImageHeader->versionPach ||
+				imageHeader->valueCRC != storageImageHeader->valueCRC){
 				upgrade = true;
 			}
 		}else{

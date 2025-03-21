@@ -70,12 +70,12 @@ void adcTSK(void *pPrm){
 	spi_init(spi3, spiDiv4);
 	spi_setCallback(spi3, spiTC_Hook);
 
-	static MovingAverageFilter<uint16_t, 16> f_vin(45000); // 55.5V init
+	static MovingAverageFilter<uint16_t, 16> f_tsh1(0);
+	static MovingAverageFilter<uint16_t, 16> f_tsh2(0);
+	static MovingAverageFilter<uint16_t, 16> f_vin(45000); // Equivalent 55.5V
 	static MovingAverageFilter<uint32_t, 1000> f_iadc(0);
 	static MovingAverageFilter<uint32_t, 1000> f_uadc(0);
-
-	static MovingAverageFilter<int32_t, 16> f_iex(0);
-	static MovingAverageFilter<int16_t, 16> f_common(820);
+	static MovingAverageFilter<int16_t, 32> f_common(820);
 
 	decltype(a.dacU) dacU = 0;
 	decltype(a.dacI) dacI = 0;
@@ -92,7 +92,10 @@ void adcTSK(void *pPrm){
 		ad468x_convRead(&resa, &resb);
 		a.filtered.i = f_iadc.proc(resb);
 		a.filtered.u = f_uadc.proc(resa);
+
 		a.filtered.vrefm = f_common.proc(adcValue.adcreg[CH_VREFM]);
+		a.filtered.tsh1 = f_tsh1.proc(adcValue.adcreg[CH_TSH1]) - a.filtered.vrefm;
+		a.filtered.tsh2 = f_tsh2.proc(adcValue.adcreg[CH_TSH2]) - a.filtered.vrefm;
 		a.filtered.uin = f_vin.proc(adcValue.adcreg[CH_UINADC]) - a.filtered.vrefm;
 		if(dacU != a.dacU){
 			ad5663_set_b(a.dacU);

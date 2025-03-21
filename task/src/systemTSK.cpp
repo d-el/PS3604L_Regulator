@@ -33,10 +33,7 @@
 #define UDC_Rh							(47)	/// [kOhm]
 #define UDC_Rl							(2)		/// [kOhm]
 
-#define REVERSE_VOLTAGE_THRESHOLD		(150)	/// [adc lsb with oversampling]
-
-#define CURRENT_SENSOR_THRESHOLD_UP		(0.1)	/// [A]
-#define CURRENT_SENSOR_THRESHOLD_DOWN	(0.09)	/// [A]
+#define REVERSE_VOLTAGE_THRESHOLD		(1000)	/// [adc lsb with oversampling]
 
 #define SYSTEM_TSK_PERIOD				(1)		///< [ms]
 #define TIME_CURRENT_OFF				(1000)	///< [ms]
@@ -47,7 +44,7 @@
 #define TEMPERATURE_FAN_MAX				(60.0)	///< [°C]
 #define TEMPERARURE_DISABLE				(80.0)	///< [°C]
 
-#define MIN_VIN_VOLTAGE					(40.0)	/// [V]
+#define MIN_VIN_VOLTAGE					(47.0)	/// [V]
 
 extern "C" int _write(int fd, const void *buf, size_t count);
 
@@ -214,14 +211,25 @@ bool savePrm(void){
 	}
 	return true;
 }
-float fv , fi, fr;
+
+#define ADC_Kfiltr		9
+#define iq_Filtr(valOld, valNew, Kfiltr)    (((valOld = valOld + (valNew - (valOld >> Kfiltr))) + ((1<<Kfiltr)-1)) >> Kfiltr)
+
+/*!****************************************************************************
+ * @brief	Main dispatcher task
+ */
+static uint16_t iir_1(uint32_t *acc, uint16_t x, uint8_t k){
+	*acc = x + *acc - (*acc >> k);
+	uint16_t y = *acc >> k;
+	return y;
+}
+
 /*!****************************************************************************
  * @brief	Main dispatcher task
  */
 void systemTSK(void *pPrm){
 	(void)pPrm;
 
-	plog_setVprintf(vsprintf);
 	plog_setWrite(_write);
 	plog_setTimestamp([]() -> uint32_t { return xTaskGetTickCount(); });
 
@@ -237,37 +245,79 @@ void systemTSK(void *pPrm){
 	vTaskDelay(pdMS_TO_TICKS(300));
 
 	///========================================================
-	_iq					qInVoltage = 0;				// [V]
-	_iq					qVoltage = 0;				// [V]
-	_iq					qCurrent = 0;				// [A]
-	_iq					qCurrentInternal = 0;		// [A]
-	_iq					qWireResistens = 0;			// [Ohm]
+	adcTaskStct_type&	a = adcTaskStct;
 	_iq14				q20OutPower = 0;			// [W]
 	uint32_t			resistance = 0;				// [Ohm]
 	uint32_t 			capacity = 0;				// [mAh]
+	uint32_t			uinacc = 0;
 	bool				irqEnable = false;
-	bool 				enableState = false;
-	bool 				reverseVoltage = false;
-	uint8_t 			limitCnt = 0;
+	bool				enableState = false;
+	bool				reverseVoltage = false;
+	uint8_t				limitCnt = 0;
 	TickType_t			timeOffset = 0;
 	TickType_t			lowCurrentTime = 0;
 	TickType_t			pxPreviousWakeTime = xTaskGetTickCount();
-	adcTaskStct_type& a = adcTaskStct;
 
 	while(1){
 		/*
 		 * Detect reverse voltage
 		 */
 #warning
-//		if(a.filtered.u < REVERSE_VOLTAGE_THRESHOLD){
-//			reverseVoltage = true;
-//		}else{
-//			reverseVoltage = false;
-//		}
+		if(a.filtered.u < REVERSE_VOLTAGE_THRESHOLD){
+			reverseVoltage = true;
+		}else{
+			reverseVoltage = false;
+		}
+
+		/*
+		 * Calculate current
+		 */
+		_iq qCurrent;
+		if(/* check signal RNG_OVF */gppin_get(GP_RNG_DETECT) && Prm::crange.val == Prm::mask_crange::crange_auto){
+			if(a.filtered.i <= Prm::micro_iext1_adc){
+				qCurrent = s32iq_lerp(	Prm::micro_iext0_adc, IntToIQ(Prm::micro_i0_i, 1000000),
+												Prm::micro_iext1_adc, IntToIQ(Prm::micro_i1_i, 1000000),
+												a.filtered.i);
+			}
+			else{
+				qCurrent = s32iq_lerp(	Prm::micro_iext1_adc, IntToIQ(Prm::micro_i1_i, 1000000),
+												Prm::micro_iext2_adc, IntToIQ(Prm::micro_i2_i, 1000000),
+												a.filtered.i);
+			}
+		}
+
+		else{
+			if(a.filtered.i <= Prm::i1_adc){
+				qCurrent = s32iq_lerp(	Prm::i0_adc, IntToIQ(Prm::i0_i, 1000000),
+												Prm::i1_adc, IntToIQ(Prm::i1_i, 1000000),
+												a.filtered.i);
+			}
+			else if(a.filtered.i <= Prm::i2_adc){
+				qCurrent = s32iq_lerp(	Prm::i1_adc, IntToIQ(Prm::i1_i, 1000000),
+												Prm::i2_adc, IntToIQ(Prm::i2_i, 1000000),
+												a.filtered.i);
+			}
+			else if(a.filtered.i <= Prm::i3_adc){
+				qCurrent = s32iq_lerp(	Prm::i2_adc, IntToIQ(Prm::i2_i, 1000000),
+												Prm::i3_adc, IntToIQ(Prm::i3_i, 1000000),
+												a.filtered.i);
+			}
+			else if(a.filtered.i <= Prm::i4_adc){
+				qCurrent = s32iq_lerp(	Prm::i3_adc, IntToIQ(Prm::i3_i, 1000000),
+												Prm::i4_adc, IntToIQ(Prm::i4_i, 1000000),
+												a.filtered.i);
+			}
+			else{
+				qCurrent = s32iq_lerp(	Prm::i4_adc, IntToIQ(Prm::i4_i, 1000000),
+												Prm::i5_adc, IntToIQ(Prm::i5_i, 1000000),
+												a.filtered.i);
+			}
+		}
 
 		/*
 		 * Calculate voltage
 		 */
+		_iq qVoltage;
 		if(a.filtered.u <= Prm::v1_adc){
 			qVoltage = s32iq_lerp(	Prm::v0_adc, IntToIQ(Prm::v0_u, 1000000),
 									Prm::v1_adc, IntToIQ(Prm::v1_u, 1000000),
@@ -293,60 +343,25 @@ void systemTSK(void *pPrm){
 									Prm::v5_adc, IntToIQ(Prm::v5_u, 1000000),
 									a.filtered.u);
 		}
-		qWireResistens = IntToIQ(Prm::wireResistance.val, 10000);
+		_iq qWireResistens = IntToIQ(Prm::wireResistance.val, 10000);
 		qVoltage  = qVoltage - _IQmpy(qWireResistens, qCurrent);
-
-		/*
-		 * Calculate current
-		 */
-		if(/* check signal RNG_OVF */gppin_get(GP_RNG_DETECT) && Prm::crange.val == Prm::mask_crange::crange_auto){
-			if(a.filtered.i <= Prm::micro_iext1_adc){
-				qCurrentInternal = s32iq_lerp(	Prm::micro_iext0_adc, IntToIQ(Prm::micro_i0_i, 1000000),
-												Prm::micro_iext1_adc, IntToIQ(Prm::micro_i1_i, 1000000),
-												a.filtered.i);
-			}
-			else{
-				qCurrentInternal = s32iq_lerp(	Prm::micro_iext1_adc, IntToIQ(Prm::micro_i1_i, 1000000),
-												Prm::micro_iext2_adc, IntToIQ(Prm::micro_i2_i, 1000000),
-												a.filtered.i);
-			}
-		}
-
-		else{
-			if(a.filtered.i <= Prm::i1_adc){
-				qCurrentInternal = s32iq_lerp(	Prm::i0_adc, IntToIQ(Prm::i0_i, 1000000),
-												Prm::i1_adc, IntToIQ(Prm::i1_i, 1000000),
-												a.filtered.i);
-			}
-			else if(a.filtered.i <= Prm::i2_adc){
-				qCurrentInternal = s32iq_lerp(	Prm::i1_adc, IntToIQ(Prm::i1_i, 1000000),
-												Prm::i2_adc, IntToIQ(Prm::i2_i, 1000000),
-												a.filtered.i);
-			}
-			else if(a.filtered.i <= Prm::i3_adc){
-				qCurrentInternal = s32iq_lerp(	Prm::i2_adc, IntToIQ(Prm::i2_i, 1000000),
-												Prm::i3_adc, IntToIQ(Prm::i3_i, 1000000),
-												a.filtered.i);
-			}
-			else if(a.filtered.i <= Prm::i4_adc){
-				qCurrentInternal = s32iq_lerp(	Prm::i3_adc, IntToIQ(Prm::i3_i, 1000000),
-												Prm::i4_adc, IntToIQ(Prm::i4_i, 1000000),
-												a.filtered.i);
-			}
-			else{
-				qCurrentInternal = s32iq_lerp(	Prm::i4_adc, IntToIQ(Prm::i4_i, 1000000),
-												Prm::i5_adc, IntToIQ(Prm::i5_i, 1000000),
-												a.filtered.i);
-			}
-		}
-
-		qCurrent = qCurrentInternal;
 
 		/*
 		 * Calculate input voltage
 		 */
-		qInVoltage = a.filtered.uin * _IQ((AdcVref * (UDC_Rh + UDC_Rl)) / (65536 * UDC_Rl));
+		auto calculateUin = [](uint16_t lsb) -> _iq { return lsb * _IQ((AdcVref * (UDC_Rh + UDC_Rl)) / (65536 * UDC_Rl)); };
+		uint16_t adcUinAverage = iir_1(&uinacc, a.filtered.uin, 9);
+		_iq qInVoltage = calculateUin(a.filtered.uin);
+		_iq qInVoltageAverage = calculateUin(adcUinAverage);
 
+
+		auto caltTemparature = [](uint16_t adcVal){
+			_iq qvTsh = adcVal * _IQ(AdcVref / 65536/*Full scale*/);
+			_iq qTsh = _IQdiv(qvTsh - _IQ(0.4/*Static offset*/), _IQ(0.0195/*Volts per degree*/));
+			return IQtoInt(qTsh, 10);
+		};
+		Prm::temp_shunt.val = caltTemparature(a.filtered.tsh1);
+		Prm::temp_ref.val = caltTemparature(a.filtered.tsh2);
 		/*
 		 * Calculate output power
 		 */
@@ -430,7 +445,7 @@ void systemTSK(void *pPrm){
 			status |= Prm::m_reverseVoltage;
 		}
 
-		if(qInVoltage < _IQ(MIN_VIN_VOLTAGE)){
+		if(qInVoltage < _IQ(9)){
 			status |= Prm::m_lowInputVoltage;
 		}
 
@@ -443,14 +458,13 @@ void systemTSK(void *pPrm){
 		*/
 		Prm::vadc = a.filtered.u;
 		Prm::iadc = a.filtered.i;
-		Prm::iexternaladc = a.filtered.iex;
 		Prm::voltage = IQtoInt(qVoltage, 1000000);
 		Prm::current = IQtoInt(qCurrent, 1000000);
 		Prm::power = IQtoInt(q20OutPower, 1000000, 22);
 		Prm::resistance = resistance;
 		Prm::capacity = capacity;
 		Prm::input_voltage = IQtoInt(qInVoltage, 1000000);
-		Prm::temperature = temperature.temperature;
+		Prm::temp_heatsink = temperature.temperature;
 		Prm::debug_u16.val = a.filtered.vrefm;
 
 		if(enableState){
@@ -466,15 +480,15 @@ void systemTSK(void *pPrm){
 									(uint32_t)(((uint64_t)temperature.temperature << 24) / 10));
 			qpwmTask = _IQsat(qpwmTask, _IQ(1), _IQ(COOLER_PWM_START));
 			if(temperature.temperature > (TEMPERATURE_FAN_ON * 10)){
-				uint16_t pwmk = IQtoInt(qpwmTask, 1000);
-				FanPwmSet(pwmk);
+				uint16_t pwmk = IQtoInt(qpwmTask, DAC_MAX_VALUE);
+				dac_ch1(pwmk);
 			}
 			if(temperature.temperature < TEMPERATURE_FAN_OFF * 10){
-				FanPwmSet(0);
+				dac_ch1(0);
 			}
 		}
 		else{
-			FanPwmSet(1000);
+			dac_ch1(DAC_MAX_VALUE);
 		}
 
 		/**************************************
@@ -605,9 +619,9 @@ void systemTSK(void *pPrm){
 		}
 
 		if(Prm::crange.val == Prm::mask_crange::crange_auto && gppin_get(GP_RNG_DETECT)){
-			gppin_set(GP_RNG_MEAS_SELECT);
-		}else{
 			gppin_reset(GP_RNG_MEAS_SELECT);
+		}else{
+			gppin_set(GP_RNG_MEAS_SELECT);
 		}
 
 		/**************************************
@@ -625,6 +639,7 @@ void systemTSK(void *pPrm){
 		 */
 		if(enableState && disablecause > Prm::v_none){
 			switchOFF();
+			setCRangeHi();
 			irqLimitOff();
 			irqEnable = false;
 			enableState = false;

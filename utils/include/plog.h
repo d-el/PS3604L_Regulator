@@ -1,10 +1,10 @@
 /*!****************************************************************************
  * @file		plog.h
  * @author		d_el
- * @version		V1.0
- * @date		25.05.2018
- * @copyright	The MIT License (MIT). Copyright (c) 2017 Storozhenko Roman
- * @brief		Logging library
+ * @version		V1.1
+ * @date		21.03.2025
+ * @copyright	The MIT License (MIT). Copyright (c) 2025 Storozhenko Roman
+ * @brief		Logging utility
  */
 
 #ifndef plog_H
@@ -87,10 +87,6 @@
 	} while(0)
 
 /*!****************************************************************************
- * Enumeration
- */
-
-/*!****************************************************************************
  * Typedef
  */
 /**
@@ -106,34 +102,20 @@ typedef enum {
 	P_LOG_VERBOSE	  /*!< Bigger chunks of debugging information, or frequent messages which can potentially flood the output. */
 }plog_level_t;
 
-typedef int (*plog_vprintf_type)(char *, const char *, va_list);
+typedef int (*plog_vsnprintf_type)(char *, size_t maxlen, const char *, va_list);
 typedef ssize_t (*plog_write_type)(int fd, const void *buf, size_t count);
 typedef uint32_t (*plog_timestamp_type)(void);
 
 /*!****************************************************************************
- * Exported variables
- */
-
-/*!****************************************************************************
- * Macro functions
- */
-
-/*!****************************************************************************
  * Function declaration
  */
-plog_vprintf_type plog_setVprintf(plog_vprintf_type func);
+plog_vsnprintf_type plog_setVprintf(plog_vsnprintf_type func);
 plog_write_type plog_setWrite(plog_write_type func);
 int plog_setWriteFd(int fd);
 plog_timestamp_type plog_setTimestamp(plog_timestamp_type func);
-
 int plog_write(plog_level_t level, const char* tag, const char* format, ...) __attribute__ ((format (printf, 3, 4)));
-//void plog_printf(const char* format, ...) /*__attribute__ ((format (printf, 1, 2)))*/;
-//#define plog_printf(format, ...)  plog_write(P_LOG_VERBOSE, NULL, format)
-
-//#define plog_printf(format, ...)  plog_write(0, 0, format, ##__VA_ARGS__)
-
-int plog_printf(const char* format, ...);
-
+int plog_printf(const char* format, ...) __attribute__ ((format (printf, 1, 2)));
+int plog_hexdumpcolumn(const void *buffer, size_t length, size_t column);
 uint32_t plog_timestamp(void);
 
 #ifdef __cplusplus

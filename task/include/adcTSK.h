@@ -24,10 +24,11 @@ typedef enum {
 
 typedef struct {
 	struct {
+		uint16_t tsh1;
+		uint16_t tsh2;
 		uint16_t uin;
 		int32_t u;
 		int32_t i;
-		int32_t iex;
 		uint16_t vrefm;
 	}filtered;
 	bool externalSensorOk;
