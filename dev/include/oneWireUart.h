@@ -1,9 +1,9 @@
 ﻿/*!****************************************************************************
  * @file		oneWireUart.h
  * @author		d_el
- * @version		V1.2
- * @date		03.11.2022
- * @copyright	The MIT License (MIT). Copyright (c) 2022 Storozhenko Roman
+ * @version		V1.3
+ * @date		30.03.2025
+ * @copyright	The MIT License (MIT). Copyright (c) 2025 Storozhenko Roman
  */
 #ifndef oneWireUart_H
 #define oneWireUart_H
@@ -16,23 +16,8 @@ extern "C" {
 * Include
 */
 #include <stdint.h>
-
-/*!****************************************************************************
-* User define
-*/
-#define OW_UART				(uart2)
-#define OW_TIMEOUT			(50)		//[ms]
-
-// ROM COMMANDS Definition
-#define SEARCH_ROM			0xF0
-#define MATCH_ROM			0x55
-#define READ_ROM			0x33
-#define SKIP_ROM			0xCC
-#define ALARM_SEARCH		0xEC
-
-/*!****************************************************************************
-* User enum
-*/
+#include <stddef.h>
+#include <stdbool.h>
 
 /*!****************************************************************************
 * User typedef
@@ -46,7 +31,8 @@ typedef enum{
 	owSearchOk,
 	owSearchLast,
 	owSearchError,
-	owUartTimeout
+	owUartTimeout,
+	owOther
 }owSt_type;
 
 typedef struct{
@@ -56,23 +42,29 @@ typedef struct{
 	uint8_t lastDeviceFlag;
 }ow_searchRomContext_t;
 
-/*!****************************************************************************
-* Macro functions
-*/
+typedef bool (*owuart_init_t)(void);
+typedef bool (*owuart_strongPullup_t)(bool hi);
+typedef bool (*owuart_setBaud_t)(uint32_t baud);
+typedef bool (*owuart_write_t)(const void* src, size_t len);
+typedef size_t (*owuart_readEnable_t)(void* dst, size_t len);
+typedef size_t (*owuart_read_t)(void* dst, size_t len);
 
 /*!****************************************************************************
 * Prototypes for the functions
 */
-void ow_init(void);
-void ow_setOutHi(void);
-void ow_setOutOpenDrain(void);
+bool ow_init(	owuart_init_t init,
+				owuart_setBaud_t setBaud,
+				owuart_write_t write,
+				owuart_readEnable_t readEnable,
+				owuart_read_t read,
+				owuart_strongPullup_t setOut);
+owSt_type ow_strongPullup(bool v);
 owSt_type ow_reset(void);
 owSt_type ow_write(const void *src, uint8_t len);
 owSt_type ow_read(void *dst, uint8_t len);
 owSt_type ow_searchRom(ow_searchRomContext_t* context);
 owSt_type ow_readRom(uint8_t rom[8]);
 owSt_type ow_selectRom(const uint8_t rom[8]);
-uint8_t ow_crc8(uint8_t *mas, uint8_t n);
 
 #ifdef __cplusplus
 }
