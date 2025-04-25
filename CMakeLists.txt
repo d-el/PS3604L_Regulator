@@ -99,6 +99,9 @@ add_custom_command(TARGET ${PROJECT_NAME}.elf POST_BUILD
 		${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${PROJECT_NAME}.elf.dir/link.txt
 		`crc32 ${PROJECT_NAME}.temp.bin` `stat --printf="%s" ${PROJECT_NAME}.temp.bin`
 
+	BYPRODUCTS ${NAME}b.hex
+	COMMAND ${CMAKE_OBJCOPY} -Oihex $<TARGET_FILE:${PROJECT_NAME}b.elf> ${NAME}b.hex
+	
 	BYPRODUCTS ${NAME}.hex
 	COMMAND ${CMAKE_OBJCOPY} -Oihex $<TARGET_FILE:${PROJECT_NAME}.elf> ${NAME}.hex
 

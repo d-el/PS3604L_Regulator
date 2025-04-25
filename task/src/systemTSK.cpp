@@ -212,9 +212,6 @@ bool savePrm(void){
 	return true;
 }
 
-#define ADC_Kfiltr		9
-#define iq_Filtr(valOld, valNew, Kfiltr)    (((valOld = valOld + (valNew - (valOld >> Kfiltr))) + ((1<<Kfiltr)-1)) >> Kfiltr)
-
 /*!****************************************************************************
  * @brief	Main dispatcher task
  */
@@ -262,7 +259,6 @@ void systemTSK(void *pPrm){
 		/*
 		 * Detect reverse voltage
 		 */
-#warning
 		if(a.filtered.u < REVERSE_VOLTAGE_THRESHOLD){
 			reverseVoltage = true;
 		}else{
