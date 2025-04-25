@@ -76,9 +76,9 @@ eMBFuncReadFileRecord( UCHAR * pucFrame, USHORT * usLen )
     eMBException    eStatus = MB_EX_NONE;
     eMBErrorCode    eFileStatus;
     UCHAR           subReq[253];
-	UCHAR           records;
-	UCHAR           *pucFrameCur;
-	UCHAR           *readFrameCur;
+    UCHAR           records;
+    UCHAR           *pucFrameCur;
+    UCHAR           *readFrameCur;
     USHORT          usFile;
     USHORT          usRecord;
     USHORT          usRecordLen;
@@ -87,41 +87,41 @@ eMBFuncReadFileRecord( UCHAR * pucFrame, USHORT * usLen )
         pucFrame[MB_PDU_FUNC_BYTECNT_OFF] <= MB_BYTECNT_MAX &&
         pucFrame[MB_PDU_FUNC_BYTECNT_OFF] % MB_SIZE == 0 )
     {
-    	// Copy to request buffer
-		for( UCHAR i = 0; i < pucFrame[MB_PDU_FUNC_BYTECNT_OFF]; i++ )
-		{
-			subReq[i] = pucFrame[i + MB_PDU_FUNC_SUBREQ_OFF];
-		}
+        // Copy to request buffer
+        for( UCHAR i = 0; i < pucFrame[MB_PDU_FUNC_BYTECNT_OFF]; i++ )
+        {
+            subReq[i] = pucFrame[i + MB_PDU_FUNC_SUBREQ_OFF];
+        }
 
-		records = pucFrame[MB_PDU_FUNC_BYTECNT_OFF] / MB_SIZE;
-		pucFrameCur = &pucFrame[MB_PDU_FUNC_SUBREQ_OFF];
-		readFrameCur = &subReq[0];
-		*usLen = MB_PDU_FUNC_OFF;
+        records = pucFrame[MB_PDU_FUNC_BYTECNT_OFF] / MB_SIZE;
+        pucFrameCur = &pucFrame[MB_PDU_FUNC_SUBREQ_OFF];
+        readFrameCur = &subReq[0];
+        *usLen = MB_PDU_FUNC_OFF;
 
-		for( UCHAR r = 0; r < records; r++ )
-		{
-			usFile = ( USHORT )( readFrameCur[MB_REQ_FILENUMBER_OFF] << 8 );
-			usFile |= ( USHORT )( readFrameCur[MB_REQ_FILENUMBER_OFF + 1] );
-			usRecord = ( USHORT )( readFrameCur[MB_REQ_RECNUMBER_OFF] << 8 );
-			usRecord |= ( USHORT )( readFrameCur[MB_REQ_RECNUMBER_OFF + 1] );
-			usRecordLen = ( USHORT )( readFrameCur[MB_REQ_RECLEN_OFF] << 8 );
-			usRecordLen |= ( USHORT )( readFrameCur[MB_REQ_RECLEN_OFF + 1] );
+        for( UCHAR r = 0; r < records; r++ )
+        {
+            usFile = ( USHORT )( readFrameCur[MB_REQ_FILENUMBER_OFF] << 8 );
+            usFile |= ( USHORT )( readFrameCur[MB_REQ_FILENUMBER_OFF + 1] );
+            usRecord = ( USHORT )( readFrameCur[MB_REQ_RECNUMBER_OFF] << 8 );
+            usRecord |= ( USHORT )( readFrameCur[MB_REQ_RECNUMBER_OFF + 1] );
+            usRecordLen = ( USHORT )( readFrameCur[MB_REQ_RECLEN_OFF] << 8 );
+            usRecordLen |= ( USHORT )( readFrameCur[MB_REQ_RECLEN_OFF + 1] );
 
-			pucFrameCur[MB_READ_RES_LEN_OFF] = 1 + usRecordLen * 2;
-			pucFrameCur[MB_READ_RES_REFTYPE_OFF] = MB_REFTYPE;
-			eFileStatus = eMBFileRecordCB( &pucFrameCur[MB_READ_RES_DATA_OFF], usFile, usRecord, usRecordLen, MB_REG_READ );
-			if( eFileStatus != MB_ENOERR )
-			{
-				eStatus = prveMBError2Exception( eFileStatus );
-			}
-			*usLen += 2 + usRecordLen * 2;
+            pucFrameCur[MB_READ_RES_LEN_OFF] = 1 + usRecordLen * 2;
+            pucFrameCur[MB_READ_RES_REFTYPE_OFF] = MB_REFTYPE;
+            eFileStatus = eMBFileRecordCB( &pucFrameCur[MB_READ_RES_DATA_OFF], usFile, usRecord, usRecordLen, MB_REG_READ );
+            if( eFileStatus != MB_ENOERR )
+            {
+            	eStatus = prveMBError2Exception( eFileStatus );
+            }
+            *usLen += 2 + usRecordLen * 2;
 
-			readFrameCur += MB_SIZE;
-			pucFrameCur += 2 + usRecordLen * 2;
-		}
+            readFrameCur += MB_SIZE;
+            pucFrameCur += 2 + usRecordLen * 2;
+        }
 
-		pucFrame[MB_PDU_FUNC_RESDATALEN_OFF] = *usLen;
-		*usLen += 2;
+        pucFrame[MB_PDU_FUNC_RESDATALEN_OFF] = *usLen;
+        *usLen += 2;
 
     }
     else
@@ -139,43 +139,43 @@ eMBFuncWriteFileRecord( UCHAR * pucFrame, USHORT * usLen )
 {
     eMBException    eStatus = MB_EX_NONE;
     eMBErrorCode    eFileStatus;
-	UCHAR           requestDataLength;
-	UCHAR           *pucFrameCur;
-	UCHAR           *readFrameCur;
+    UCHAR           requestDataLength;
+    UCHAR           *pucFrameCur;
+    UCHAR           *readFrameCur;
     USHORT          usFile;
     USHORT          usRecord;
     USHORT          usRecordLen;
 
     if( pucFrame[MB_PDU_FUNC_BYTECNT_OFF] >= MB_SIZE &&
-        pucFrame[MB_PDU_FUNC_BYTECNT_OFF] <= MB_BYTECNT_MAX )
+    	pucFrame[MB_PDU_FUNC_BYTECNT_OFF] <= MB_BYTECNT_MAX )
     {
-    	requestDataLength = pucFrame[MB_PDU_FUNC_BYTECNT_OFF];
-		pucFrameCur = &pucFrame[MB_PDU_FUNC_SUBREQ_OFF];
-		readFrameCur = &pucFrame[MB_PDU_FUNC_SUBREQ_OFF];
-		*usLen = MB_PDU_FUNC_OFF;
+        requestDataLength = pucFrame[MB_PDU_FUNC_BYTECNT_OFF];
+        pucFrameCur = &pucFrame[MB_PDU_FUNC_SUBREQ_OFF];
+        readFrameCur = &pucFrame[MB_PDU_FUNC_SUBREQ_OFF];
+        *usLen = MB_PDU_FUNC_OFF;
 
-		while( readFrameCur < &pucFrame[MB_PDU_FUNC_SUBREQ_OFF] + requestDataLength )
-		{
-			usFile = ( USHORT )( readFrameCur[MB_REQ_FILENUMBER_OFF] << 8 );
-			usFile |= ( USHORT )( readFrameCur[MB_REQ_FILENUMBER_OFF + 1] );
-			usRecord = ( USHORT )( readFrameCur[MB_REQ_RECNUMBER_OFF] << 8 );
-			usRecord |= ( USHORT )( readFrameCur[MB_REQ_RECNUMBER_OFF + 1] );
-			usRecordLen = ( USHORT )( readFrameCur[MB_REQ_RECLEN_OFF] << 8 );
-			usRecordLen |= ( USHORT )( readFrameCur[MB_REQ_RECLEN_OFF + 1] );
+        while( readFrameCur < &pucFrame[MB_PDU_FUNC_SUBREQ_OFF] + requestDataLength )
+        {
+            usFile = ( USHORT )( readFrameCur[MB_REQ_FILENUMBER_OFF] << 8 );
+            usFile |= ( USHORT )( readFrameCur[MB_REQ_FILENUMBER_OFF + 1] );
+            usRecord = ( USHORT )( readFrameCur[MB_REQ_RECNUMBER_OFF] << 8 );
+            usRecord |= ( USHORT )( readFrameCur[MB_REQ_RECNUMBER_OFF + 1] );
+            usRecordLen = ( USHORT )( readFrameCur[MB_REQ_RECLEN_OFF] << 8 );
+            usRecordLen |= ( USHORT )( readFrameCur[MB_REQ_RECLEN_OFF + 1] );
 
-			eFileStatus = eMBFileRecordCB( &pucFrameCur[MB_WRITE_REQ_DATA_OFF], usFile, usRecord, usRecordLen, MB_REG_WRITE );
-			if( eFileStatus != MB_ENOERR )
-			{
-				eStatus = prveMBError2Exception( eFileStatus );
-			}
-			*usLen += 1 + 2 + 2 + 2 + usRecordLen * 2;
+            eFileStatus = eMBFileRecordCB( &pucFrameCur[MB_WRITE_REQ_DATA_OFF], usFile, usRecord, usRecordLen, MB_REG_WRITE );
+            if( eFileStatus != MB_ENOERR )
+            {
+            	eStatus = prveMBError2Exception( eFileStatus );
+            }
+            *usLen += 1 + 2 + 2 + 2 + usRecordLen * 2;
 
-			readFrameCur += 1 + 2 + 2 + 2 + usRecordLen * 2;
-			pucFrameCur += 1 + 2 + 2 + 2 + usRecordLen * 2;
-		}
+            readFrameCur += 1 + 2 + 2 + 2 + usRecordLen * 2;
+            pucFrameCur += 1 + 2 + 2 + 2 + usRecordLen * 2;
+        }
 
-		pucFrame[MB_PDU_FUNC_RESDATALEN_OFF] = *usLen;
-		*usLen += 2;
+        pucFrame[MB_PDU_FUNC_RESDATALEN_OFF] = *usLen;
+        *usLen += 2;
 
     }
     else

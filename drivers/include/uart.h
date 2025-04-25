@@ -22,7 +22,6 @@ extern "C" {
 /*!****************************************************************************
 * User define
 */
-#define UART_FREQ						(24000000U)		///< [Hz]
 
 //UART1
 #define		UART1_USE					(1)
@@ -38,8 +37,8 @@ extern "C" {
 
 //UART2
 #define		UART2_USE					(1)
-#define		UART2_TxBffSz				(128)
-#define		UART2_RxBffSz				(128)
+#define		UART2_TxBffSz				(0)
+#define		UART2_RxBffSz				(0)
 #define		UART2_RxDmaInterruptPrior	(15)
 #define		UART2_TXIRQPrior			(15)
 #define		UART2_PINAFTX				(7)
@@ -97,8 +96,8 @@ typedef struct uartStruct{
 			uint32_t				dmaIfcrMaskRx;		///< DMA interrupt flag clear register mask Rx
 		};
 		struct{
-			uint8_t					*pCurrentTx;
-			uint8_t					*pEndTx;
+			const uint8_t			*pCurrentTx;
+			const uint8_t			*pEndTx;
 			uint8_t					*pCurrentRx;
 			uint8_t					*pEndRx;
 		};
@@ -147,7 +146,7 @@ void uart_init(uart_type *uartx, uint32_t baudRate);
 void uart_deinit(uart_type *uartx);
 void uart_setBaud(uart_type *uartx, uint32_t baudRate);
 void uart_setCallback(uart_type *uartx, uartCallback_type txHoock, uartCallback_type rxHoock);
-void uart_write(uart_type *uartx, void *src, uint16_t len);
+void uart_write(uart_type *uartx, const void *src, uint16_t len);
 void uart_read(uart_type *uartx, void *dst, uint16_t len);
 void uart_stopRead(uart_type *uartStruct);
 

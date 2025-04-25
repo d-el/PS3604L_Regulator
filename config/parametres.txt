@@ -7,7 +7,8 @@ text(status, mask,
 	16: m_reverseVoltage,
 	32: m_сalibrationEmpty,
 	64: m_limitation,
-	128: m_externaIAdc
+	128: m_externaIAdc,
+	256: m_cRangeLoOverflow
 	)
 
 text(disablecause, value,
@@ -29,6 +30,25 @@ text(mode, value,
 	3: dacMode
 	)
 
+text(crange, value,
+	0: crange_hi,
+	1: crange_auto
+	)
+
+text(save, value,
+	0: save_nop,
+	1: save_do,
+	2: save_ok,
+	3: save_nothing,
+	4: save_error
+	)
+
+text(reboot, value,
+	0: reboot_no,
+	1: reboot_do,
+	2: reboot_ok
+	)
+
 group(Info, public)
 	p(version_major		,""			,uint16_t	,chmodR		,getFwVer	,0	,0x0000	,0			,0			,65535		,0	,0	,0		,notsave)
 	p(version_minor		,""			,uint16_t	,chmodR		,getFwVer	,1	,0x0001	,0			,0			,65535		,0	,0	,0		,notsave)
@@ -48,6 +68,9 @@ group(Target, public)
 	p(enable			,""			,uint16_t	,chmodRW	,nullptr	,0	,0x010B	,0			,0			,1			,0	,0	,0		,notsave)
 	p(wireResistance	,"Ohm"		,uint32_t	,chmodRW	,nullptr	,0	,0x010C	,0			,0			,250.00000	,0	,0	,4		,notsave)
 	p(ocp_delay			,"ms"		,uint16_t	,chmodRW	,nullptr	,0	,0x010E	,200		,0			,65535		,0	,0	,0		,notsave)
+	p(save_settings		,""			,uint16_t	,chmodRW	,nullptr	,0	,0x010F	,0			,0			,4			,0	,0	,0		,notsave)
+	p(crange			,""			,uint16_t	,chmodRW	,nullptr	,0	,0x0110	,0			,0			,1			,0	,0	,0		,notsave)
+	p(reboot			,""			,uint16_t	,chmodRW	,nullptr	,0	,0x0111	,2			,0			,2			,0	,0	,0		,notsave)
 
 group(State, public)
 	p(voltage			,"V"		,int32_t	,chmodR		,nullptr	,0	,0x0200	,0			,-1.0000	,37.000000	,0	,0	,6		,notsave)
@@ -57,26 +80,27 @@ group(State, public)
 	p(time				,"s"		,uint32_t	,chmodR		,nullptr	,0	,0x0208	,0			,0			,4294967.295l,0	,0	,3		,notsave)
 	p(capacity			,"Ah"		,uint32_t	,chmodR		,nullptr	,0	,0x020A	,0			,0			,999.000	,0	,0	,3		,notsave)
 	p(input_voltage		,"V"		,int32_t	,chmodR		,nullptr	,0	,0x020C	,0			,0			,100.000000	,0	,0	,6		,notsave)
-	p(temperature		,"°С"		,int16_t	,chmodR		,nullptr	,0	,0x020E	,0			,-55.0		,125.0		,0	,0	,1		,notsave)
-	p(status			,""			,uint16_t	,chmodR		,nullptr	,0	,0x020F	,0			,0			,65535		,0	,0	,0		,notsave)
-	p(disablecause		,""			,uint16_t	,chmodR		,nullptr	,0	,0x0210	,0			,0			,65535		,0	,0	,0		,notsave)
-	p(vadc				,"lsb"		,uint16_t	,chmodR		,nullptr	,0	,0x0211	,0			,0			,65535		,0	,0	,0		,notsave)
-	p(iadc				,"lsb"		,uint16_t	,chmodR		,nullptr	,0	,0x0212	,0			,0			,65535		,0	,0	,0		,notsave)
-	p(iexternaladc		,"lsb"		,int32_t	,chmodR		,nullptr	,0	,0x0213	,0			,-2147483648,2147483647	,0	,0	,0		,notsave)
+	p(temp_heatsink		,"°С"		,int16_t	,chmodR		,nullptr	,0	,0x020E	,0			,-55.0		,125.0		,0	,0	,1		,notsave)
+	p(temp_shunt		,"°С"		,int16_t	,chmodR		,nullptr	,0	,0x020F	,0			,-55.0		,125.0		,0	,0	,1		,notsave)
+	p(temp_ref			,"°С"		,int16_t	,chmodR		,nullptr	,0	,0x0210	,0			,-55.0		,125.0		,0	,0	,1		,notsave)
+	p(status			,""			,uint16_t	,chmodR		,nullptr	,0	,0x0211	,0			,0			,65535		,0	,0	,0		,notsave)
+	p(disablecause		,""			,uint16_t	,chmodR		,nullptr	,0	,0x0212	,0			,0			,65535		,0	,0	,0		,notsave)
+	p(vadc				,"lsb"		,int32_t	,chmodR		,nullptr	,0	,0x0213	,0			,0			,65535		,0	,0	,0		,notsave)
+	p(iadc				,"lsb"		,int32_t	,chmodR		,nullptr	,0	,0x0215	,0			,0			,65535		,0	,0	,0		,notsave)
 
 group(calibration, public)
 	p(calibration_time	,""			,uint32_t	,chmodRW	,nullptr	,0	,0x0300	,0			,0			,4294967295	,0	,0	,0		,savesys)
-	p(dac_max_val		,""			,uint32_t	,chmodR		,nullptr	,0	,0x0302	,65535		,0			,65535		,0	,0	,0		,notsave)
+	p(dac_max_val		,""			,int32_t	,chmodR		,nullptr	,0	,0x0302	,65535		,-2147483648,2147483647	,0	,0	,0		,notsave)
 
-	p(v0_u				,"V"		,int32_t	,chmodRW	,vsave		,0	,0x0310	,0.010300	,0.000000	,36.000000	,0	,0	,6		,savesys)
+	p(v0_u				,"V"		,int32_t	,chmodRW	,vsave		,0	,0x0310	,0.010000	,0.000000	,36.000000	,0	,0	,6		,savesys)
 	p(v1_u				,"V"		,int32_t	,chmodRW	,vsave		,1	,0x0312	,8.000000	,0.000000	,36.000000	,0	,0	,6		,savesys)
 	p(v2_u				,"V"		,int32_t	,chmodRW	,vsave		,2	,0x0314	,16.00000	,0.000000	,36.000000	,0	,0	,6		,savesys)
 	p(v3_u				,"V"		,int32_t	,chmodRW	,vsave		,3	,0x0316	,22.00000	,0.000000	,36.000000	,0	,0	,6		,savesys)
 	p(v4_u				,"V"		,int32_t	,chmodRW	,vsave		,4	,0x0318	,30.00000	,0.000000	,36.000000	,0	,0	,6		,savesys)
 	p(v5_u				,"V"		,int32_t	,chmodRW	,vsave		,5	,0x031A	,35.00000	,0.000000	,36.000000	,0	,0	,6		,savesys)
 
-	p(i0_i				,"A"		,int32_t	,chmodRW	,isave		,0	,0x0320	,0.001030	,0.000000	,4.0000000	,0	,0	,6		,savesys)
-	p(i1_i				,"A"		,int32_t	,chmodRW	,isave		,1	,0x0322	,0.010020	,0.000000	,4.0000000	,0	,0	,6		,savesys)
+	p(i0_i				,"A"		,int32_t	,chmodRW	,isave		,0	,0x0320	,0.001020	,0.000000	,4.0000000	,0	,0	,6		,savesys)
+	p(i1_i				,"A"		,int32_t	,chmodRW	,isave		,1	,0x0322	,0.010100	,0.000000	,4.0000000	,0	,0	,6		,savesys)
 	p(i2_i				,"A"		,int32_t	,chmodRW	,isave		,2	,0x0324	,0.500000	,0.000000	,4.0000000	,0	,0	,6		,savesys)
 	p(i3_i				,"A"		,int32_t	,chmodRW	,isave		,3	,0x0326	,2.200000	,0.000000	,4.0000000	,0	,0	,6		,savesys)
 	p(i4_i				,"A"		,int32_t	,chmodRW	,isave		,4	,0x0328	,3.000000	,0.000000	,4.0000000	,0	,0	,6		,savesys)
@@ -84,44 +108,39 @@ group(calibration, public)
 
 	p(micro_i0_i		,"A"		,int32_t	,chmodRW	,micro_isave,0	,0x0330	,0.000010	,0.000000	,4.0000000	,0	,0	,6		,savesys)
 	p(micro_i1_i		,"A"		,int32_t	,chmodRW	,micro_isave,1	,0x0332	,0.000950	,0.000000	,4.0000000	,0	,0	,6		,savesys)
+	p(micro_i2_i		,"A"		,int32_t	,chmodRW	,micro_isave,2	,0x0334	,0.050000	,0.000000	,4.0000000	,0	,0	,6		,savesys)
 
 group(calibration, private)
-	p(v0_adc			,"lsb"		,uint16_t	,chmodRW	,nullptr	,0	,0x0340	,425		,0			,65535		,0	,0	,0		,savesys)
-	p(v1_adc			,"lsb"		,uint16_t	,chmodRW	,nullptr	,0	,0x0341	,13857		,0			,65535		,0	,0	,0		,savesys)
-	p(v2_adc			,"lsb"		,uint16_t	,chmodRW	,nullptr	,0	,0x0342	,27319		,0			,65535		,0	,0	,0		,savesys)
-	p(v3_adc			,"lsb"		,uint16_t	,chmodRW	,nullptr	,0	,0x0343	,37427		,0			,65535		,0	,0	,0		,savesys)
-	p(v4_adc			,"lsb"		,uint16_t	,chmodRW	,nullptr	,0	,0x0344	,50917		,0			,65535		,0	,0	,0		,savesys)
-	p(v5_adc			,"lsb"		,uint16_t	,chmodRW	,nullptr	,0	,0x0345	,59355		,0			,65535		,0	,0	,0		,savesys)
+	p(v0_adc			,"lsb"		,int32_t	,chmodRW	,nullptr	,0	,0x0340	,1722		,-2147483648,2147483647	,0	,0	,0		,savesys)
+	p(v1_adc			,"lsb"		,int32_t	,chmodRW	,nullptr	,0	,0x0341	,55313		,-2147483648,2147483647	,0	,0	,0		,savesys)
+	p(v2_adc			,"lsb"		,int32_t	,chmodRW	,nullptr	,0	,0x0342	,108971		,-2147483648,2147483647	,0	,0	,0		,savesys)
+	p(v3_adc			,"lsb"		,int32_t	,chmodRW	,nullptr	,0	,0x0343	,149214		,-2147483648,2147483647	,0	,0	,0		,savesys)
+	p(v4_adc			,"lsb"		,int32_t	,chmodRW	,nullptr	,0	,0x0344	,202869		,-2147483648,2147483647	,0	,0	,0		,savesys)
+	p(v5_adc			,"lsb"		,int32_t	,chmodRW	,nullptr	,0	,0x0345	,236404		,-2147483648,2147483647	,0	,0	,0		,savesys)
 
-	p(v0_dac			,"lsb"		,uint16_t	,chmodRW	,nullptr	,0	,0x0350	,416		,0			,65535		,0	,0	,0		,savesys)
-	p(v1_dac			,"lsb"		,uint16_t	,chmodRW	,nullptr	,0	,0x0351	,13496		,0			,65535		,0	,0	,0		,savesys)
-	p(v2_dac			,"lsb"		,uint16_t	,chmodRW	,nullptr	,0	,0x0352	,26607		,0			,65535		,0	,0	,0		,savesys)
-	p(v3_dac			,"lsb"		,uint16_t	,chmodRW	,nullptr	,0	,0x0353	,36457		,0			,65535		,0	,0	,0		,savesys)
-	p(v4_dac			,"lsb"		,uint16_t	,chmodRW	,nullptr	,0	,0x0354	,49590		,0			,65535		,0	,0	,0		,savesys)
-	p(v5_dac			,"lsb"		,uint16_t	,chmodRW	,nullptr	,0	,0x0355	,57797		,0			,65535		,0	,0	,0		,savesys)
+	p(v0_dac			,"lsb"		,int32_t	,chmodRW	,nullptr	,0	,0x0350	,422		,-2147483648,2147483647	,0	,0	,0		,savesys)
+	p(v1_dac			,"lsb"		,int32_t	,chmodRW	,nullptr	,0	,0x0351	,13862		,-2147483648,2147483647	,0	,0	,0		,savesys)
+	p(v2_dac			,"lsb"		,int32_t	,chmodRW	,nullptr	,0	,0x0352	,27315		,-2147483648,2147483647	,0	,0	,0		,savesys)
+	p(v3_dac			,"lsb"		,int32_t	,chmodRW	,nullptr	,0	,0x0353	,37398		,-2147483648,2147483647	,0	,0	,0		,savesys)
+	p(v4_dac			,"lsb"		,int32_t	,chmodRW	,nullptr	,0	,0x0354	,50848		,-2147483648,2147483647	,0	,0	,0		,savesys)
+	p(v5_dac			,"lsb"		,int32_t	,chmodRW	,nullptr	,0	,0x0355	,59254		,-2147483648,2147483647	,0	,0	,0		,savesys)
 
-	p(i0_adc			,"lsb"		,uint16_t	,chmodRW	,nullptr	,0	,0x0360	,423		,0			,65535		,0	,0	,0		,savesys)
-	p(i1_adc			,"lsb"		,uint16_t	,chmodRW	,nullptr	,0	,0x0361	,557		,0			,65535		,0	,0	,0		,savesys)
-	p(i2_adc			,"lsb"		,uint16_t	,chmodRW	,nullptr	,0	,0x0362	,7980		,0			,65535		,0	,0	,0		,savesys)
-	p(i3_adc			,"lsb"		,uint16_t	,chmodRW	,nullptr	,0	,0x0363	,33744		,0			,65535		,0	,0	,0		,savesys)
-	p(i4_adc			,"lsb"		,uint16_t	,chmodRW	,nullptr	,0	,0x0364	,45882		,0			,65535		,0	,0	,0		,savesys)
-	p(i5_adc			,"lsb"		,uint16_t	,chmodRW	,nullptr	,0	,0x0365	,53452		,0			,65535		,0	,0	,0		,savesys)
+	p(i0_adc			,"lsb"		,int32_t	,chmodRW	,nullptr	,0	,0x0360	,1733		,-2147483648,2147483647	,0	,0	,0		,savesys)
+	p(i1_adc			,"lsb"		,int32_t	,chmodRW	,nullptr	,0	,0x0361	,2284		,-2147483648,2147483647	,0	,0	,0		,savesys)
+	p(i2_adc			,"lsb"		,int32_t	,chmodRW	,nullptr	,0	,0x0362	,32279		,-2147483648,2147483647	,0	,0	,0		,savesys)
+	p(i3_adc			,"lsb"		,int32_t	,chmodRW	,nullptr	,0	,0x0363	,136380		,-2147483648,2147483647	,0	,0	,0		,savesys)
+	p(i4_adc			,"lsb"		,int32_t	,chmodRW	,nullptr	,0	,0x0364	,185379		,-2147483648,2147483647	,0	,0	,0		,savesys)
+	p(i5_adc			,"lsb"		,int32_t	,chmodRW	,nullptr	,0	,0x0365	,215988		,-2147483648,2147483647	,0	,0	,0		,savesys)
 
-	p(i0_dac			,"lsb"		,uint16_t	,chmodRW	,nullptr	,0	,0x0370	,329		,0			,65535		,0	,0	,0		,savesys)
-	p(i1_dac			,"lsb"		,uint16_t	,chmodRW	,nullptr	,0	,0x0371	,461		,0			,65535		,0	,0	,0		,savesys)
-	p(i2_dac			,"lsb"		,uint16_t	,chmodRW	,nullptr	,0	,0x0372	,7691		,0			,65535		,0	,0	,0		,savesys)
-	p(i3_dac			,"lsb"		,uint16_t	,chmodRW	,nullptr	,0	,0x0373	,32765		,0			,65535		,0	,0	,0		,savesys)
-	p(i4_dac			,"lsb"		,uint16_t	,chmodRW	,nullptr	,0	,0x0374	,44572		,0			,65535		,0	,0	,0		,savesys)
- 	p(i5_dac			,"lsb"		,uint16_t	,chmodRW	,nullptr	,0	,0x0375	,51926		,0			,65535		,0	,0	,0		,savesys)
- 
-	p(iext0_adc			,"lsb"		,int32_t	,chmodRW	,nullptr	,0	,0x0380	,616		,-2147483648,2147483647	,0	,0	,0		,savesys)
-	p(iext1_adc			,"lsb"		,int32_t	,chmodRW	,nullptr	,0	,0x0382	,6338		,-2147483648,2147483647	,0	,0	,0		,savesys)
-	p(iext2_adc			,"lsb"		,int32_t	,chmodRW	,nullptr	,0	,0x0384	,318706		,-2147483648,2147483647	,0	,0	,0		,savesys)
-	p(iext3_adc			,"lsb"		,int32_t	,chmodRW	,nullptr	,0	,0x0386	,524287		,-2147483648,2147483647	,0	,0	,0		,savesys)
-	p(iext4_adc			,"lsb"		,int32_t	,chmodRW	,nullptr	,0	,0x0388	,524287		,-2147483648,2147483647	,0	,0	,0		,savesys)
-	p(iext5_adc			,"lsb"		,int32_t	,chmodRW	,nullptr	,0	,0x038A	,524287		,-2147483648,2147483647	,0	,0	,0		,savesys)
+	p(i0_dac			,"lsb"		,int32_t	,chmodRW	,nullptr	,0	,0x0370	,478		,-2147483648,2147483647	,0	,0	,0		,savesys)
+	p(i1_dac			,"lsb"		,int32_t	,chmodRW	,nullptr	,0	,0x0371	,616		,-2147483648,2147483647	,0	,0	,0		,savesys)
+	p(i2_dac			,"lsb"		,int32_t	,chmodRW	,nullptr	,0	,0x0372	,8127		,-2147483648,2147483647	,0	,0	,0		,savesys)
+	p(i3_dac			,"lsb"		,int32_t	,chmodRW	,nullptr	,0	,0x0373	,34235		,-2147483648,2147483647	,0	,0	,0		,savesys)
+	p(i4_dac			,"lsb"		,int32_t	,chmodRW	,nullptr	,0	,0x0374	,46528		,-2147483648,2147483647	,0	,0	,0		,savesys)
+	p(i5_dac			,"lsb"		,int32_t	,chmodRW	,nullptr	,0	,0x0375	,54202		,-2147483648,2147483647	,0	,0	,0		,savesys)
 
-	p(micro_iext0_adc	,"lsb"		,int32_t	,chmodRW	,nullptr	,0	,0x0390	,-59		,-2147483648,2147483647	,0	,0	,0		,savesys)
-	p(micro_iext1_adc	,"lsb"		,int32_t	,chmodRW	,nullptr	,0	,0x0392	,551		,-2147483648,2147483647	,0	,0	,0		,savesys)
+	p(micro_iext0_adc	,"lsb"		,int32_t	,chmodRW	,nullptr	,0	,0x0390	,1703		,-2147483648,2147483647	,0	,0	,0		,savesys)
+	p(micro_iext1_adc	,"lsb"		,int32_t	,chmodRW	,nullptr	,0	,0x0392	,4675		,-2147483648,2147483647	,0	,0	,0		,savesys)
+	p(micro_iext2_adc	,"lsb"		,int32_t	,chmodRW	,nullptr	,0	,0x0394	,159815		,-2147483648,2147483647	,0	,0	,0		,savesys)
 
 	p(debug_u16			,""			,uint16_t	,chmodRW	,nullptr	,0	,0x0400	,0			,0			,65535		,0	,0	,0		,notsave)

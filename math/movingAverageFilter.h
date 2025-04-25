@@ -15,7 +15,7 @@
 template<class T, size_t MaxSize>
 class MovingAverageFilter {
 public:
-	MovingAverageFilter(T _defValue, size_t _size = MaxSize):
+	MovingAverageFilter(T _defValue=0, size_t _size = MaxSize):
 		size(_size), index(0), acc(0)
 	{
 

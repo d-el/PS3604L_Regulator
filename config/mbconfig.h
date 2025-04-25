@@ -96,7 +96,7 @@ PR_BEGIN_EXTERN_C
 #define MB_FUNC_READWRITE_HOLDING_ENABLED       (  1 )
 
 #define MB_FUNC_READ_FILE_RECORD_ENABLED        (  0 )
-#define MB_FUNC_WRITE_FILE_RECORD_ENABLED       (  0 )
+#define MB_FUNC_WRITE_FILE_RECORD_ENABLED       (  1 )
 
 /*! @} */
 #ifdef __cplusplus

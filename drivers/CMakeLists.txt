@@ -1,10 +1,10 @@
 add_library(drivers STATIC
 	src/clock.c
+	src/cm4.c
 	src/dac.c
 	src/drivers.c
 	src/flash.c
 	src/gpio.c
-	src/i2c.c
 	src/pwm.c
 	src/sdAdc.c
 	src/spi.c

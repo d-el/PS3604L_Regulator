@@ -16,7 +16,6 @@
 #include "adc.h"
 #include "dac.h"
 #include "pwm.h"
-#include "i2c.h"
 #include "flash.h"
 #include "drivers.h"
 
@@ -30,9 +29,8 @@
 void hardInit(void){
 	clock_init();
 	gpio_init();
-	pwmFan_init();
-	adc_init();
 	dac_init();
+	adc_init();
 	externalInterrupt_CcCv_init();
 }
 

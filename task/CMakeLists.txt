@@ -1,6 +1,6 @@
 add_library(task STATIC
 	src/adcTSK.cpp
-	src/ds18TSK.c
+	src/ds18TSK.cpp
 	src/modbusTSK.cpp
 	src/monitorTSK.c
 	src/systemTSK.cpp

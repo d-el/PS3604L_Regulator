@@ -2,8 +2,8 @@
  * @file		oneWireUart.c
  * @author		d_el
  * @version		V1.3
- * @date		08.08.2023
- * @copyright	The MIT License (MIT). Copyright (c) 2023 Storozhenko Roman
+ * @date		30.03.2025
+ * @copyright	The MIT License (MIT). Copyright (c) 2025 Storozhenko Roman
  */
 
 /*!****************************************************************************
@@ -11,60 +11,69 @@
 */
 #include <assert.h>
 #include <string.h>
-#include <FreeRTOS.h>
-#include <task.h>
-#include <semphr.h>
-#include <uart.h>
-#include <gpio.h>
-#include "oneWireUart.h"
 #include <crc.h>
+#include "oneWireUart.h"
 
-#define resetBaud 9000
-#define rwbitBaud 120000
+#ifndef OW_RESETBAUD
+#define OW_RESETBAUD 9600
+#endif
+#ifndef OW_RWBITBAUD
+#define OW_RWBITBAUD 115200
+#endif
 
-/*!****************************************************************************
-* MEMORY
-*/
-static SemaphoreHandle_t oneWireUartSem;
+// ROM COMMANDS Definition
+#define SEARCH_ROM			0xF0
+#define MATCH_ROM			0x55
+#define READ_ROM			0x33
+#define SKIP_ROM			0xCC
+#define ALARM_SEARCH		0xEC
 
-/*!****************************************************************************
- * @brief	uart RX callback
- */
-static void uartRxHook(uart_type *puart){
-	(void)puart;
-	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-	xSemaphoreGiveFromISR(oneWireUartSem, &xHigherPriorityTaskWoken);
-	portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
-}
+owuart_init_t owuart_init;
+owuart_setBaud_t owuart_setBaud;
+owuart_write_t owuart_write;
+owuart_readEnable_t owuart_readEnable;
+owuart_read_t owuart_read;
+owuart_strongPullup_t owuart_strongPullup;
+
+#ifndef OW_TX_BFF
+#define OW_TX_BFF 128
+#endif
+uint8_t txBff[OW_TX_BFF];
+
+#ifndef OW_RX_BFF
+#define OW_RX_BFF 128
+#endif
+uint8_t rxBff[OW_RX_BFF];
 
 /*!****************************************************************************
 * @brief	Initialization one wire interface
 */
-void ow_init(void){
-	uart_init(OW_UART, 9600);	//1WIRE
-
-	// Create Semaphore for UART
-	vSemaphoreCreateBinary(oneWireUartSem);
-	assert(oneWireUartSem != NULL);
-	xSemaphoreTake(oneWireUartSem, portMAX_DELAY);
-
-	uart_setCallback(OW_UART, (uartCallback_type)NULL, uartRxHook);
+bool ow_init(	owuart_init_t init,
+				owuart_setBaud_t setBaud,
+				owuart_write_t write,
+				owuart_readEnable_t readEnable,
+				owuart_read_t read,
+				owuart_strongPullup_t strongPullup){
+	owuart_init = init;
+	owuart_setBaud = setBaud;
+	owuart_write = write;
+	owuart_readEnable = readEnable;
+	owuart_read = read;
+	owuart_strongPullup = strongPullup;
+	return owuart_init();
 }
 
 /*!****************************************************************************
-* @brief	Set One Wire pin to push-pull output
+* @brief	Set strong pullup
+* @param	true - pullup enable, false - pullup disable
+* @retval	owSt_type
 */
-void ow_setOutHi(void){
-	gppin_init(pinsMode[GP_DS18B20].p, pinsMode[GP_DS18B20].npin, outPushPull,
-			pinsMode[GP_DS18B20].pull, 1, 0);
-}
-
-/*!****************************************************************************
-* @brief	Set One Wire pin to Open Drain output
-*/
-void ow_setOutOpenDrain(void){
-	gppin_init(pinsMode[GP_DS18B20].p, pinsMode[GP_DS18B20].npin, pinsMode[GP_DS18B20].mode,
-			pinsMode[GP_DS18B20].pull, pinsMode[GP_DS18B20].iniState, pinsMode[GP_DS18B20].nAF);
+owSt_type ow_strongPullup(bool v){
+	if(owuart_strongPullup){
+		owuart_strongPullup(v);
+		return owOk;
+	}
+	return owOther;
 }
 
 /*!****************************************************************************
@@ -73,23 +82,15 @@ void ow_setOutOpenDrain(void){
 * @retval	owSt_type
 */
 owSt_type ow_reset(void){
-	BaseType_t  res;
-
-	if(gppin_get(GP_DS18B20) == 0){
-		return owShortCircle; //Check on the Short Circle bus
-	}
-
-	uart_setBaud(OW_UART, resetBaud);
-	OW_UART->pTxBff[0] = 0xF0;
-	xSemaphoreTake(oneWireUartSem, 0);
-	uart_read(OW_UART, OW_UART->pRxBff, UART2_RxBffSz);
-	uart_write(OW_UART, OW_UART->pTxBff, 1);
-	res = xSemaphoreTake(oneWireUartSem, pdMS_TO_TICKS(OW_TIMEOUT));
-	if(res != pdTRUE){
+	owuart_setBaud(OW_RESETBAUD);
+	owuart_readEnable(rxBff, sizeof(rxBff));
+	txBff[0] = 0xF0;
+	owuart_write(txBff, 1);
+	size_t len = owuart_read(rxBff, sizeof(rxBff));
+	if(len < 1){
 		return owUartTimeout;
 	}
-
-	if((OW_UART->pRxBff[0] >= 0x90)&&(OW_UART->pRxBff[0] <= 0xE0)){
+	if((rxBff[0] >= 0x90)&&(rxBff[0] <= 0xF0)){
 		return owOk;
 	}else{
 		return owNotFound;
@@ -98,22 +99,22 @@ owSt_type ow_reset(void){
 
 /*!***************************************************************************
 * @brief	Write one bit
-* @param	bit value
-* @retval 	None
+* @param	src - bit value
+* @retval	None
 */
 owSt_type ow_writebit(uint8_t src){
-	uint8_t *pBff = OW_UART->pTxBff;
+	uint8_t *pBff = txBff;
 	uint8_t byteTrans = 1;
 	if(src != 0){
 		*pBff = 0xFF;
 	}else{
 		*pBff = 0x00;
 	}
-	uart_setBaud(OW_UART, rwbitBaud);
-	uart_read(OW_UART, OW_UART->pRxBff, byteTrans);
-	uart_write(OW_UART, OW_UART->pTxBff, byteTrans);
-	BaseType_t res = xSemaphoreTake(oneWireUartSem, pdMS_TO_TICKS(OW_TIMEOUT));
-	if(res != pdTRUE){
+	owuart_setBaud(OW_RWBITBAUD);
+	owuart_readEnable(rxBff, byteTrans);
+	owuart_write(txBff, byteTrans);
+	size_t len = owuart_read(rxBff, byteTrans);
+	if(len < 1){
 		return owUartTimeout;
 	}
 	return owOk;
@@ -121,14 +122,14 @@ owSt_type ow_writebit(uint8_t src){
 
 /*!***************************************************************************
 * @brief	Write data
-* @param	src - pointer to source buffer
-* @param	len - number bytes for transmit
+* @param	src		pointer to source buffer
+* @param	len		number bytes for transmit
 * @retval	None
 */
 owSt_type ow_write(const void *src, uint8_t len){
 	uint8_t *pSrc		= (uint8_t*)src;
 	uint8_t *pSrcEnd	= pSrc + len;
-	uint8_t *pBff		= OW_UART->pTxBff;
+	uint8_t *pBff		= txBff;
 	uint8_t mask, byteTrans = len << 3;
 
 	while(pSrc < pSrcEnd){
@@ -142,11 +143,11 @@ owSt_type ow_write(const void *src, uint8_t len){
 		pSrc++;
 	}
 
-	uart_setBaud(OW_UART, rwbitBaud);
-	uart_read(OW_UART, OW_UART->pRxBff, byteTrans);
-	uart_write(OW_UART, OW_UART->pTxBff, byteTrans);
-	BaseType_t res = xSemaphoreTake(oneWireUartSem, pdMS_TO_TICKS(OW_TIMEOUT));
-	if(res != pdTRUE){
+	owuart_setBaud(OW_RWBITBAUD);
+	owuart_readEnable(rxBff, byteTrans);
+	owuart_write(txBff, byteTrans);
+	size_t rxlen = owuart_read(rxBff, byteTrans);
+	if(rxlen < 1){
 		return owUartTimeout;
 	}
 	return owOk;
@@ -159,14 +160,13 @@ owSt_type ow_write(const void *src, uint8_t len){
 */
 owSt_type ow_readbit(uint8_t *dst){
 	uint8_t	 byteTrans = 1;
-	memset(OW_UART->pTxBff, 0xFF, byteTrans);
-	uart_setBaud(OW_UART, rwbitBaud);
-	uart_read(OW_UART, OW_UART->pRxBff, byteTrans);
-	uart_write(OW_UART, OW_UART->pTxBff, byteTrans);
-	BaseType_t res = xSemaphoreTake(oneWireUartSem, pdMS_TO_TICKS(OW_TIMEOUT));
-
-	if(res == pdTRUE){
-		if(OW_UART->pRxBff[0] == 0xFF){
+	memset(txBff, 0xFF, byteTrans);
+	owuart_setBaud(OW_RWBITBAUD);
+	owuart_readEnable(rxBff, byteTrans);
+	owuart_write(txBff, byteTrans);
+	size_t len = owuart_read(rxBff, byteTrans);
+	if(len > 0){
+		if(rxBff[0] == 0xFF){
 			*dst = 1; //Read '1'
 		}else{
 			*dst = 0;
@@ -186,20 +186,18 @@ owSt_type ow_readbit(uint8_t *dst){
 * @retval	Status operation
 */
 owSt_type ow_read(void *dst, uint8_t len){
-	BaseType_t  res;
 	uint8_t		*pDst		= dst;
 	uint8_t		*pDstEnd	= pDst + len;
-	uint8_t		*pBff		= OW_UART->pRxBff;
+	uint8_t		*pBff		= rxBff;
 	uint8_t		mask, byteTrans = len << 3;
 
-	memset(OW_UART->pTxBff, 0xFF, byteTrans);
+	memset(txBff, 0xFF, byteTrans);
 
-	uart_setBaud(OW_UART, rwbitBaud);
-	uart_read(OW_UART, OW_UART->pRxBff, byteTrans);
-	uart_write(OW_UART, OW_UART->pTxBff, byteTrans);
-	res = xSemaphoreTake(oneWireUartSem, pdMS_TO_TICKS(OW_TIMEOUT));
-
-	if(res == pdTRUE){
+	owuart_setBaud(OW_RWBITBAUD);
+	owuart_readEnable(rxBff, byteTrans);
+	owuart_write(txBff, byteTrans);
+	size_t rxlen = owuart_read(rxBff, byteTrans);
+	if(rxlen == byteTrans){
 		while(pDst < pDstEnd){
 			*pDst = 0;
 			for(mask = 1; mask != 0; mask <<= 1){
@@ -224,7 +222,7 @@ owSt_type ow_read(void *dst, uint8_t len){
  */
 owSt_type ow_searchRom(ow_searchRomContext_t* context){
 	owSt_type searchResult = owOk;
-	uint8_t lastZero = 0, idBitNumber = 1, romByteNumber = 0/*, searchResult = 0*/;
+	uint8_t lastZero = 0, idBitNumber = 1, romByteNumber = 0;
 	uint8_t idBit, cmpIdBit;
 	uint8_t romByteMask = 1, searchDirection;
 
@@ -293,7 +291,7 @@ owSt_type ow_searchRom(ow_searchRomContext_t* context){
 		}while(romByteNumber < 8); // Loop until through all ROM bytes 0-7
 		// If the search was successful then
 		if(!((idBitNumber < 65) || (crc8Calc(&crc1Wire, context->rom, 8) != 0))){
-			// Search successful so set LastDiscrepancy, LastDeviceFlag, search_result
+			// Search successful so set lastDiscrepancy, lastDeviceFlag, search_result
 			context->lastDiscrepancy = lastZero;
 			// Check for last device
 			if(context->lastDiscrepancy == 0){
@@ -302,22 +300,21 @@ owSt_type ow_searchRom(ow_searchRomContext_t* context){
 			}else{
 				searchResult = owSearchOk;
 			}
-
 		}
 	}
 	// If no device found then reset counters so next 'search' will be like a first
-	if(!searchResult || !context->rom[0]){
+	if(!searchResult || context->rom[0] == 0){
 		context->lastDiscrepancy = 0;
 		context->lastDeviceFlag = 0;
 		context->lastFamilyDiscrepancy = 0;
-		searchResult = owNotFound;
+		searchResult = owSearchError;
 	}
 	return searchResult;
 }
 
 /*!***************************************************************************
  * @brief	Read the slave’s 64-bit ROM code
- * @param	rom - destination
+ * @param	rom		destination
  * @retval	Status operation
  */
 owSt_type ow_readRom(uint8_t rom[8]){
@@ -342,7 +339,7 @@ owSt_type ow_readRom(uint8_t rom[8]){
 
 /*!***************************************************************************
  * @brief	Address a specific slave device
- * @param	rom - slave ID or NULL for skip rom
+ * @param	rom - slave ID or NULL for skip ROM
  * @retval	Status operation
  */
 owSt_type ow_selectRom(const uint8_t rom[8]){
@@ -359,29 +356,6 @@ owSt_type ow_selectRom(const uint8_t rom[8]){
 	}
 	owSt_type result = ow_write(buff, size);
 	return result;
-}
-
-/*!***************************************************************************
- *  CRC8 MAXIM
- * Polynomial:		0x31
- * Initial Value:	0x00
- * Final Xor Value:	0x00
- */
-uint8_t ow_crc8(uint8_t *mas, uint8_t n){
-	uint8_t j , i, tmp, data, crc = 0;
-
-	for(i = 0; i < n; i++){
-		data = *mas;
-		for(j = 0; j < 8; j++){
-			tmp = (crc ^ data) & 0x01;
-			if (tmp == 0x01) crc = crc ^ 0x18;
-			crc = (crc >> 1) & 0x7F;
-			if (tmp == 0x01) crc = crc | 0x80;
-			data = data >> 1;
-		}
-		mas++;
-	}
-	return crc;
 }
 
 /******************************** END OF FILE ********************************/

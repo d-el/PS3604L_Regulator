@@ -25,7 +25,10 @@ pinMode_type   const pinsMode[] = {
 	/*2 */	makepin(GPIOB,	7,		outOpenDrain,				pullDisable,	1,	0),	//ON_OFF
 	/*3 */	makepin(GPIOA,	0,		digitalInput,				pullDisable,	0,	0),	//CC_CV
 	/*4 */	makepin(GPIOA,	2,		alternateFunctionOpenDrain,	pullDisable,	1,	7),	//DS18B20
-	/*5 */	makepin(GPIOA,	15,		outPushPull,				pullDisable,	1,	0),	//SPI3_NSS
+	/*6 */	makepin(GPIOA,	15,		outPushPull,				pullDisable,	1,	0),	//ADC_NSS
+	/*7 */	makepin(GPIOA,	6,		outOpenDrain,				pullDisable,	1,	0),	//RNG_HI
+	/*8 */	makepin(GPIOA,	1,		outPushPull,				pullDisable,	0,	0),	//RNG_MEAS_SELECT
+	/*9 */	makepin(GPIOB,	6,		digitalInput,				pullDisable,	0,	0),	//RNG_DETECT
 };
 static const uint32_t pinNum = sizeof(pinsMode) / sizeof(pinMode_type);
 

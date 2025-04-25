@@ -18,6 +18,8 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 
+#define FLASH_PAGE_SIZE		2048
+
 /*!****************************************************************************
 * Prototypes for the functions
 */
@@ -25,7 +27,7 @@ void flash_unlock(void);
 void flash_lock(void);
 void flash_eraseAllPages(void);
 bool flash_erasePage(void *address);
-bool flash_write(void *dst, uint16_t *src, uint32_t num);
+bool flash_write(void* dst, void* const src, uint32_t num);
 
 #ifdef __cplusplus
 }

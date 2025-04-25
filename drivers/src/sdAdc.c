@@ -30,13 +30,9 @@ void adc_init(void){
 	/**********************************
 	 * IO
 	 */
-	//Analog Input
-	gppin_init(GPIOB, 0, analogMode, pullDisable, 0, 0);
-	//Analog Input
-	gppin_init(GPIOB, 1, analogMode, pullDisable, 0,  0);
-	//Analog Input
+	gppin_init(GPIOB, 1, analogMode, pullDisable, 0, 0);
 	gppin_init(GPIOB, 2, analogMode, pullDisable, 0, 0);
-	//Analog Input
+	gppin_init(GPIOE, 8, analogMode, pullDisable, 0, 0);
 	gppin_init(GPIOE, 9, analogMode, pullDisable, 0, 0);
 
 	for(int i = 0; i < 360000; i++) __NOP();
@@ -79,15 +75,15 @@ void adc_init(void){
 	SDADC1->CONF0R	&= ~SDADC_CONF0R_GAIN0;						//1x gain
 	}
 
-	SDADC1->CONFCHR1 |= 0 << SDADC_CONFCHR1_CONFCH4_Pos;		//Channel 4 uses the configuration specified in SDADC_CONF0R
-	SDADC1->CONFCHR1 |= 0 << SDADC_CONFCHR1_CONFCH5_Pos;		//Channel 5 uses the configuration specified in SDADC_CONF0R
-	SDADC1->CONFCHR1 |= 0 << SDADC_CONFCHR1_CONFCH6_Pos;		//Channel 6 uses the configuration specified in SDADC_CONF0R
-	SDADC1->CONFCHR1 |= 0 << SDADC_CONFCHR1_CONFCH7_Pos;		//Channel 7 uses the configuration specified in SDADC_CONF0R
+	SDADC1->CONFCHR1 |= 0 << SDADC_CONFCHR1_CONFCH4_Pos;		//Channel uses the configuration specified in SDADC_CONF0R
+	SDADC1->CONFCHR1 |= 0 << SDADC_CONFCHR1_CONFCH5_Pos;		//Channel uses the configuration specified in SDADC_CONF0R
+	SDADC1->CONFCHR1 |= 0 << SDADC_CONFCHR1_CONFCH7_Pos;		//Channel uses the configuration specified in SDADC_CONF0R
+	SDADC1->CONFCHR2 |= 0 << SDADC_CONFCHR2_CONFCH8_Pos;		//Channel uses the configuration specified in SDADC_CONF0R
 
-	SDADC1->JCHGR	=	SDADC_JCHGR_JCHG_4 |					//Channel 4 is part of the injected group
-						SDADC_JCHGR_JCHG_5 |					//Channel 5 is part of the injected group
-						SDADC_JCHGR_JCHG_6 |					//Channel 6 is part of the injected group
-						SDADC_JCHGR_JCHG_7;						//Channel 7 is part of the injected group
+	SDADC1->JCHGR	=	SDADC_JCHGR_JCHG_4 |
+						SDADC_JCHGR_JCHG_5 |
+						SDADC_JCHGR_JCHG_7 |					//Channel is part of the injected group
+						SDADC_JCHGR_JCHG_8;						//Channel is part of the injected group
 
 	SDADC1->CR2		|= SDADC_CR2_JEXTEN_0;						//Each rising edge on the selected trigger makes a request to launch a injected conversion
 	SDADC1->CR2		|= SDADC_CR2_JEXTSEL_0 |					//Trigger signal selection for launching injected conversions TIM3_CH1

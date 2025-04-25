@@ -337,7 +337,7 @@ void uart_setCallback(uart_type *uartx, uartCallback_type txHoock, uartCallback_
 /*!****************************************************************************
  * @brief
  */
-void uart_write(uart_type *uartx, void *src, uint16_t len){
+void uart_write(uart_type *uartx, const void *src, uint16_t len){
 	uartx->pUart->ICR = USART_ICR_TCCF;
 
 	if(uartx->dmaMode > 0){

@@ -25,6 +25,7 @@ extern uint32_t _sbss;					///RAM bss start
 extern uint32_t _ebss;					///RAM bss end
 
 typedef void(*intVector_type)(void);	///Interrupt service routine type
+void Reset_Handler(void);
 
 /*!****************************************************************************
  * @brief  Initialization .bss section
@@ -58,19 +59,6 @@ void __initializeData(uint32_t *dataStart, uint32_t *dataEnd, uint32_t *src){
 	while(pData < dataEnd){
 		*pData++ = *src++;
 	}
-}
-
-/*!****************************************************************************
- * @brief	Program entry point
- */
-void Reset_Handler(void){
-	__initializeData(&_sdata, &_edata, &_sidata);
-	__initializeBss(&_sbss, &_ebss);
-	__libc_init_array();
-	SystemInit();
-	main();
-	__libc_fini_array();
-	while(1);
 }
 
 /*!****************************************************************************
@@ -270,5 +258,20 @@ intVector_type intVector[] __attribute__ ((section (".isr_vector"))) = {
 	0,
 	FPU_IRQHandler,
 };
+
+/*!****************************************************************************
+ * @brief	Program entry point
+ */
+void Reset_Handler(void){
+	volatile uint32_t* VTOR = (uint32_t*)0xE000ED08;
+	*VTOR = (uint32_t)&intVector[0];
+	__initializeData(&_sdata, &_edata, &_sidata);
+	__initializeBss(&_sbss, &_ebss);
+	__libc_init_array();
+	SystemInit();
+	main();
+	__libc_fini_array();
+	while(1);
+}
 
 /******************************** END OF FILE ********************************/

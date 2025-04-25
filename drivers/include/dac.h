@@ -27,7 +27,6 @@ extern "C" {
 */
 void dac_init(void);
 void dac_ch1(uint16_t val);
-void dac_ch2(uint16_t val);
 
 #ifdef __cplusplus
 }

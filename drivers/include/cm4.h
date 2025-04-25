@@ -1,37 +1,32 @@
 /*!****************************************************************************
- * @file		ad5663.h
+ * @file		cm4.h
  * @author		d_el
  * @version		V1.0
- * @date		Mar 26, 2024
+ * @date		Feb 15, 2025
  * @copyright	License (MIT). Copyright (c) 2024 Storozhenko Roman
  * @brief
  */
 
-#ifndef ad5663_H
-#define ad5663_H
+#ifndef cm4_H
+#define cm4_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-
 /*!****************************************************************************
  * Include
  */
-#include <stdbool.h>
-
-typedef bool (*ad5663_spi_t)(void* dst, const void* src, uint16_t len);
+#include <stdint.h>
 
 /*!****************************************************************************
  * Function declaration
  */
-void ad5663_init(ad5663_spi_t spi);
-void ad5663_set_a(uint16_t val);
-void ad5663_set_b(uint16_t val);
+void cm4_executeprogram(uint32_t* exe);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif //ad5663_H
+#endif //cm4_H
 /******************************** END OF FILE ********************************/
