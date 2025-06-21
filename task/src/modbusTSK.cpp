@@ -18,6 +18,7 @@
 #include <prmSystem.h>
 #include <plog.h>
 #include <flash.h>
+#include <imageheader.h>
 
 /*!****************************************************************************
 * MEMORY
@@ -25,9 +26,6 @@
 #define LOG_LOCAL_LEVEL P_LOG_NONE
 static const char *logTag = "modbusTSK";
 static bool needSave;
-
-extern const uint8_t *const _fwstorage_flash_start;	/// See memory.ld
-extern const uint8_t _fwstorage_flash_size;			/// See memory.ld
 
 /*!****************************************************************************
 * @brief	Connect program task
@@ -161,8 +159,8 @@ eMBErrorCode eMBRegHoldingCB(UCHAR *pucRegBuffer, USHORT usAddress, USHORT usNRe
 eMBErrorCode eMBFileRecordCB(UCHAR* pucDataBuffer, USHORT usFile, USHORT usRecord, USHORT usLen, eMBRegisterMode eMode){
 	(void)usFile;
 	size_t offset = usRecord * 128;
-	const uint8_t* fwstorage_flash_start = (uint8_t*)&_fwstorage_flash_start;
-	size_t fwstorage_flash_size = (size_t)&_fwstorage_flash_size;
+	const uint8_t* fwstorage_flash_start = getStorageStartAddress();
+	size_t fwstorage_flash_size = getStorageSize();
 
 	if(usFile != 1){
 		return MB_EINVAL;

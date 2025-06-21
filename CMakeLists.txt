@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.6)
 
 PROJECT(PS3604LR
-	VERSION 1.12.3
+	VERSION 1.12.4
 	LANGUAGES CXX C
 	)
 	
@@ -87,7 +87,6 @@ target_link_libraries(${PROJECT_NAME}b.elf
 	systems
 	task
 	utils
-	${CMAKE_CURRENT_SOURCE_DIR}/lib/IQmathLib-cm4/IQmathLib-cm4.a
 	)
 
 set(NAME ${PROJECT_NAME}_${PROJECT_VERSION})
@@ -99,14 +98,17 @@ add_custom_command(TARGET ${PROJECT_NAME}.elf POST_BUILD
 		${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${PROJECT_NAME}.elf.dir/link.txt
 		`crc32 ${PROJECT_NAME}.temp.bin` `stat --printf="%s" ${PROJECT_NAME}.temp.bin`
 
-	BYPRODUCTS ${NAME}b.hex
-	COMMAND ${CMAKE_OBJCOPY} -Oihex $<TARGET_FILE:${PROJECT_NAME}b.elf> ${NAME}b.hex
+	BYPRODUCTS${PROJECT_NAME}b.hex  ${NAME}b.hex
+	COMMAND ${CMAKE_OBJCOPY} -Oihex $<TARGET_FILE:${PROJECT_NAME}b.elf> ${PROJECT_NAME}b.hex --gap-fill=0xFF
+	COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_NAME}b.hex ${NAME}b.hex
 	
-	BYPRODUCTS ${NAME}.hex
-	COMMAND ${CMAKE_OBJCOPY} -Oihex $<TARGET_FILE:${PROJECT_NAME}.elf> ${NAME}.hex
+	BYPRODUCTS ${PROJECT_NAME}.hex ${NAME}.hex
+	COMMAND ${CMAKE_OBJCOPY} -Oihex $<TARGET_FILE:${PROJECT_NAME}.elf> ${PROJECT_NAME}.hex --gap-fill=0xFF
+	COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_NAME}.hex ${NAME}.hex 
 
-	BYPRODUCTS ${NAME}.bin
-	COMMAND ${CMAKE_OBJCOPY} -Obinary $<TARGET_FILE:${PROJECT_NAME}.elf> ${NAME}.bin --gap-fill=0xFF
+	BYPRODUCTS ${PROJECT_NAME}.bin ${NAME}.bin
+	COMMAND ${CMAKE_OBJCOPY} -Obinary $<TARGET_FILE:${PROJECT_NAME}.elf> ${PROJECT_NAME}.bin --gap-fill=0xFF
+	COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_NAME}.bin ${NAME}.bin
 
 	COMMENT "Generate hex and bin"
 	)

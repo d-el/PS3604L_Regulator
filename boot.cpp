@@ -1,4 +1,5 @@
-﻿/* @file		boot.cpp                                                      *
+﻿/******************************************************************************
+ * @file		boot.cpp                                                      *
  * @author		Storozhenko Roman - D_EL                                      *
  * @version		V1.0                                                          *
  * @date		13.02.2025                                                    *
@@ -16,10 +17,6 @@
 #include <cm4.h>
 #include <imageheader.h>
 
-extern uint8_t _main_flash_start[];				/// See memory.ld
-extern uint8_t _fwstorage_flash_start[];			/// See memory.ld
-extern uint8_t _fwstorage_flash_size;			/// See memory.ld
-
 static bool checkProgram(const uint8_t* addr);
 
 /*!****************************************************************************
@@ -29,9 +26,9 @@ int main(void){
 	clock_init();
 	crc32_init();
 
-	const uint8_t* main_flash_start = (uint8_t*)&_main_flash_start;
-	const uint8_t* fwstorage_flash_start = (uint8_t*)&_fwstorage_flash_start;
-	size_t fwstorage_flash_size = (size_t)&_fwstorage_flash_size;
+	const uint8_t* main_flash_start = getImageStartAddress();
+	const uint8_t* fwstorage_flash_start = getStorageStartAddress();
+	size_t fwstorage_flash_size = getStorageSize();
 
 	const imageHeader_t* imageHeader = (imageHeader_t*)main_flash_start;
 	const imageHeader_t* storageImageHeader = (imageHeader_t*)fwstorage_flash_start;
@@ -82,7 +79,7 @@ int main(void){
  */
 static bool checkProgram(const uint8_t* addr){
 	const imageHeader_t* imageHeader = (imageHeader_t*)addr;
-	if(imageHeader->magic != (uint32_t)_header_magic){
+	if(imageHeader->magic != getHeaderMagic()){
 		return false;
 	}
 	if(imageHeader->size == 0){

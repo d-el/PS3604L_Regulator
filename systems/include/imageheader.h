@@ -10,8 +10,6 @@
 
 #include <stdint.h>
 
-static const uint32_t _header_magic = 0x36232587;		/// Firmware header magic. See memory.ld
-
 typedef struct imageHeader{
 	uint32_t valueCRC;
 	uint32_t size; // Size image include this header
@@ -22,15 +20,38 @@ typedef struct imageHeader{
 	uint32_t exeOffset; // Offset execute from start image
 }imageHeader_t;
 
+extern uint32_t _header_magic;
+extern uint8_t _main_flash_start[];				/// See memory.ld
+extern uint8_t _main_flash_size;
+extern uint8_t _fwstorage_flash_start[];		/// See memory.ld
+extern uint8_t _fwstorage_flash_size;			/// See memory.ld
 
-static inline const imageHeader_t* getImageHeader(){
-	extern const struct imageHeader _imageheader_start;
-	return &_imageheader_start;
+static inline uint32_t getHeaderMagic(void){
+	return (uint32_t)0x36232587;
 }
 
-static inline const uint8_t* getImageStartAddress(){
-	extern const struct imageHeader _imageheader_start;
-	return (uint8_t*)&_imageheader_start;
+static inline const imageHeader_t* getImageHeader(void){
+	return (imageHeader_t*)&_main_flash_start;
+}
+
+static inline const uint8_t* getImageStartAddress(void){
+	return (uint8_t*)&_main_flash_start;
+}
+
+static inline intptr_t getImageSize(void){
+	return (intptr_t)&_main_flash_size;
+}
+
+static inline const imageHeader_t* getStorageHeader(void){
+	return (imageHeader*)&_fwstorage_flash_start;
+}
+
+static inline const uint8_t* getStorageStartAddress(void){
+	return (uint8_t*)&_fwstorage_flash_start;
+}
+
+static inline intptr_t getStorageSize(void){
+	return (intptr_t)&_fwstorage_flash_size;
 }
 
 #endif /* IMAGEHEADER_H */

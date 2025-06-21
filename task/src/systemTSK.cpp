@@ -215,15 +215,6 @@ bool savePrm(void){
 /*!****************************************************************************
  * @brief	Main dispatcher task
  */
-static uint16_t iir_1(uint32_t *acc, uint16_t x, uint8_t k){
-	*acc = x + *acc - (*acc >> k);
-	uint16_t y = *acc >> k;
-	return y;
-}
-
-/*!****************************************************************************
- * @brief	Main dispatcher task
- */
 void systemTSK(void *pPrm){
 	(void)pPrm;
 
@@ -245,8 +236,7 @@ void systemTSK(void *pPrm){
 	adcTaskStct_type&	a = adcTaskStct;
 	_iq14				q20OutPower = 0;			// [W]
 	uint32_t			resistance = 0;				// [Ohm]
-	uint32_t 			capacity = 0;				// [mAh]
-	uint32_t			uinacc = 0;
+	uint32_t			capacity = 0;				// [mAh]
 	bool				irqEnable = false;
 	bool				enableState = false;
 	bool				reverseVoltage = false;
@@ -272,13 +262,13 @@ void systemTSK(void *pPrm){
 		if(/* check signal RNG_OVF */gppin_get(GP_RNG_DETECT) && Prm::crange.val == Prm::mask_crange::crange_auto){
 			if(a.filtered.i <= Prm::micro_iext1_adc){
 				qCurrent = s32iq_lerp(	Prm::micro_iext0_adc, IntToIQ(Prm::micro_i0_i, 1000000),
-												Prm::micro_iext1_adc, IntToIQ(Prm::micro_i1_i, 1000000),
-												a.filtered.i);
+										Prm::micro_iext1_adc, IntToIQ(Prm::micro_i1_i, 1000000),
+										a.filtered.i);
 			}
 			else{
 				qCurrent = s32iq_lerp(	Prm::micro_iext1_adc, IntToIQ(Prm::micro_i1_i, 1000000),
-												Prm::micro_iext2_adc, IntToIQ(Prm::micro_i2_i, 1000000),
-												a.filtered.i);
+										Prm::micro_iext2_adc, IntToIQ(Prm::micro_i2_i, 1000000),
+										a.filtered.i);
 			}
 		}
 
@@ -346,10 +336,7 @@ void systemTSK(void *pPrm){
 		 * Calculate input voltage
 		 */
 		auto calculateUin = [](uint16_t lsb) -> _iq { return lsb * _IQ((AdcVref * (UDC_Rh + UDC_Rl)) / (65536 * UDC_Rl)); };
-		uint16_t adcUinAverage = iir_1(&uinacc, a.filtered.uin, 9);
 		_iq qInVoltage = calculateUin(a.filtered.uin);
-		_iq qInVoltageAverage = calculateUin(adcUinAverage);
-
 
 		auto caltTemparature = [](uint16_t adcVal){
 			_iq qvTsh = adcVal * _IQ(AdcVref / 65536/*Full scale*/);
