@@ -5,7 +5,6 @@ add_library(drivers STATIC
 	src/drivers.c
 	src/flash.c
 	src/gpio.c
-	src/pwm.c
 	src/sdAdc.c
 	src/spi.c
 	src/uart.c

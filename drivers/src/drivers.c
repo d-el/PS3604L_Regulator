@@ -15,7 +15,6 @@
 #include "uart.h"
 #include "adc.h"
 #include "dac.h"
-#include "pwm.h"
 #include "flash.h"
 #include "drivers.h"
 

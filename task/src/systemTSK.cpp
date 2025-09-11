@@ -18,7 +18,6 @@
 #include <IQmathLib.h>
 #include <specificMath.h>
 #include <adc.h>
-#include <pwm.h>
 #include <flash.h>
 #include <board.h>
 #include <prmSystem.h>
@@ -33,12 +32,10 @@
 #define UDC_Rh							(47)	/// [kOhm]
 #define UDC_Rl							(2)		/// [kOhm]
 
-#define REVERSE_VOLTAGE_THRESHOLD		(1000)	/// [adc lsb with oversampling]
-
 #define SYSTEM_TSK_PERIOD				(1)		///< [ms]
 #define TIME_CURRENT_OFF				(1000)	///< [ms]
 
-#define COOLER_PWM_START				(0.3)	///< [k PWM]
+#define COOLER_START					(0.3)	///< [k from maximum]
 #define TEMPERATURE_FAN_OFF				(35.0)	///< [°C]
 #define TEMPERATURE_FAN_ON				(43.0)	///< [°C]
 #define TEMPERATURE_FAN_MAX				(60.0)	///< [°C]
@@ -66,13 +63,6 @@ bool currentirq;
  */
 static inline void switchON(void){
 	gppin_reset(GP_ON_OFF);
-}
-
-/*!****************************************************************************
- * @brief	main output OFF
- */
-static inline void switchOFF(void){
-	gppin_set(GP_ON_OFF);
 }
 
 /*!****************************************************************************
@@ -227,8 +217,8 @@ void systemTSK(void *pPrm){
 	Prm::deserialize(Prm::savesys, &_suser_settings, settingsize);
 	auto prevenable = Prm::enable.val;
 
-	assert(pdTRUE == xTaskCreate(modbusTSK, "modbusTSK", MODBUS_TSK_SZ_STACK,  NULL, MODBUS_TSK_PRIO, NULL));
 	assert(pdTRUE == xTaskCreate(adcTSK, "adcTSK", ADC_TSK_SZ_STACK, NULL, ADC_TSK_PRIO, NULL));
+	assert(pdTRUE == xTaskCreate(modbusTSK, "modbusTSK", MODBUS_TSK_SZ_STACK,  NULL, MODBUS_TSK_PRIO, NULL));
 	assert(pdTRUE == xTaskCreate(ds18TSK, "ds18TSK", DS18B_TSK_SZ_STACK, NULL, DS18B_TSK_PRIO, NULL));
 	vTaskDelay(pdMS_TO_TICKS(300));
 
@@ -239,22 +229,13 @@ void systemTSK(void *pPrm){
 	uint32_t			capacity = 0;				// [mAh]
 	bool				irqEnable = false;
 	bool				enableState = false;
-	bool				reverseVoltage = false;
 	uint8_t				limitCnt = 0;
 	TickType_t			timeOffset = 0;
 	TickType_t			lowCurrentTime = 0;
 	TickType_t			pxPreviousWakeTime = xTaskGetTickCount();
+	switchON();
 
 	while(1){
-		/*
-		 * Detect reverse voltage
-		 */
-		if(a.filtered.u < REVERSE_VOLTAGE_THRESHOLD){
-			reverseVoltage = true;
-		}else{
-			reverseVoltage = false;
-		}
-
 		/*
 		 * Calculate current
 		 */
@@ -424,10 +405,6 @@ void systemTSK(void *pPrm){
 				limited = false;
 		}
 
-		if(reverseVoltage){
-			status |= Prm::m_reverseVoltage;
-		}
-
 		if(qInVoltage < _IQ(9)){
 			status |= Prm::m_lowInputVoltage;
 		}
@@ -458,10 +435,10 @@ void systemTSK(void *pPrm){
 		* Cooler regulator
 		*/
 		if(temperature.state == temp_Ok){
-			_iq	qpwmTask = iq_lerp(	_IQ(TEMPERATURE_FAN_ON),_IQ(COOLER_PWM_START),
+			_iq	qpwmTask = iq_lerp(	_IQ(TEMPERATURE_FAN_ON),_IQ(COOLER_START),
 									_IQ(TEMPERATURE_FAN_MAX), _IQ(1),
 									(uint32_t)(((uint64_t)temperature.temperature << 24) / 10));
-			qpwmTask = _IQsat(qpwmTask, _IQ(1), _IQ(COOLER_PWM_START));
+			qpwmTask = _IQsat(qpwmTask, _IQ(1), _IQ(COOLER_START));
 			if(temperature.temperature > (TEMPERATURE_FAN_ON * 10)){
 				uint16_t pwmk = IQtoInt(qpwmTask, DAC_MAX_VALUE);
 				dac_ch1(pwmk);
@@ -515,7 +492,7 @@ void systemTSK(void *pPrm){
 			}
 
 			// Calc udac
-			_iq qU = IntToIQ(Prm::voltage_set, 1000000) + _IQmpy(qWireResistens, qCurrent);
+			_iq qU = IntToIQ(enableState ? Prm::voltage_set : 0, 1000000) + _IQmpy(qWireResistens, qCurrent);
 
 			if(qU == 0){
 				udac = 0;
@@ -568,9 +545,6 @@ void systemTSK(void *pPrm){
 		else if(status & Prm::m_lowInputVoltage){
 			disablecause = Prm::v_lowInputVoltage;
 		}
-		else if(status & Prm::m_reverseVoltage){
-			disablecause = Prm::v_reverseVoltage;
-		}
 		else if(enableState && Prm::mode == Prm::overcurrentShutdown && Prm::time.val >= Prm::ocp_delay.val &&
 				(currentirq || MODE_IS_CC())){
 			disablecause = Prm::v_overCurrent;
@@ -611,7 +585,6 @@ void systemTSK(void *pPrm){
 		 * Request enable
 		 */
 		if(!enableState && Prm::enable){
-			switchON();
 			enableState = true;
 			timeOffset = xTaskGetTickCount();
 			Prm::disablecause = Prm::v_none;
@@ -621,7 +594,6 @@ void systemTSK(void *pPrm){
 		 * Request disable
 		 */
 		if(enableState && disablecause > Prm::v_none){
-			switchOFF();
 			setCRangeHi();
 			irqLimitOff();
 			irqEnable = false;
