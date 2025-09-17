@@ -217,9 +217,13 @@ void systemTSK(void *pPrm){
 	Prm::deserialize(Prm::savesys, &_suser_settings, settingsize);
 	auto prevenable = Prm::enable.val;
 
-	assert(pdTRUE == xTaskCreate(adcTSK, "adcTSK", ADC_TSK_SZ_STACK, NULL, ADC_TSK_PRIO, NULL));
-	assert(pdTRUE == xTaskCreate(modbusTSK, "modbusTSK", MODBUS_TSK_SZ_STACK,  NULL, MODBUS_TSK_PRIO, NULL));
-	assert(pdTRUE == xTaskCreate(ds18TSK, "ds18TSK", DS18B_TSK_SZ_STACK, NULL, DS18B_TSK_PRIO, NULL));
+	BaseType_t osres = xTaskCreate(adcTSK, "adcTSK", ADC_TSK_SZ_STACK, NULL, ADC_TSK_PRIO, NULL);
+	assert(osres == pdTRUE);
+	osres = xTaskCreate(modbusTSK, "modbusTSK", MODBUS_TSK_SZ_STACK,  NULL, MODBUS_TSK_PRIO, NULL);
+	assert(osres == pdTRUE);
+	osres = xTaskCreate(ds18TSK, "ds18TSK", DS18B_TSK_SZ_STACK, NULL, DS18B_TSK_PRIO, NULL);
+	assert(osres == pdTRUE);
+	(void)osres;
 	vTaskDelay(pdMS_TO_TICKS(300));
 
 	///========================================================
