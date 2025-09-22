@@ -498,10 +498,7 @@ void systemTSK(void *pPrm){
 			// Calc udac
 			_iq qU = IntToIQ(enableState ? Prm::voltage_set : 0, 1000000) + _IQmpy(qWireResistens, qCurrent);
 
-			if(qU == 0){
-				udac = 0;
-			}
-			else if(qU <= IntToIQ(Prm::v1_u, 1000000)){
+			if(qU <= IntToIQ(Prm::v1_u, 1000000)){
 				udac = iq_lerp(	IntToIQ(Prm::v0_u, 1000000), Prm::v0_dac,
 								IntToIQ(Prm::v1_u, 1000000), Prm::v1_dac,
 								qU);
