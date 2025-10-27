@@ -1,14 +1,14 @@
 /*!****************************************************************************
- * @file		ad5663.h
+ * @file		ad5060.h
  * @author		d_el
  * @version		V1.0
- * @date		Mar 26, 2024
- * @copyright	License (MIT). Copyright (c) 2024 Storozhenko Roman
+ * @date		Oct 23, 2025
+ * @copyright	License (MIT). Copyright (c) 2025 Storozhenko Roman
  * @brief
  */
 
-#ifndef ad5663_H
-#define ad5663_H
+#ifndef ad5060_H
+#define ad5060_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -18,16 +18,17 @@ extern "C" {
 /*!****************************************************************************
  * Include
  */
+#include <stdint.h>
 #include <stdbool.h>
 
-typedef bool (*ad5663_spi_t)(void* dst, const void* src, uint16_t len);
+typedef bool (*ad5060_spi_t)(void* dst, const void* src, uint16_t len);
 
 /*!****************************************************************************
  * Function declaration
  */
-void ad5663_init(ad5663_spi_t spi);
-void ad5663_set_a(uint16_t val);
-void ad5663_set_b(uint16_t val);
+void ad5060_init(ad5060_spi_t spi);
+void ad5060_set_a(uint16_t val);
+void ad5060_set_b(uint16_t val);
 
 #ifdef __cplusplus
 }

@@ -97,7 +97,7 @@ typedef struct{
 
 typedef enum{
 	GP_LED,
-	GP_AD5663_SYNC,
+	GP_NSS2,
 	GP_ON_OFF,
 	GP_CC_CV,
 	GP_DS18B20,
@@ -105,6 +105,7 @@ typedef enum{
 	GP_RNG_HI,
 	GP_RNG_MEAS_SELECT,
 	GP_RNG_DETECT,
+	GP_NSS3,
 
 GP_NOT_USED
 }GPnum_type;

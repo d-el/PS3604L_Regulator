@@ -16,7 +16,7 @@
 #include <semphr.h>
 #include <adc.h>
 #include <spi.h>
-#include <ad5663.h>
+#include <ad5060.h>
 #include "adcTSK.h"
 #include <movingAverageFilter.h>
 #include "sysTimeMeas.h"
@@ -81,7 +81,7 @@ void adcTSK(void *pPrm){
 	decltype(a.dacI) dacI = 0;
 
 	adc_setCallback(adcHoock);
-	ad5663_init(spi);
+	ad5060_init(spi);
 	ad468x_init(spi);
 	adc_setSampleRate(500);
 	adc_startSampling();
@@ -98,11 +98,11 @@ void adcTSK(void *pPrm){
 		a.filtered.tsh2 = f_tsh2.proc(adcValue.adcreg[CH_TSH2]) - a.filtered.vrefm;
 		a.filtered.uin = f_vin.proc(adcValue.adcreg[CH_UINADC]) - a.filtered.vrefm;
 		if(dacU != a.dacU){
-			ad5663_set_b(a.dacU);
+			ad5060_set_b(a.dacU);
 			dacU = a.dacU;
 		}
 		if(dacI != a.dacI){
-			ad5663_set_a(a.dacI);
+			ad5060_set_a(a.dacI);
 			dacI = a.dacI;
 		}
 	}

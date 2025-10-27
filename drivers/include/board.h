@@ -7,18 +7,14 @@
  *
  * TIM12_CH1 (PB14)				-> LED
  * TIM3_CH1						-> ADC TRIGGER
- * TIM4_CH2(PA12)				-> FAN_PWM
  *
  * SDADC1_IN4P					-> UDC_MEAS
- * SDADC1_IN5P					-> I_MEAS
- * SDADC1_IN6P					-> U_MEAS
  * SDADC1_IN7P					-> VREF-
  *
- * UART3 TX - (PD8)				-> 1Wire
- * UART1 TX - (PA9), RX - (PA10)-> UART CONNECT
+ * DAC CH1						-> FAN_VAL
  *
- * GPIO (PB5)					-> ON_OFF
- * GPIO (PA0)					-> CC_CV
+ * UART2 TX - (PA2)				-> 1Wire
+ * UART1 TX - (PA9), RX - (PA10)-> UART CONNECT
  */
 #ifndef board_H
 #define board_H

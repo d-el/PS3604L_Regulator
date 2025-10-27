@@ -105,14 +105,6 @@ void vsave(Prm::Val<int32_t>& prm, bool read, void *arg){
 			Prm::v3_adc = adcTaskStct.filtered.u;
 			Prm::v3_dac = Prm::vdac.val;
 			break;
-		case 4:
-			Prm::v4_adc = adcTaskStct.filtered.u;
-			Prm::v4_dac = Prm::vdac.val;
-			break;
-		case 5:
-			Prm::v5_adc = adcTaskStct.filtered.u;
-			Prm::v5_dac = Prm::vdac.val;
-			break;
 	}
 }
 
@@ -141,14 +133,6 @@ void isave(Prm::Val<int32_t>& prm, bool read, void *arg){
 		case 3:
 			Prm::i3_adc = adcTaskStct.filtered.i;
 			Prm::i3_dac = Prm::idac.val;
-			break;
-		case 4:
-			Prm::i4_adc = adcTaskStct.filtered.i;
-			Prm::i4_dac = Prm::idac.val;
-			break;
-		case 5:
-			Prm::i5_adc = adcTaskStct.filtered.i;
-			Prm::i5_dac = Prm::idac.val;
 			break;
 	}
 }
@@ -260,28 +244,18 @@ void systemTSK(void *pPrm){
 		else{
 			if(a.filtered.i <= Prm::i1_adc){
 				qCurrent = s32iq_lerp(	Prm::i0_adc, IntToIQ(Prm::i0_i, 1000000),
-												Prm::i1_adc, IntToIQ(Prm::i1_i, 1000000),
-												a.filtered.i);
+										Prm::i1_adc, IntToIQ(Prm::i1_i, 1000000),
+										a.filtered.i);
 			}
 			else if(a.filtered.i <= Prm::i2_adc){
 				qCurrent = s32iq_lerp(	Prm::i1_adc, IntToIQ(Prm::i1_i, 1000000),
-												Prm::i2_adc, IntToIQ(Prm::i2_i, 1000000),
-												a.filtered.i);
-			}
-			else if(a.filtered.i <= Prm::i3_adc){
-				qCurrent = s32iq_lerp(	Prm::i2_adc, IntToIQ(Prm::i2_i, 1000000),
-												Prm::i3_adc, IntToIQ(Prm::i3_i, 1000000),
-												a.filtered.i);
-			}
-			else if(a.filtered.i <= Prm::i4_adc){
-				qCurrent = s32iq_lerp(	Prm::i3_adc, IntToIQ(Prm::i3_i, 1000000),
-												Prm::i4_adc, IntToIQ(Prm::i4_i, 1000000),
-												a.filtered.i);
+										Prm::i2_adc, IntToIQ(Prm::i2_i, 1000000),
+										a.filtered.i);
 			}
 			else{
-				qCurrent = s32iq_lerp(	Prm::i4_adc, IntToIQ(Prm::i4_i, 1000000),
-												Prm::i5_adc, IntToIQ(Prm::i5_i, 1000000),
-												a.filtered.i);
+				qCurrent = s32iq_lerp(	Prm::i2_adc, IntToIQ(Prm::i2_i, 1000000),
+										Prm::i3_adc, IntToIQ(Prm::i3_i, 1000000),
+										a.filtered.i);
 			}
 		}
 
@@ -299,19 +273,9 @@ void systemTSK(void *pPrm){
 									Prm::v2_adc, IntToIQ(Prm::v2_u, 1000000),
 									a.filtered.u);
 		}
-		else if(a.filtered.u <= Prm::v3_adc){
+		else{
 			qVoltage = s32iq_lerp(	Prm::v2_adc, IntToIQ(Prm::v2_u, 1000000),
 									Prm::v3_adc, IntToIQ(Prm::v3_u, 1000000),
-									a.filtered.u);
-		}
-		else if(a.filtered.u <= Prm::v4_adc){
-			qVoltage = s32iq_lerp(	Prm::v3_adc, IntToIQ(Prm::v3_u, 1000000),
-									Prm::v4_adc, IntToIQ(Prm::v4_u, 1000000),
-									a.filtered.u);
-		}
-		else{
-			qVoltage = s32iq_lerp(	Prm::v4_adc, IntToIQ(Prm::v4_u, 1000000),
-									Prm::v5_adc, IntToIQ(Prm::v5_u, 1000000),
 									a.filtered.u);
 		}
 		_iq qWireResistens = IntToIQ(Prm::wireResistance.val, 10000);
@@ -479,19 +443,9 @@ void systemTSK(void *pPrm){
 								IntToIQ(Prm::i2_i, 1000000), Prm::i2_dac,
 								qI);
 			}
-			else if(qI <= IntToIQ(Prm::i3_i, 1000000)){
+			else{
 				idac = iq_lerp(	IntToIQ(Prm::i2_i, 1000000), Prm::i2_dac,
 								IntToIQ(Prm::i3_i, 1000000), Prm::i3_dac,
-								qI);
-			}
-			else if(qI <= IntToIQ(Prm::i4_i, 1000000)){
-				idac = iq_lerp(	IntToIQ(Prm::i3_i, 1000000), Prm::i3_dac,
-								IntToIQ(Prm::i4_i, 1000000), Prm::i4_dac,
-								qI);
-			}
-			else{
-				idac = iq_lerp(	IntToIQ(Prm::i4_i, 1000000), Prm::i4_dac,
-								IntToIQ(Prm::i5_i, 1000000), Prm::i5_dac,
 								qI);
 			}
 
@@ -508,19 +462,9 @@ void systemTSK(void *pPrm){
 								IntToIQ(Prm::v2_u, 1000000), Prm::v2_dac,
 								qU);
 			}
-			else if(qU <= IntToIQ(Prm::v3_u, 1000000)){
+			else{
 				udac = iq_lerp(	IntToIQ(Prm::v2_u, 1000000), Prm::v2_dac,
 								IntToIQ(Prm::v3_u, 1000000), Prm::v3_dac,
-								qU);
-			}
-			else if(qU <= IntToIQ(Prm::v4_u, 1000000)){
-				udac = iq_lerp(	IntToIQ(Prm::v3_u, 1000000), Prm::v3_dac,
-								IntToIQ(Prm::v4_u, 1000000), Prm::v4_dac,
-								qU);
-				}
-			else{
-				udac = iq_lerp(	IntToIQ(Prm::v4_u, 1000000), Prm::v4_dac,
-								IntToIQ(Prm::v5_u, 1000000), Prm::v5_dac,
 								qU);
 			}
 		}

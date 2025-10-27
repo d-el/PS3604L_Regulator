@@ -21,7 +21,7 @@
 */
 pinMode_type   const pinsMode[] = {
 	/*0 */	makepin(GPIOF,	6,		outPushPull,				pullDisable,	1,	0),	//LED
-	/*1 */	makepin(GPIOF,	7,		outPushPull,				pullDisable,	1,	0),	//AD5663_SYNC
+	/*1 */	makepin(GPIOF,	7,		outPushPull,				pullDisable,	1,	0),	//NSS2
 	/*2 */	makepin(GPIOB,	7,		outOpenDrain,				pullDisable,	1,	0),	//ON_OFF
 	/*3 */	makepin(GPIOA,	0,		digitalInput,				pullDisable,	0,	0),	//CC_CV
 	/*4 */	makepin(GPIOA,	2,		alternateFunctionOpenDrain,	pullDisable,	1,	7),	//DS18B20
@@ -29,6 +29,7 @@ pinMode_type   const pinsMode[] = {
 	/*6 */	makepin(GPIOA,	6,		outOpenDrain,				pullDisable,	1,	0),	//RNG_HI
 	/*7 */	makepin(GPIOA,	1,		outPushPull,				pullDisable,	0,	0),	//RNG_MEAS_SELECT
 	/*8 */	makepin(GPIOB,	6,		digitalInput,				pullDisable,	0,	0),	//RNG_DETECT
+	/*9 */	makepin(GPIOA,	12,		outPushPull,				pullDisable,	1,	0),	//NSS3
 };
 static const uint32_t pinNum = sizeof(pinsMode) / sizeof(pinMode_type);
 
