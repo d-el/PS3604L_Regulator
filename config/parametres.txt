@@ -122,7 +122,7 @@ group(calibration, private)
 
 	p(i0_dac			,"lsb"		,int32_t	,chmodRW	,nullptr	,0	,0x0370	,426		,-2147483648,2147483647	,0	,0	,0		,savesys)
 	p(i1_dac			,"lsb"		,int32_t	,chmodRW	,nullptr	,0	,0x0371	,8110		,-2147483648,2147483647	,0	,0	,0		,savesys)
-	p(i2_dac			,"lsb"		,int32_t	,chmodRW	,nullptr	,0	,0x0372	,84276		,-2147483648,2147483647	,0	,0	,0		,savesys)
+	p(i2_dac			,"lsb"		,int32_t	,chmodRW	,nullptr	,0	,0x0372	,34276		,-2147483648,2147483647	,0	,0	,0		,savesys)
 	p(i3_dac			,"lsb"		,int32_t	,chmodRW	,nullptr	,0	,0x0373	,46576		,-2147483648,2147483647	,0	,0	,0		,savesys)
 
 	p(micro_iext0_adc	,"lsb"		,int32_t	,chmodRW	,nullptr	,0	,0x0390	,1626		,-2147483648,2147483647	,0	,0	,0		,savesys)
