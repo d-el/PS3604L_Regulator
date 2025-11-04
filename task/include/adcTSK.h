@@ -11,8 +11,8 @@
 /*!****************************************************************************
  * Include
  */
-#include "IQmathLib.h"
-
+#include <stdint.h>
+#include <stdbool.h>
 
 /*!****************************************************************************
  * User typedef
@@ -26,14 +26,14 @@ typedef struct {
 	struct {
 		uint16_t tsh1;
 		uint16_t tsh2;
-		uint16_t uin;
-		int32_t u;
+		uint16_t vin;
+		int32_t v;
 		int32_t i;
 		uint16_t vrefm;
 	}filtered;
 	bool externalSensorOk;
 
-	uint16_t dacU;
+	uint16_t dacV;
 	uint16_t dacI;
 } adcTaskStct_type;
 

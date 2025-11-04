@@ -90,19 +90,19 @@ void vsave(Prm::Val<int32_t>& prm, bool read, void *arg){
 
 	switch(reinterpret_cast<uint32_t>(prm.getarg())){
 		case 0:
-			Prm::v0_adc = adcTaskStct.filtered.u;
+			Prm::v0_adc = adcTaskStct.filtered.v;
 			Prm::v0_dac = Prm::vdac.val;
 			break;
 		case 1:
-			Prm::v1_adc = adcTaskStct.filtered.u;
+			Prm::v1_adc = adcTaskStct.filtered.v;
 			Prm::v1_dac = Prm::vdac.val;
 			break;
 		case 2:
-			Prm::v2_adc = adcTaskStct.filtered.u;
+			Prm::v2_adc = adcTaskStct.filtered.v;
 			Prm::v2_dac = Prm::vdac.val;
 			break;
 		case 3:
-			Prm::v3_adc = adcTaskStct.filtered.u;
+			Prm::v3_adc = adcTaskStct.filtered.v;
 			Prm::v3_dac = Prm::vdac.val;
 			break;
 	}
@@ -263,20 +263,20 @@ void systemTSK(void *pPrm){
 		 * Calculate voltage
 		 */
 		_iq qVoltage;
-		if(a.filtered.u <= Prm::v1_adc){
+		if(a.filtered.v <= Prm::v1_adc){
 			qVoltage = s32iq_lerp(	Prm::v0_adc, IntToIQ(Prm::v0_u, 1000000),
 									Prm::v1_adc, IntToIQ(Prm::v1_u, 1000000),
-									a.filtered.u);
+									a.filtered.v);
 		}
-		else if(a.filtered.u <= Prm::v2_adc){
+		else if(a.filtered.v <= Prm::v2_adc){
 			qVoltage = s32iq_lerp(	Prm::v1_adc, IntToIQ(Prm::v1_u, 1000000),
 									Prm::v2_adc, IntToIQ(Prm::v2_u, 1000000),
-									a.filtered.u);
+									a.filtered.v);
 		}
 		else{
 			qVoltage = s32iq_lerp(	Prm::v2_adc, IntToIQ(Prm::v2_u, 1000000),
 									Prm::v3_adc, IntToIQ(Prm::v3_u, 1000000),
-									a.filtered.u);
+									a.filtered.v);
 		}
 		_iq qWireResistens = IntToIQ(Prm::wireResistance.val, 10000);
 		qVoltage  = qVoltage - _IQmpy(qWireResistens, qCurrent);
@@ -285,7 +285,7 @@ void systemTSK(void *pPrm){
 		 * Calculate input voltage
 		 */
 		auto calculateUin = [](uint16_t lsb) -> _iq { return lsb * _IQ((AdcVref * (UDC_Rh + UDC_Rl)) / (65536 * UDC_Rl)); };
-		_iq qInVoltage = calculateUin(a.filtered.uin);
+		_iq qInVoltage = calculateUin(a.filtered.vin);
 
 		auto caltTemparature = [](uint16_t adcVal){
 			_iq qvTsh = adcVal * _IQ(AdcVref / 65536/*Full scale*/);
@@ -384,7 +384,7 @@ void systemTSK(void *pPrm){
 		/**************************************
 		* Set value
 		*/
-		Prm::vadc = a.filtered.u;
+		Prm::vadc = a.filtered.v;
 		Prm::iadc = a.filtered.i;
 		Prm::voltage = IQtoInt(qVoltage, 1000000);
 		Prm::current = IQtoInt(qCurrent, 1000000);
@@ -422,10 +422,10 @@ void systemTSK(void *pPrm){
 		/**************************************
 		* Calculate DAC values
 		*/
-		uint16_t udac = 0, idac = 0;
+		uint16_t vdac = 0, idac = 0;
 		if(Prm::mode == Prm::dacMode){
 				idac = Prm::idac;
-				udac = Prm::vdac;
+				vdac = Prm::vdac;
 		}
 		else{
 			// Calc idac
@@ -449,28 +449,28 @@ void systemTSK(void *pPrm){
 								qI);
 			}
 
-			// Calc udac
-			_iq qU = IntToIQ(enableState ? Prm::voltage_set : 0, 1000000) + _IQmpy(qWireResistens, qCurrent);
+			// Calc vdac
+			_iq qV = IntToIQ(enableState ? Prm::voltage_set : 0, 1000000) + _IQmpy(qWireResistens, qCurrent);
 
-			if(qU <= IntToIQ(Prm::v1_u, 1000000)){
-				udac = iq_lerp(	IntToIQ(Prm::v0_u, 1000000), Prm::v0_dac,
+			if(qV <= IntToIQ(Prm::v1_u, 1000000)){
+				vdac = iq_lerp(	IntToIQ(Prm::v0_u, 1000000), Prm::v0_dac,
 								IntToIQ(Prm::v1_u, 1000000), Prm::v1_dac,
-								qU);
+								qV);
 			}
-			else if(qU <= IntToIQ(Prm::v2_u, 1000000)){
-				udac = iq_lerp(	IntToIQ(Prm::v1_u, 1000000), Prm::v1_dac,
+			else if(qV <= IntToIQ(Prm::v2_u, 1000000)){
+				vdac = iq_lerp(	IntToIQ(Prm::v1_u, 1000000), Prm::v1_dac,
 								IntToIQ(Prm::v2_u, 1000000), Prm::v2_dac,
-								qU);
+								qV);
 			}
 			else{
-				udac = iq_lerp(	IntToIQ(Prm::v2_u, 1000000), Prm::v2_dac,
+				vdac = iq_lerp(	IntToIQ(Prm::v2_u, 1000000), Prm::v2_dac,
 								IntToIQ(Prm::v3_u, 1000000), Prm::v3_dac,
-								qU);
+								qV);
 			}
 		}
 
 		a.dacI = idac;
-		a.dacU = udac;
+		a.dacV = vdac;
 
 		// Time low current
 		TickType_t lowCurrentDuration = 0;

@@ -21,6 +21,7 @@
 #include <movingAverageFilter.h>
 #include "sysTimeMeas.h"
 #include <ad468x.h>
+#include <prmSystem.h>
 
 /*!****************************************************************************
  * MEMORY
@@ -72,12 +73,12 @@ void adcTSK(void *pPrm){
 
 	static MovingAverageFilter<uint16_t, 16> f_tsh1(0);
 	static MovingAverageFilter<uint16_t, 16> f_tsh2(0);
-	static MovingAverageFilter<uint16_t, 16> f_vin(45000); // Equivalent 55.5V
+	static MovingAverageFilter<uint16_t, 16> f_vin(45000);
 	static MovingAverageFilter<uint32_t, 1000> f_iadc(0);
-	static MovingAverageFilter<uint32_t, 1000> f_uadc(0);
+	static MovingAverageFilter<uint32_t, 1000> f_vadc(0);
 	static MovingAverageFilter<int16_t, 32> f_common(820);
 
-	decltype(a.dacU) dacU = 0;
+	decltype(a.dacV) dacU = 0;
 	decltype(a.dacI) dacI = 0;
 
 	adc_setCallback(adcHoock);
@@ -91,19 +92,29 @@ void adcTSK(void *pPrm){
 		int32_t resa = 0, resb = 0;
 		ad468x_convRead(&resa, &resb);
 		a.filtered.i = f_iadc.proc(resb);
-		a.filtered.u = f_uadc.proc(resa);
+		a.filtered.v = f_vadc.proc(resa);
 
 		a.filtered.vrefm = f_common.proc(adcValue.adcreg[CH_VREFM]);
 		a.filtered.tsh1 = f_tsh1.proc(adcValue.adcreg[CH_TSH1]) - a.filtered.vrefm;
 		a.filtered.tsh2 = f_tsh2.proc(adcValue.adcreg[CH_TSH2]) - a.filtered.vrefm;
-		a.filtered.uin = f_vin.proc(adcValue.adcreg[CH_UINADC]) - a.filtered.vrefm;
-		if(dacU != a.dacU){
-			ad5060_set_b(a.dacU);
-			dacU = a.dacU;
+		a.filtered.vin = f_vin.proc(adcValue.adcreg[CH_UINADC]) - a.filtered.vrefm;
+
+		// Set DAC value
+		if(dacU != a.dacV){
+			ad5060_set_b(a.dacV);
+			dacU = a.dacV;
 		}
 		if(dacI != a.dacI){
 			ad5060_set_a(a.dacI);
 			dacI = a.dacI;
+		}
+
+		// Change filter size
+		if(f_iadc.getsize() != Prm::ifilter_size.val){
+			f_iadc.setsize(Prm::ifilter_size.val);
+		}
+		if(f_vadc.getsize() != Prm::vfilter_size.val){
+			f_vadc.setsize(Prm::vfilter_size.val);
 		}
 	}
 }
