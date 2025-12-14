@@ -75,6 +75,8 @@ group(Target, public)
 	p(reboot			,""			,uint16_t	,chmodRW	,nullptr	,0	,0x0111	,2			,0			,2			,0	,0	,0		,notsave)
 	p(vfilter_size		,""			,uint16_t	,chmodRW	,nullptr	,0	,0x0112	,1000		,1			,1000		,0	,0	,0		,notsave)
 	p(ifilter_size		,""			,uint16_t	,chmodRW	,nullptr	,0	,0x0113	,1000		,1			,1000		,0	,0	,0		,notsave)
+	p(vintegration_size	,""			,uint16_t	,chmodRW	,nullptr	,0	,0x0114	,1			,1			,100		,0	,0	,0		,notsave)
+	p(iintegration_size	,""			,uint16_t	,chmodRW	,nullptr	,0	,0x0115	,1			,1			,100		,0	,0	,0		,notsave)
 
 group(State, public)
 	p(voltage			,"V"		,int32_t	,chmodR		,nullptr	,0	,0x0200	,0			,-1.0000	,37.000000	,0	,0	,6		,notsave)

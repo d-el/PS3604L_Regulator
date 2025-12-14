@@ -74,6 +74,8 @@ void adcTSK(void *pPrm){
 	static MovingAverageFilter<uint16_t, 16> f_tsh1(0);
 	static MovingAverageFilter<uint16_t, 16> f_tsh2(0);
 	static MovingAverageFilter<uint16_t, 16> f_vin(45000);
+	static MovingAverageFilter<uint32_t, 100> int_iadc(0);
+	static MovingAverageFilter<uint32_t, 100> int_vadc(0);
 	static MovingAverageFilter<uint32_t, 1000> f_iadc(0);
 	static MovingAverageFilter<uint32_t, 1000> f_vadc(0);
 	static MovingAverageFilter<int16_t, 32> f_common(820);
@@ -91,8 +93,20 @@ void adcTSK(void *pPrm){
 		xSemaphoreTake(AdcEndConversionSem, portMAX_DELAY);
 		int32_t resa = 0, resb = 0;
 		ad468x_convRead(&resa, &resb);
-		a.filtered.i = f_iadc.proc(resb);
-		a.filtered.v = f_vadc.proc(resa);
+
+		// Integration
+		int_iadc.integrate(resb);
+		// Filtering
+		if(int_iadc.getindex() == 0){
+			a.filtered.i = f_iadc.proc(int_iadc.calcoutput());
+		}
+
+		// Integration
+		int_vadc.integrate(resa);
+		// Filtering
+		if(int_vadc.getindex() == 0){
+			a.filtered.v = f_vadc.proc(int_vadc.calcoutput());
+		}
 
 		a.filtered.vrefm = f_common.proc(adcValue.adcreg[CH_VREFM]);
 		a.filtered.tsh1 = f_tsh1.proc(adcValue.adcreg[CH_TSH1]) - a.filtered.vrefm;
@@ -109,6 +123,13 @@ void adcTSK(void *pPrm){
 			dacI = a.dacI;
 		}
 
+		// Change integration size
+		if(int_iadc.getsize() != Prm::iintegration_size.val){
+			int_iadc.setsize(Prm::iintegration_size.val);
+		}
+		if(int_vadc.getsize() != Prm::vintegration_size.val){
+			int_vadc.setsize(Prm::vintegration_size.val);
+		}
 		// Change filter size
 		if(f_iadc.getsize() != Prm::ifilter_size.val){
 			f_iadc.setsize(Prm::ifilter_size.val);

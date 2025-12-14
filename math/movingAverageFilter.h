@@ -1,9 +1,9 @@
 /*!****************************************************************************
  * @file		movingAverageFilter.h
  * @author		Storozhenko Roman - D_EL
- * @version 	V1.0
- * @date		22-01-2022
- * @copyright 	The MIT License (MIT). Copyright (c) 2022 Storozhenko Roman
+ * @version 	V1.1
+ * @date		13-12-2025
+ * @copyright 	The MIT License (MIT). Copyright (c) 2025 Storozhenko Roman
  */
 
 #ifndef MOVINGAVERAGEFILTER_H
@@ -24,7 +24,7 @@ public:
 		}
 	};
 
-	T proc(T val){
+	void integrate(T val){
 		acc -= buffer[index];
 		buffer[index] = val;
 		acc += buffer[index];
@@ -33,8 +33,15 @@ public:
 		if(index >= size){
 			index = 0;
 		}
+	}
 
+	T calcoutput(){
 		return acc / (int32_t)size;
+	}
+
+	T proc(T val){
+		integrate(val);
+		return calcoutput();
 	}
 
 	void setsize(size_t _size){
@@ -47,10 +54,15 @@ public:
 				acc += lastval;
 			}
 		}
+		index = 0;
 	}
 
 	size_t getsize(){
 		return size;
+	}
+
+	size_t getindex(){
+		return index;
 	}
 
 private:
