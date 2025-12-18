@@ -208,7 +208,6 @@ void systemTSK(void *pPrm){
 	osres = xTaskCreate(ds18TSK, "ds18TSK", DS18B_TSK_SZ_STACK, NULL, DS18B_TSK_PRIO, NULL);
 	assert(osres == pdTRUE);
 	(void)osres;
-	vTaskDelay(pdMS_TO_TICKS(300));
 
 	///========================================================
 	adcTaskStct_type&	a = adcTaskStct;
@@ -353,7 +352,7 @@ void systemTSK(void *pPrm){
 				status |= Prm::m_overheated;
 			}
 		}
-		else{
+		else if(temperature.state == temp_ErrSensor){
 			status |= Prm::m_errorTemperatureSensor;
 		}
 
@@ -393,7 +392,6 @@ void systemTSK(void *pPrm){
 		Prm::capacity = capacity;
 		Prm::input_voltage = IQtoInt(qInVoltage, 1000000);
 		Prm::temp_heatsink = temperature.temperature;
-		Prm::debug_u16.val = a.filtered.vrefm;
 
 		if(enableState){
 			Prm::time.val = xTaskGetTickCount() - timeOffset;

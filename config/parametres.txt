@@ -62,7 +62,7 @@ group(Info, public)
 
 group(Target, public)
 	p(voltage_set		,"V"		,int32_t	,chmodRW	,nullptr	,0	,0x0100	,0			,0			,40.000000	,0	,0	,6		,notsave)
-	p(current_set		,"A"		,int32_t	,chmodRW	,nullptr	,0	,0x0102	,0			,0.0001		,4.2000000	,0	,0	,6		,notsave)
+	p(current_set		,"A"		,int32_t	,chmodRW	,nullptr	,0	,0x0102	,0.0001		,0.0001		,4.2000000	,0	,0	,6		,notsave)
 	p(vdac				,"lsb"		,int32_t	,chmodRW	,nullptr	,1	,0x0104	,0			,0			,65535		,0	,0	,0		,notsave)
 	p(idac				,"lsb"		,int32_t	,chmodRW	,nullptr	,1	,0x0106	,0			,0			,65535		,0	,0	,0		,notsave)
 	p(mode				,""			,uint16_t	,chmodRW	,nullptr	,0	,0x0108	,0			,0			,3			,0	,0	,0		,notsave)

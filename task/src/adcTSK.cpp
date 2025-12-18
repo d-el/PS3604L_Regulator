@@ -73,7 +73,7 @@ void adcTSK(void *pPrm){
 
 	static MovingAverageFilter<uint16_t, 16> f_tsh1(0);
 	static MovingAverageFilter<uint16_t, 16> f_tsh2(0);
-	static MovingAverageFilter<uint16_t, 16> f_vin(45000);
+	static MovingAverageFilter<uint16_t, 16> f_vin(10700);
 	static MovingAverageFilter<uint32_t, 100> int_iadc(0);
 	static MovingAverageFilter<uint32_t, 100> int_vadc(0);
 	static MovingAverageFilter<uint32_t, 1000> f_iadc(0);

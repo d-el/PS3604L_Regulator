@@ -47,6 +47,7 @@ static void uartRxHook(uart_type *puart){
 void ds18TSK(void *pPrm){
 	(void)pPrm;
 	uint8_t errorcnt = 0;
+	temperature.state = temp_NoInit;
 
 	// Create Semaphore for UART
 	vSemaphoreCreateBinary(oneWireUartSem);
@@ -102,7 +103,7 @@ void ds18TSK(void *pPrm){
 			if(errorcnt < DS18_MAX_ERROR){
 				errorcnt++;
 			}else{
-				temperature.state = temp_NoInit;
+				temperature.state = temp_ErrSensor;
 			}
 			vTaskDelay(pdMS_TO_TICKS(1000));
 		}
