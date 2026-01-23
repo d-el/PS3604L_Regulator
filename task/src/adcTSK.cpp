@@ -14,13 +14,13 @@
 #include <task.h>
 #include <queue.h>
 #include <semphr.h>
-#include <adc.h>
-#include <spi.h>
-#include <ad5060.h>
+#include <hal/adc.h>
+#include <hal/spi.h>
+#include <hal/sysTimeMeas.h>
+#include <dev/ad5060.h>
+#include <dev/ad468x.h>
 #include "adcTSK.h"
 #include <movingAverageFilter.h>
-#include "sysTimeMeas.h"
-#include <ad468x.h>
 #include <prmSystem.h>
 
 /*!****************************************************************************

@@ -329,9 +329,11 @@ void uart_setBaud(uart_type *uartx, uint32_t baudRate){
 /*!****************************************************************************
  * @brief	Set callback uart
  */
-void uart_setCallback(uart_type *uartx, uartCallback_type txHoock, uartCallback_type rxHoock){
+void uart_setCallback(uart_type *uartx, uartCallback_type txHoock, void*txArg, uartCallback_type rxHoock, void* rxArg){
 	uartx->txHoock = txHoock;
+	uartx->txHoockArg = txArg;
 	uartx->rxHoock = rxHoock;
+	uartx->rxHoockArg = rxArg;
 }
 
 /*!****************************************************************************

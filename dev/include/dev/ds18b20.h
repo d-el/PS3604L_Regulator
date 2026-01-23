@@ -8,15 +8,11 @@
 #ifndef ds18b20_H
 #define ds18b20_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*!****************************************************************************
 * Include
 */
 #include <stdint.h>
-#include "oneWireUart.h"
+#include "driver/oneWireUart.h"
 
 /*!****************************************************************************
 * User typedef
@@ -31,14 +27,14 @@ typedef struct{
 
 typedef enum{
 	ds18b20st_ok,
-	ds18b20st_NotFound = owNotFound,
-	ds18b20st_ShortCircle = owShortCircle,
-	ds18b20st_wTimeOut = owTimeOut,
-	ds18b20st_errorCrc = owCrcError,
-	ds18b20st_SearchLast = owSearchLast,
-	ds18b20st_SearchError = owSearchError,
-	ds18b20st_UartTimeout = owUartTimeout,
-	ds18b20st_other = owOther,
+	ds18b20st_NotFound = OneWire::owNotFound,
+	ds18b20st_ShortCircle = OneWire::owShortCircle,
+	ds18b20st_wTimeOut = OneWire::owTimeOut,
+	ds18b20st_errorCrc = OneWire::owCrcError,
+	ds18b20st_SearchLast = OneWire::owSearchLast,
+	ds18b20st_SearchError = OneWire::owSearchError,
+	ds18b20st_UartTimeout = OneWire::owUartTimeout,
+	ds18b20st_other = OneWire::owOther,
 	ds18b20st_notDs18b20
 }ds18b20_state_type;
 
@@ -52,10 +48,6 @@ ds18b20_state_type ds18b20_writeTrim(const uint8_t rom[8], const uint8_t trim[2]
 ds18b20_state_type ds18b20_convertTemp(const uint8_t rom[8]);
 int16_t ds18b20_reg2tmpr(const uint8_t scratchpad[2]);
 uint16_t ds18b20_getTconv(uint8_t bits);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif //ds18b20_H
 /******************************** END OF FILE ********************************/

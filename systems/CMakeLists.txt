@@ -5,7 +5,6 @@ add_library(systems STATIC
 	src/semihosting.c
 	src/startup_stm32f373xx.c
 	src/syscall.c
-	src/sysTimeMeas.c
 	src/write.c
 	)
 
@@ -17,6 +16,6 @@ target_compile_options(systems PUBLIC
 	-DSEGGER_RTT_SECTION=".rtti"
 	)
 
-target_link_libraries(systems cmsis drivers freertos utils)
+target_link_libraries(systems cmsis hal freertos utils)
 
-target_link_options(systems PUBLIC -Wl,--require-defined=writeInit)
+target_link_options(systems PUBLIC -Wl,--require-defined=writeInit -Wl,-u HardFault_Handler)

@@ -13,7 +13,7 @@
 #include <inttypes.h>
 #include <stdint.h>
 #include <plog.h>
-#include <board.h>
+#include <hal/board.h>
 
 /*!****************************************************************************
  * Memory

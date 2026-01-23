@@ -13,8 +13,8 @@
 #include <FreeRTOS.h>
 #include <task.h>
 #include <semphr.h>
-#include <spi.h>
-#include <gpio.h>
+#include <hal/spi.h>
+#include <hal/gpio.h>
 #include "ad5060.h"
 
 /*!****************************************************************************

@@ -35,14 +35,14 @@
 * @param	bits - resolution bits
 */
 ds18b20_state_type ds18b20_init(const uint8_t rom[8], uint8_t bits){
-	owSt_type result = ow_reset();
+	OneWire::owSt_t result = oneWire(0).reset();
 	if(result != 0){
 		return (ds18b20_state_type)result;
 	}
 
 	if(rom == NULL){
 		uint8_t readRom[8];
-		result = ow_readRom(readRom);
+		result = oneWire(0).readRom(readRom);
 		if(result != 0){
 			return (ds18b20_state_type)result;
 		}
@@ -51,8 +51,8 @@ ds18b20_state_type ds18b20_init(const uint8_t rom[8], uint8_t bits){
 		}
 	}
 
-	result = ow_selectRom(rom);
-	if(result != owOk){
+	result = oneWire(0).selectRom(rom);
+	if(result != OneWire::owOk){
 		return (ds18b20_state_type)result;
 	}
 
@@ -68,8 +68,8 @@ ds18b20_state_type ds18b20_init(const uint8_t rom[8], uint8_t bits){
 		default: buff[3] = 0x7F;;
 	}
 	buff[3] = 0x7F;				//12bit 750ms	0.0625
-	result = ow_write(buff, sizeof(buff));
-	if(result != owOk){
+	result =oneWire(0).write(buff, sizeof(buff));
+	if(result != OneWire::owOk){
 		return (ds18b20_state_type)result;
 	}
 
@@ -82,23 +82,23 @@ ds18b20_state_type ds18b20_init(const uint8_t rom[8], uint8_t bits){
 * @param	scratchpad - save to
 */
 ds18b20_state_type ds18b20_readScratchpad(const uint8_t rom[8], uint8_t scratchpad[9]){
-	owSt_type result = ow_reset();
+	OneWire::owSt_t result = oneWire(0).reset();
 	if(result != 0){
 		return (ds18b20_state_type)result;
 	}
-	result = ow_selectRom(rom);
-	if(result != owOk){
+	result = oneWire(0).selectRom(rom);
+	if(result != OneWire::owOk){
 		return (ds18b20_state_type)result;
 	}
 
 	const uint8_t functionCommand = READ_SCRATCHPAD;
-	result = ow_write(&functionCommand, 1);
-	if(result != owOk){
+	result = oneWire(0).write(&functionCommand, 1);
+	if(result != OneWire::owOk){
 		return (ds18b20_state_type)result;
 	}
 
-	result = ow_read(scratchpad, 9);
-	if(result != owOk){
+	result = oneWire(0).read(scratchpad, 9);
+	if(result != OneWire::owOk){
 		return (ds18b20_state_type)result;
 	}
 
@@ -117,20 +117,20 @@ ds18b20_state_type ds18b20_readScratchpad(const uint8_t rom[8], uint8_t scratchp
 ds18b20_state_type ds18b20_readTrim(const uint8_t rom[8], uint8_t trim[2]){
 	const uint8_t functionCommand[] = { READ_TRIM1, READ_TRIM2 };
 	for(uint8_t i = 0; i < 2; i++){
-		owSt_type result = ow_reset();
+		OneWire::owSt_t result = oneWire(0).reset();
 		if(result != 0){
 			return (ds18b20_state_type)result;
 		}
-		result = ow_selectRom(rom);
-		if(result != owOk){
+		result = oneWire(0).selectRom(rom);
+		if(result != OneWire::owOk){
 			return (ds18b20_state_type)result;
 		}
-		result = ow_write(&functionCommand[i], 1);
-		if(result != owOk){
+		result = oneWire(0).write(&functionCommand[i], 1);
+		if(result != OneWire::owOk){
 			return (ds18b20_state_type)result;
 		}
-		result = ow_read(&trim[i], 1);
-		if(result != owOk){
+		result = oneWire(0).read(&trim[i], 1);
+		if(result != OneWire::owOk){
 			return (ds18b20_state_type)result;
 		}
 	}
@@ -145,33 +145,33 @@ ds18b20_state_type ds18b20_readTrim(const uint8_t rom[8], uint8_t trim[2]){
 ds18b20_state_type ds18b20_writeTrim(const uint8_t rom[8], const uint8_t trim[2]){
 	const uint8_t writeCommand[] = { WRITE_TRIM1, WRITE_TRIM2 };
 	for(uint8_t i = 0; i < 2; i++){
-		owSt_type result = ow_reset();
+		OneWire::owSt_t result = oneWire(0).reset();
 		if(result != 0){
 			return (ds18b20_state_type)result;
 		}
-		result = ow_selectRom(rom);
-		if(result != owOk){
+		result = oneWire(0).selectRom(rom);
+		if(result != OneWire::owOk){
 			return (ds18b20_state_type)result;
 		}
 		uint8_t writedata[2] = { writeCommand[i], trim[i] };
-		result = ow_write(&writedata[0], 2);
-		if(result != owOk){
+		result = oneWire(0).write(&writedata[0], 2);
+		if(result != OneWire::owOk){
 			return (ds18b20_state_type)result;
 		}
 	}
 
 	const uint8_t saveCommand[] = { SAVE_TRIM1, SAVE_TRIM2 };
 	for(uint8_t i = 0; i < 2; i++){
-		owSt_type result = ow_reset();
+		OneWire::owSt_t result = oneWire(0).reset();
 		if(result != 0){
 			return (ds18b20_state_type)result;
 		}
-		result = ow_selectRom(rom);
-		if(result != owOk){
+		result = oneWire(0).selectRom(rom);
+		if(result != OneWire::owOk){
 			return (ds18b20_state_type)result;
 		}
-		result = ow_write(&saveCommand[i], 1);
-		if(result != owOk){
+		result = oneWire(0).write(&saveCommand[i], 1);
+		if(result != OneWire::owOk){
 			return (ds18b20_state_type)result;
 		}
 	}
@@ -184,18 +184,18 @@ ds18b20_state_type ds18b20_writeTrim(const uint8_t rom[8], const uint8_t trim[2]
 * @param	rom - slave ID or NULL for skip ROM
 */
 ds18b20_state_type ds18b20_convertTemp(const uint8_t rom[8]){
-	owSt_type result = ow_reset();
+	OneWire::owSt_t result = oneWire(0).reset();
 	if(result != 0){
 		return (ds18b20_state_type)result;
 	}
-	result = ow_selectRom(rom);
-	if(result != owOk){
+	result = oneWire(0).selectRom(rom);
+	if(result != OneWire::owOk){
 		return (ds18b20_state_type)result;
 	}
 
 	const uint8_t functionCommand = CONVERT_T;
-	result = ow_write(&functionCommand, 1);
-	if(result != owOk){
+	result = oneWire(0).write(&functionCommand, 1);
+	if(result != OneWire::owOk){
 		return (ds18b20_state_type)result;
 	}
 	return ds18b20st_ok;

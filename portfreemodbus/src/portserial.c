@@ -8,8 +8,8 @@
 #include <FreeRTOS.h>
 #include <task.h>
 #include <semphr.h>
-#include <uart.h>
-#include <board.h>
+#include <hal/uart.h>
+#include <hal/board.h>
 
 #include "port.h"
 
@@ -79,7 +79,7 @@ BOOL xMBPortSerialInit(UCHAR ucPort, ULONG ulBaudRate, UCHAR ucDataBits, eMBPari
 	rxBuffer = buffer;
 	rxBufferLen = bufferLen;
 	uart_init(connectUart, ulBaudRate);
-	uart_setCallback(connectUart, uartTskHook, uartTskHook);
+	uart_setCallback(connectUart, uartTskHook, NULL, uartTskHook, NULL);
 
 	vMBPortSerialEnable( FALSE, FALSE );
 	return TRUE;

@@ -12,7 +12,7 @@
  */
 #include <stddef.h>
 #include "ad468x.h"
-#include "gpio.h"
+#include "hal/gpio.h"
 
 enum{
 	N_CONFIGURATION1 = 0x01,

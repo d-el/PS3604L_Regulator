@@ -10,7 +10,7 @@ target_include_directories(task PUBLIC
 	include
 	)
 target_compile_options(task PUBLIC -Wno-missing-field-initializers)
-target_link_libraries(task freertos utils drivers dev systems prmsystem iqmathlib-cm4 freemodbus math)
+target_link_libraries(task freertos utils hal dev driver systems prmsystem iqmathlib-cm4 freemodbus math)
 
 target_link_options(systems PUBLIC
 	-u vApplicationStackOverflowHook

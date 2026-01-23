@@ -17,9 +17,10 @@
 #include <semphr.h>
 #include <IQmathLib.h>
 #include <specificMath.h>
-#include <adc.h>
-#include <flash.h>
-#include <board.h>
+#include <hal/adc.h>
+#include <hal/flash.h>
+#include <hal/board.h>
+#include <driver/oneWireUart.h>
 #include <prmSystem.h>
 #include <plog.h>
 #include <prmSystem.h>
@@ -200,6 +201,8 @@ void systemTSK(void *pPrm){
 	auto settingsize = Prm::getSerialSize(Prm::savesys);
 	Prm::deserialize(Prm::savesys, &_suser_settings, settingsize);
 	auto prevenable = Prm::enable.val;
+	oneWire(0).init(); // Init one wire stack
+	oneWire(0).reset();
 
 	BaseType_t osres = xTaskCreate(adcTSK, "adcTSK", ADC_TSK_SZ_STACK, NULL, ADC_TSK_PRIO, NULL);
 	assert(osres == pdTRUE);

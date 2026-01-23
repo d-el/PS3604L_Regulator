@@ -104,7 +104,9 @@ typedef struct uartStruct{
 	};
 
 	void (*txHoock)(struct uartStruct *uart);
+	void* rxHoockArg;
 	void (*rxHoock)(struct uartStruct *uart);
+	void* txHoockArg;
 	uint32_t frequency;
 	uint32_t					baudRate;
 	volatile uartTxState_type	txState			:8;
@@ -145,7 +147,7 @@ extern uart_type			*uart3;
 void uart_init(uart_type *uartx, uint32_t baudRate);
 void uart_deinit(uart_type *uartx);
 void uart_setBaud(uart_type *uartx, uint32_t baudRate);
-void uart_setCallback(uart_type *uartx, uartCallback_type txHoock, uartCallback_type rxHoock);
+void uart_setCallback(uart_type *uartx, uartCallback_type txHoock, void*rxArg, uartCallback_type rxHoock, void* txArg);
 void uart_write(uart_type *uartx, const void *src, uint16_t len);
 void uart_read(uart_type *uartx, void *dst, uint16_t len);
 void uart_stopRead(uart_type *uartStruct);
