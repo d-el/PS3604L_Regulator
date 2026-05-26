@@ -26,10 +26,14 @@ typedef struct {
 	struct {
 		uint16_t tsh1;
 		uint16_t tsh2;
-		uint16_t vin;
+		uint16_t ifan;
+		uint16_t v1;
+		uint16_t v2;
+		uint16_t v3;
+		uint16_t v4;
+		uint16_t vg;
 		int32_t v;
 		int32_t i;
-		uint16_t vrefm;
 	}filtered;
 	bool externalSensorOk;
 

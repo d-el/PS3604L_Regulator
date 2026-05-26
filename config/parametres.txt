@@ -1,14 +1,22 @@
 ﻿
 text(status, mask,
-	1: m_errorExternalIAdc,
-	2: m_errorTemperatureSensor,
-	4: m_overheated,
-	8: m_lowInputVoltage,
-	16: m_reserved,
-	32: m_сalibrationEmpty,
-	64: m_limitation,
-	128: m_externaIAdc,
-	256: m_cRangeLoOverflow
+	1: s_limitation,
+	2: s_cRangeLoOverflow,
+	4: s_overheated,
+	8: s_calibrationEmpty
+	)
+
+text(error, mask,
+	1: e_temperatureSensor,
+	2: e_temperatureSensorRef,
+	4: e_temperatureSensorShunt,
+	8: e_lowInputV1,
+	16: e_lowInputV2,
+	32: e_lowInputV3,
+	64: e_lowInputV4,
+	128: e_lowInputVg,
+	256: e_fan,
+	512: e_fanOvercurrent
 	)
 
 text(disablecause, value,
@@ -85,14 +93,20 @@ group(State, public)
 	p(resistance		,"Ohm"		,int32_t	,chmodR		,nullptr	,0	,0x0206	,0			,-0.0001	,214748.3647l,0	,0	,4		,notsave)
 	p(time				,"s"		,uint32_t	,chmodR		,nullptr	,0	,0x0208	,0			,0			,4294967.295l,0	,0	,3		,notsave)
 	p(capacity			,"Ah"		,uint32_t	,chmodR		,nullptr	,0	,0x020A	,0			,0			,999.000	,0	,0	,3		,notsave)
-	p(input_voltage		,"V"		,int32_t	,chmodR		,nullptr	,0	,0x020C	,0			,0			,100.000000	,0	,0	,6		,notsave)
-	p(temp_heatsink		,"°С"		,int16_t	,chmodR		,nullptr	,0	,0x020E	,0			,-55.0		,125.0		,0	,0	,1		,notsave)
-	p(temp_shunt		,"°С"		,int16_t	,chmodR		,nullptr	,0	,0x020F	,0			,-55.0		,125.0		,0	,0	,1		,notsave)
-	p(temp_ref			,"°С"		,int16_t	,chmodR		,nullptr	,0	,0x0210	,0			,-55.0		,125.0		,0	,0	,1		,notsave)
-	p(status			,""			,uint16_t	,chmodR		,nullptr	,0	,0x0211	,0			,0			,65535		,0	,0	,0		,notsave)
-	p(disablecause		,""			,uint16_t	,chmodR		,nullptr	,0	,0x0212	,0			,0			,65535		,0	,0	,0		,notsave)
-	p(vadc				,"lsb"		,int32_t	,chmodR		,nullptr	,0	,0x0213	,0			,0			,65535		,0	,0	,0		,notsave)
-	p(iadc				,"lsb"		,int32_t	,chmodR		,nullptr	,0	,0x0215	,0			,0			,65535		,0	,0	,0		,notsave)
+	p(iFan				,"A"		,int16_t	,chmodR		,nullptr	,0	,0x020C	,0			,0			,1.000		,0	,0	,3		,notsave)
+	p(input_v1			,"V"		,int16_t	,chmodR		,nullptr	,0	,0x020D	,0			,0			,100.0		,0	,0	,1		,notsave)
+	p(input_v2			,"V"		,int16_t	,chmodR		,nullptr	,0	,0x020E	,0			,0			,100.0		,0	,0	,1		,notsave)
+	p(input_v3			,"V"		,int16_t	,chmodR		,nullptr	,0	,0x020F	,0			,0			,100.0		,0	,0	,1		,notsave)
+	p(input_v4			,"V"		,int16_t	,chmodR		,nullptr	,0	,0x0210	,0			,0			,100.0		,0	,0	,1		,notsave)
+	p(input_vg			,"V"		,int16_t	,chmodR		,nullptr	,0	,0x0211	,0			,0			,100.0		,0	,0	,1		,notsave)
+	p(temp_heatsink		,"°С"		,int16_t	,chmodR		,nullptr	,0	,0x0212	,0			,-55.0		,125.0		,0	,0	,1		,notsave)
+	p(temp_shunt		,"°С"		,int16_t	,chmodR		,nullptr	,0	,0x0213	,0			,-55.0		,125.0		,0	,0	,1		,notsave)
+	p(temp_ref			,"°С"		,int16_t	,chmodR		,nullptr	,0	,0x0214	,0			,-55.0		,125.0		,0	,0	,1		,notsave)
+	p(status			,""			,uint16_t	,chmodR		,nullptr	,0	,0x0215	,0			,0			,65535		,0	,0	,0		,notsave)
+	p(error				,""			,uint16_t	,chmodR		,nullptr	,0	,0x0216	,0			,0			,65535		,0	,0	,0		,notsave)
+	p(disablecause		,""			,uint16_t	,chmodR		,nullptr	,0	,0x0217	,0			,0			,65535		,0	,0	,0		,notsave)
+	p(vadc				,"lsb"		,int32_t	,chmodR		,nullptr	,0	,0x0218	,0			,0			,65535		,0	,0	,0		,notsave)
+	p(iadc				,"lsb"		,int32_t	,chmodR		,nullptr	,0	,0x021A	,0			,0			,65535		,0	,0	,0		,notsave)
 
 group(calibration, public)
 	p(v0_u				,"V"		,int32_t	,chmodRW	,vsave		,0	,0x0310	,0.010440	,0.000000	,36.000000	,0	,0	,6		,savesys)

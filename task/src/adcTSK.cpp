@@ -73,12 +73,16 @@ void adcTSK(void *pPrm){
 
 	static MovingAverageFilter<uint16_t, 16> f_tsh1(0);
 	static MovingAverageFilter<uint16_t, 16> f_tsh2(0);
-	static MovingAverageFilter<uint16_t, 16> f_vin(10700);
+	static MovingAverageFilter<uint16_t, 32> f_ifan(0);
+	static MovingAverageFilter<uint16_t, 16> f_v1(10700);
+	static MovingAverageFilter<uint16_t, 16> f_v2(10700);
+	static MovingAverageFilter<uint16_t, 16> f_v3(10700);
+	static MovingAverageFilter<uint16_t, 16> f_v4(10700);
+	static MovingAverageFilter<uint16_t, 16> f_vg(10700);
 	static MovingAverageFilter<uint32_t, 100> int_iadc(0);
 	static MovingAverageFilter<uint32_t, 100> int_vadc(0);
 	static MovingAverageFilter<uint32_t, 1000> f_iadc(0);
 	static MovingAverageFilter<uint32_t, 1000> f_vadc(0);
-	static MovingAverageFilter<int16_t, 32> f_common(820);
 
 	decltype(a.dacV) dacU = 0;
 	decltype(a.dacI) dacI = 0;
@@ -108,10 +112,14 @@ void adcTSK(void *pPrm){
 			a.filtered.v = f_vadc.proc(int_vadc.calcoutput());
 		}
 
-		a.filtered.vrefm = f_common.proc(adcValue.adcreg[CH_VREFM]);
-		a.filtered.tsh1 = f_tsh1.proc(adcValue.adcreg[CH_TSH1]) - a.filtered.vrefm;
-		a.filtered.tsh2 = f_tsh2.proc(adcValue.adcreg[CH_TSH2]) - a.filtered.vrefm;
-		a.filtered.vin = f_vin.proc(adcValue.adcreg[CH_UINADC]) - a.filtered.vrefm;
+		a.filtered.tsh1 = f_tsh1.proc(adcValue.adcreg1[A1CH_TSH1]);
+		a.filtered.tsh2 = f_tsh2.proc(adcValue.adcreg1[A1CH_TSH2]);
+		a.filtered.ifan = f_ifan.proc(adcValue.adcreg1[A1CH_IFAN]);
+		a.filtered.v1 = f_v1.proc(adcValue.adcreg1[A1CH_V1]);
+		a.filtered.v2 = f_v2.proc(adcValue.adcreg1[A1CH_V2]);
+		a.filtered.v3 = f_v3.proc(adcValue.adcreg3[A3CH_V3]);
+		a.filtered.v4 = f_v4.proc(adcValue.adcreg3[A3CH_V4]);
+		a.filtered.vg = f_vg.proc(adcValue.adcreg3[A3CH_VG]);
 
 		// Set DAC value
 		if(dacU != a.dacV){

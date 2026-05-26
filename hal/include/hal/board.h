@@ -37,7 +37,8 @@
 // Task Priority
 #define EXTI_CC_CV_Priority			0
 #define PVD_IRQ_Priority			1
-#define DMA2_Channel3_IRQn_Priority	15
+#define DMA2_Channel3_IRQn_Priority	14
+#define DMA2_Channel5_IRQn_Priority	14
 
 /*!****************************************************************************
 * Macro functions

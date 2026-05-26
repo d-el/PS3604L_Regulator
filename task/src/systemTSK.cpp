@@ -30,19 +30,24 @@
 #include "ds18TSK.h"
 
 #define AdcVref							(3.3)	/// [V]
-#define UDC_Rh							(47)	/// [kOhm]
-#define UDC_Rl							(2)		/// [kOhm]
+#define UDC_Rh							(1000)	/// [kOhm]
+#define UDC_Rl							(47)	/// [kOhm]
 
 #define SYSTEM_TSK_PERIOD				(1)		///< [ms]
 #define TIME_CURRENT_OFF				(1000)	///< [ms]
 
-#define COOLER_START					(0.3)	///< [k from maximum]
-#define TEMPERATURE_FAN_OFF				(35.0)	///< [°C]
-#define TEMPERATURE_FAN_ON				(43.0)	///< [°C]
-#define TEMPERATURE_FAN_MAX				(60.0)	///< [°C]
+#define TEMPERATURE_FAN_OFF				(36.0)	///< [°C]
+#define TEMPERATURE_FAN_ON				(40.0)	///< [°C]
+#define TEMPERATURE_FAN_MAX				(55.0)	///< [°C]
 #define TEMPERARURE_DISABLE				(80.0)	///< [°C]
 
-#define MIN_VIN_VOLTAGE					(47.0)	/// [V]
+#define MIN_V1							(9.5)	/// [V]
+
+#define FAN_VOLTAGE_START				(2.2)	///< [V]
+#define FAN_VOLTAGE_MAX					(6)		///< [V]
+#define FAN_CURRENT_CHECK				(0.1)	/// [A]
+#define FAN_CURRENT_CHECK_DEV			(0.03)	/// [A]
+#define FAN_CURRENT_MAX					(0.35)	/// [A]
 
 extern "C" int _write(int fd, const void *buf, size_t count);
 
@@ -215,15 +220,18 @@ void systemTSK(void *pPrm){
 	///========================================================
 	adcTaskStct_type&	a = adcTaskStct;
 	_iq14				q20OutPower = 0;			// [W]
+	_iq					fanSetVoltage = 0;			// [V]
 	uint32_t			resistance = 0;				// [Ohm]
 	uint32_t			capacity = 0;				// [mAh]
 	bool				irqEnable = false;
 	bool				enableState = false;
+	bool				initialFanChecked = false;
 	uint8_t				limitCnt = 0;
 	TickType_t			timeOffset = 0;
 	TickType_t			lowCurrentTime = 0;
 	TickType_t			pxPreviousWakeTime = xTaskGetTickCount();
 	switchON();
+	dac_ch1(DAC_MAX_VALUE / 2); // Apply fan check voltage
 
 	while(1){
 		/*
@@ -283,19 +291,26 @@ void systemTSK(void *pPrm){
 		_iq qWireResistens = IntToIQ(Prm::wireResistance.val, 10000);
 		qVoltage  = qVoltage - _IQmpy(qWireResistens, qCurrent);
 
+		auto calculatFanCurrent = [](uint16_t lsb) -> _iq { return lsb * _IQ(AdcVref / 65536); };
+		_iq qIfan = calculatFanCurrent(a.filtered.ifan);
+
 		/*
 		 * Calculate input voltage
 		 */
-		auto calculateUin = [](uint16_t lsb) -> _iq { return lsb * _IQ((AdcVref * (UDC_Rh + UDC_Rl)) / (65536 * UDC_Rl)); };
-		_iq qInVoltage = calculateUin(a.filtered.vin);
+		auto calculateVin = [](uint16_t lsb) -> _iq { return lsb * _IQ((AdcVref * (UDC_Rh + UDC_Rl)) / (65536 * UDC_Rl)); };
+		_iq qInV1 = calculateVin(a.filtered.v1);
+		_iq qInV2 = calculateVin(a.filtered.v2);
+		_iq qInV3 = calculateVin(a.filtered.v3);
+		_iq qInV4 = calculateVin(a.filtered.v4);
+		_iq qInVg = calculateVin(a.filtered.vg);
 
-		auto caltTemparature = [](uint16_t adcVal){
+		auto calcTemparature = [](uint16_t adcVal){
 			_iq qvTsh = adcVal * _IQ(AdcVref / 65536/*Full scale*/);
 			_iq qTsh = _IQdiv(qvTsh - _IQ(0.4/*Static offset*/), _IQ(0.0195/*Volts per degree*/));
 			return IQtoInt(qTsh, 10);
 		};
-		Prm::temp_shunt.val = caltTemparature(a.filtered.tsh1);
-		Prm::temp_ref.val = caltTemparature(a.filtered.tsh2);
+		Prm::temp_shunt.val = calcTemparature(a.filtered.tsh1);
+		Prm::temp_ref.val = calcTemparature(a.filtered.tsh2);
 		/*
 		 * Calculate output power
 		 */
@@ -344,19 +359,20 @@ void systemTSK(void *pPrm){
 
 		///========================================================
 		uint16_t status = 0;
+		uint16_t error = Prm::error.val & Prm::e_fan;
 
 		if(Prm::calibration_time.val == 0){
-			status |= Prm::m_сalibrationEmpty;
+			status |= Prm::s_calibrationEmpty;
 		}
 
 		// Temperature sensor
 		if(temperature.state == temp_Ok){
 			if(temperature.temperature > (TEMPERARURE_DISABLE * 10)){
-				status |= Prm::m_overheated;
+				status |= Prm::s_overheated;
 			}
 		}
 		else if(temperature.state == temp_ErrSensor){
-			status |= Prm::m_errorTemperatureSensor;
+			error |= Prm::e_temperatureSensor;
 		}
 
 		// Binary filter
@@ -375,17 +391,29 @@ void systemTSK(void *pPrm){
 				limited = false;
 		}
 
-		if(qInVoltage < _IQ(9)){
-			status |= Prm::m_lowInputVoltage;
+		if(qInV1 < _IQ(MIN_V1)){
+			error |= Prm::e_lowInputV1;
+		}
+		if(qInV2 < _IQ(MIN_V1 * 2)){
+			error |= Prm::e_lowInputV2;
+		}
+		if(qInV3 < _IQ(MIN_V1 * 3)){
+			error |= Prm::e_lowInputV3;
+		}
+		if(qInV4 < _IQ(MIN_V1 * 4)){
+			error |= Prm::e_lowInputV4;
+		}
+		if(qInVg < _IQ(MIN_V1 * 5)){
+			error |= Prm::e_lowInputVg;
 		}
 
 		if(Prm::enable && limited){
-			status |= Prm::m_limitation;
+			status |= Prm::s_limitation;
 		}
 
 		/**************************************
-		* Set value
-		*/
+		 * Set value
+		 */
 		Prm::vadc = a.filtered.v;
 		Prm::iadc = a.filtered.i;
 		Prm::voltage = IQtoInt(qVoltage, 1000000);
@@ -393,7 +421,12 @@ void systemTSK(void *pPrm){
 		Prm::power = IQtoInt(q20OutPower, 1000000, 22);
 		Prm::resistance = resistance;
 		Prm::capacity = capacity;
-		Prm::input_voltage = IQtoInt(qInVoltage, 1000000);
+		Prm::iFan = IQtoInt(qIfan, 1000);
+		Prm::input_v1 = IQtoInt(qInV1, 10);
+		Prm::input_v2 = IQtoInt(qInV2, 10);
+		Prm::input_v3 = IQtoInt(qInV3, 10);
+		Prm::input_v4 = IQtoInt(qInV4, 10);
+		Prm::input_vg = IQtoInt(qInVg, 10);
 		Prm::temp_heatsink = temperature.temperature;
 
 		if(enableState){
@@ -401,28 +434,49 @@ void systemTSK(void *pPrm){
 		}
 
 		/**************************************
-		* Cooler regulator
-		*/
-		if(temperature.state == temp_Ok){
-			_iq	qpwmTask = iq_lerp(	_IQ(TEMPERATURE_FAN_ON),_IQ(COOLER_START),
-									_IQ(TEMPERATURE_FAN_MAX), _IQ(1),
-									(uint32_t)(((uint64_t)temperature.temperature << 24) / 10));
-			qpwmTask = _IQsat(qpwmTask, _IQ(1), _IQ(COOLER_START));
-			if(temperature.temperature > (TEMPERATURE_FAN_ON * 10)){
-				uint16_t pwmk = IQtoInt(qpwmTask, DAC_MAX_VALUE);
-				dac_ch1(pwmk);
+		 * Fan regulator
+		 */
+		if(initialFanChecked && !(error & Prm::e_fanOvercurrent)){
+			if(temperature.state == temp_Ok){
+				if(temperature.temperature >= (TEMPERATURE_FAN_ON * 10)){
+					fanSetVoltage = iq_lerp(	_IQ(TEMPERATURE_FAN_ON), _IQ(FAN_VOLTAGE_START),
+												_IQ(TEMPERATURE_FAN_MAX), _IQ(FAN_VOLTAGE_MAX),
+												(uint32_t)(((uint64_t)/*temperature.temperature*/Prm::debug_u16.val << 24) / 10));
+					fanSetVoltage = _IQsat(fanSetVoltage, _IQ(FAN_VOLTAGE_MAX), _IQ(FAN_VOLTAGE_START));
+				}
+				else if(temperature.temperature < TEMPERATURE_FAN_OFF * 10){
+					fanSetVoltage = 0;
+				}
 			}
-			if(temperature.temperature < TEMPERATURE_FAN_OFF * 10){
-				dac_ch1(0);
+			else{
+				fanSetVoltage = FAN_VOLTAGE_MAX;
 			}
 		}
-		else{
-			dac_ch1(DAC_MAX_VALUE);
+		if(initialFanChecked){
+			if(error & Prm::e_fanOvercurrent){
+				fanSetVoltage = 0;
+			}
+			dac_ch1(fanSetVoltage / (_IQ(FAN_VOLTAGE_MAX) / DAC_MAX_VALUE));
 		}
 
 		/**************************************
-		* Calculate DAC values
-		*/
+		 * Fan test
+		 */
+		if(!initialFanChecked && xTaskGetTickCount() > pdMS_TO_TICKS(2000)){
+			if(qIfan > _IQ(FAN_CURRENT_CHECK + FAN_CURRENT_CHECK_DEV) ||
+				qIfan < _IQ(FAN_CURRENT_CHECK - FAN_CURRENT_CHECK_DEV)){
+				error |= Prm::e_fan;
+			}
+			initialFanChecked = true;
+		}
+		if(qIfan > _IQ(FAN_CURRENT_MAX)){
+			error |= Prm::e_fan;
+			error |= Prm::e_fanOvercurrent;
+		}
+
+		/**************************************
+		 * Calculate DAC values
+		 */
 		uint16_t vdac = 0, idac = 0;
 		if(Prm::mode == Prm::dacMode){
 				idac = Prm::idac;
@@ -482,13 +536,14 @@ void systemTSK(void *pPrm){
 		}
 
 		Prm::mask_disablecause disablecause = Prm::v_none;
-		if(status & Prm::m_errorTemperatureSensor){
+		if(error & Prm::e_temperatureSensor){
 			disablecause = Prm::v_errorTemperatureSensor;
 		}
-		else if(status & Prm::m_overheated){
+		else if(status & Prm::s_overheated){
 			disablecause = Prm::v_overheated;
 		}
-		else if(status & Prm::m_lowInputVoltage){
+		else if(error & Prm::e_lowInputV1 || error & Prm::e_lowInputV2 || error & Prm::e_lowInputV3 ||
+				error & Prm::e_lowInputV4 || error & Prm::e_lowInputVg){
 			disablecause = Prm::v_lowInputVoltage;
 		}
 		else if(enableState && Prm::mode == Prm::overcurrentShutdown && Prm::time.val >= Prm::ocp_delay.val &&
@@ -518,7 +573,7 @@ void systemTSK(void *pPrm){
 		}
 
 		if(!gppin_get(GP_RNG_DETECT)){
-			status |= Prm::mask_status::m_cRangeLoOverflow;
+			status |= Prm::mask_status::s_cRangeLoOverflow;
 		}
 
 		if(Prm::crange.val == Prm::mask_crange::crange_auto && gppin_get(GP_RNG_DETECT)){
@@ -564,6 +619,7 @@ void systemTSK(void *pPrm){
 		}
 
 		Prm::status = status;
+		Prm::error = error;
 
 		if(Prm::reboot.val == Prm::mask_reboot::reboot_do){
 			vTaskDelay(pdMS_TO_TICKS(2));
