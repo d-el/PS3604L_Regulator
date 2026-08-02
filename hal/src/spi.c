@@ -55,9 +55,9 @@ void spi_init(spi_type *spix, spiDiv_t divClock){
 		/************************************************
 		* IO
 		*/
-		gppin_init(GPIOB, 5, alternateFunctionPushPull, pullDisable, 0, SPI3_PINAFMOSI);
-		gppin_init(GPIOB, 4, alternateFunctionPushPull, pullUp, 0, SPI3_PINAFMISO);
-		gppin_init(GPIOB, 3, alternateFunctionPushPull, pullDisable, 0, SPI3_PINAFCLK);
+		gppin_init(GPIOB, 5, alternateFunctionPushPull, pullDisable, 0, SPI3_PINAFMOSI, ospeed2MHz);
+		gppin_init(GPIOB, 4, alternateFunctionPushPull, pullUp, 0, SPI3_PINAFMISO, ospeed2MHz);
+		gppin_init(GPIOB, 3, alternateFunctionPushPull, pullDisable, 0, SPI3_PINAFCLK, ospeed2MHz);
 
 		/************************************************
 		* NVIC

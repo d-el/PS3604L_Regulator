@@ -1,10 +1,10 @@
 ﻿/*!****************************************************************************
- * @file    	gpio.h
- * @author  	Storozhenko Roman - D_EL
- * @version 	V1.0
- * @date    	22.11.2016
- * @brief    	gpio driver for stm32 F3 microcontroller
- * @copyright 	The MIT License (MIT). Copyright (c) 2020 Storozhenko Roman
+ * @file		gpio.h
+ * @author		Storozhenko Roman - D_EL
+ * @version 	V1.1
+ * @date		22.11.2026
+ * @brief		gpio driver for stm32 F3 microcontroller
+ * @copyright	The MIT License (MIT). Copyright (c) 2026 Storozhenko Roman
  */
 #ifndef GPIO_H
 #define GPIO_H
@@ -74,9 +74,9 @@ typedef enum{
 }gpioMode_type;
 
 typedef enum{
-	speed2MHz,
-	speed10MHz,
-	speed50MHz,
+	ospeed2MHz,
+	ospeed10MHz,
+	ospeed50MHz
 }gpioSpeed_type;
 
 typedef enum{
@@ -93,18 +93,19 @@ typedef struct{
 	uint8_t         iniState    :1;     ///< Initial state
 	gpioPull_type   pull        :2;     ///< 0 - disable, 1 - pullUp, 2 - pullDown
 	uint8_t         nAF         :4;     ///< Number alternate function
+	uint8_t         ospeed      :2;     ///< Output speed
 }pinMode_type;
 
 typedef enum{
 	GP_LED,
-	GP_NSS2,
 	GP_ON_OFF,
 	GP_CC_CV,
 	GP_DS18B20,
-	GP_ADC_NSS,
 	GP_RNG_HI,
 	GP_RNG_MEAS_SELECT,
 	GP_RNG_DETECT,
+	GP_ADC_NSS,
+	GP_NSS2,
 	GP_NSS3,
 
 GP_NOT_USED
@@ -115,7 +116,7 @@ typedef void (*gpioCallback_type)(pinMode_type *gpio);
 /*!****************************************************************************
 * Macro functions
 */
-#define makepin(port, npin, mode, pull, iniState, nAF)    { port, (1<<npin), npin, mode, iniState, pull, nAF }
+#define makepin(port, npin, mode, pull, iniState, nAF, oSP)    { port, (1<<npin), npin, mode, iniState, pull, nAF, oSP }
 
 #define _gppin_set(port, pinmask)       (port->BSRR = (pinmask))
 #define _gppin_reset(port, pinmask)     (port->BRR  = (pinmask))
@@ -160,7 +161,7 @@ extern pinMode_type   const pinsMode[];
 * Prototypes for the functions in gpio.c
 */
 void externalInterrupt_CcCv_init(void);
-void gppin_init(GPIO_TypeDef *port, uint8_t npin, gpioMode_type mode, gpioPull_type pull, uint8_t iniState, uint8_t nAF);
+void gppin_init(GPIO_TypeDef *port, uint8_t npin, gpioMode_type mode, gpioPull_type pull, uint8_t iniState, uint8_t nAF, uint8_t ospeed);
 void gpio_init(void);
 void irqSetCallback(gpioCallback_type callback);
 void irqLimitOn(void);

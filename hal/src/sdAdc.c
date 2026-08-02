@@ -181,15 +181,15 @@ void adc_init(void){
 	/**********************************
 	 * IO
 	 */
-	gppin_init(GPIOB, 0, analogMode, pullDisable, 0, 0);
-	gppin_init(GPIOB, 1, analogMode, pullDisable, 0, 0);
-	gppin_init(GPIOB, 2, analogMode, pullDisable, 0, 0);
-	gppin_init(GPIOE, 8, analogMode, pullDisable, 0, 0);
-	gppin_init(GPIOE, 9, analogMode, pullDisable, 0, 0);
+	gppin_init(GPIOB, 0, analogMode, pullDisable, 0, 0, ospeed2MHz);
+	gppin_init(GPIOB, 1, analogMode, pullDisable, 0, 0, ospeed2MHz);
+	gppin_init(GPIOB, 2, analogMode, pullDisable, 0, 0, ospeed2MHz);
+	gppin_init(GPIOE, 8, analogMode, pullDisable, 0, 0, ospeed2MHz);
+	gppin_init(GPIOE, 9, analogMode, pullDisable, 0, 0, ospeed2MHz);
 
-	gppin_init(GPIOB, 14, analogMode, pullDisable, 0, 0);
-	gppin_init(GPIOB, 15, analogMode, pullDisable, 0, 0);
-	gppin_init(GPIOD, 8, analogMode, pullDisable, 0, 0);
+	gppin_init(GPIOB, 14, analogMode, pullDisable, 0, 0, ospeed2MHz);
+	gppin_init(GPIOB, 15, analogMode, pullDisable, 0, 0, ospeed2MHz);
+	gppin_init(GPIOD, 8, analogMode, pullDisable, 0, 0, ospeed2MHz);
 
 	for(int i = 0; i < 360000; i++) __NOP();
 

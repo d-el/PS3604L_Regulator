@@ -73,10 +73,10 @@ void uart_init(uart_type *uartx, uint32_t baudRate){
 		/************************************************
 		 * IO
 		 */
-		gppin_init(GPIOA, 9, alternateFunctionPushPull, pullDisable, 0, UART1_PINAFTX);			//PA9, PB6 USART1_TX
-		//gppin_init(GPIOA, 9, alternateFunctionOpenDrain, pullUp, 0, UART1_PINAFTX);
+		gppin_init(GPIOA, 9, alternateFunctionPushPull, pullDisable, 0, UART1_PINAFTX, ospeed2MHz);			//PA9, PB6 USART1_TX
+		//gppin_init(GPIOA, 9, alternateFunctionOpenDrain, pullUp, 0, UART1_PINAFTX, speed2MHz);
 		#if(UART1_HALFDUPLEX == 0)
-		gppin_init(GPIOA, 10, alternateFunctionPushPull, pullUp, 0, UART1_PINAFRX);				//PA10, PB7 USART1_RX
+		gppin_init(GPIOA, 10, alternateFunctionPushPull, pullUp, 0, UART1_PINAFRX, ospeed2MHz);				//PA10, PB7 USART1_RX
 		#else
 		uartx->halfDuplex = 1;
 		#endif
@@ -130,9 +130,9 @@ void uart_init(uart_type *uartx, uint32_t baudRate){
 		 * IO
 		 */
 		//gppin_init(GPIOB, 3, alternateFunctionPushPull, pullDisable, 0, UART2_PINAFTX);			//PA2 USART2_TX
-		gppin_init(GPIOA, 2, alternateFunctionOpenDrain, pullDisable, 0, UART2_PINAFTX);	//PD8 USART2_TX
+		gppin_init(GPIOA, 2, alternateFunctionOpenDrain, pullDisable, 0, UART2_PINAFTX, ospeed2MHz);	//PD8 USART2_TX
 		#if(UART2_HALFDUPLEX == 0)
-		gppin_init(GPIOB, 4, alternateFunctionPushPull, pullUp, 0, UART2_PINAFRX);				//PA3 USART2_RX
+		gppin_init(GPIOB, 4, alternateFunctionPushPull, pullUp, 0, UART2_PINAFRX, ospeed2MHz);				//PA3 USART2_RX
 		#else
 		uartx->halfDuplex = 1;
 		#endif
@@ -189,9 +189,9 @@ void uart_init(uart_type *uartx, uint32_t baudRate){
 		 * IO
 		 */
 		//gppin_init(GPIOD, 8, alternateFunctionPushPull, pullDisable, 0, UART3_PINAFTX);	//PD8 USART3_TX
-		gppin_init(GPIOD, 8, alternateFunctionOpenDrain, pullDisable, 0, UART3_PINAFTX);	//PD8 USART3_TX
+		gppin_init(GPIOD, 8, alternateFunctionOpenDrain, pullDisable, 0, UART3_PINAFTX, ospeed2MHz);	//PD8 USART3_TX
 		#if (UART3_HALFDUPLEX == 0)
-		gppin_init(GPIOD, 9, alternateFunctionPushPull, pullUp, 0, UART3_PINAFRX);			//PD9 USART3_RX
+		gppin_init(GPIOD, 9, alternateFunctionPushPull, pullUp, 0, UART3_PINAFRX, ospeed2MHz);			//PD9 USART3_RX
 		#else
 		uartx->halfDuplex = 1;
 		#endif
@@ -289,8 +289,8 @@ void uart_init(uart_type *uartx, uint32_t baudRate){
  * @brief
  */
 void uart_deinit(uart_type *uartx){
-	uartx->pUartTxDmaCh->CCR &= ~DMA_CCR_EN;									//Channel disabled
-	uartx->pUartRxDmaCh->CCR &= ~DMA_CCR_EN;									//Channel disabled
+	uartx->pUartTxDmaCh->CCR &= ~DMA_CCR_EN;								//Channel disabled
+	uartx->pUartRxDmaCh->CCR &= ~DMA_CCR_EN;								//Channel disabled
 	#if (UART1_USE > 0)
 	if(uartx->pUart == USART1){
 		RCC->APB2ENR &= ~RCC_APB2ENR_USART1EN;								//USART1 clock disable
@@ -301,7 +301,7 @@ void uart_deinit(uart_type *uartx){
 
 	#if (UART2_USE > 0)
 	if(uartx->pUart == USART2){
-		RCC->APB1ENR &= ~RCC_APB1ENR_USART2EN;								//USART1 clock disable
+		RCC->APB1ENR &= ~RCC_APB1ENR_USART2EN;								//USART2 clock disable
 		NVIC_DisableIRQ(DMA1_Channel6_IRQn);
 		NVIC_DisableIRQ(DMA1_Channel7_IRQn);
 	}
@@ -309,7 +309,7 @@ void uart_deinit(uart_type *uartx){
 
 	#if (UART3_USE > 0)
 	if(uartx->pUart == USART3){
-		RCC->APB1ENR &= ~RCC_APB1ENR_USART3EN;								//USART1 clock disable
+		RCC->APB1ENR &= ~RCC_APB1ENR_USART3EN;								//USART3 clock disable
 		NVIC_DisableIRQ(DMA1_Channel2_IRQn);
 		NVIC_DisableIRQ(DMA1_Channel3_IRQn);
 	}

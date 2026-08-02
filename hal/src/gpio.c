@@ -1,10 +1,10 @@
 ﻿/*!****************************************************************************
  * @file		gpio.c
  * @author		Storozhenko Roman - D_EL
- * @version 	V1.0
- * @date		22.11.2016
+ * @version 	V1.1
+ * @date		22.11.2026
  * @brief		gpio driver for stm32 F3 microcontroller
- * @copyright	The MIT License (MIT). Copyright (c) 2020 Storozhenko Roman
+ * @copyright	The MIT License (MIT). Copyright (c) 2026 Storozhenko Roman
  */
 
 /*!****************************************************************************
@@ -20,16 +20,16 @@
 * MEMORY
 */
 pinMode_type   const pinsMode[] = {
-	/*0 */	makepin(GPIOF,	6,		outPushPull,				pullDisable,	1,	0),	//LED
-	/*1 */	makepin(GPIOF,	7,		outPushPull,				pullDisable,	1,	0),	//NSS2
-	/*2 */	makepin(GPIOB,	7,		outOpenDrain,				pullDisable,	1,	0),	//ON_OFF
-	/*3 */	makepin(GPIOA,	0,		digitalInput,				pullDisable,	0,	0),	//CC_CV
-	/*4 */	makepin(GPIOA,	2,		alternateFunctionOpenDrain,	pullDisable,	1,	7),	//DS18B20
-	/*5 */	makepin(GPIOA,	15,		outPushPull,				pullDisable,	1,	0),	//ADC_NSS
-	/*6 */	makepin(GPIOA,	6,		outOpenDrain,				pullDisable,	1,	0),	//RNG_HI
-	/*7 */	makepin(GPIOA,	1,		outPushPull,				pullDisable,	0,	0),	//RNG_MEAS_SELECT
-	/*8 */	makepin(GPIOB,	6,		digitalInput,				pullDisable,	0,	0),	//RNG_DETECT
-	/*9 */	makepin(GPIOA,	12,		outPushPull,				pullDisable,	1,	0),	//NSS3
+	/*0 */	makepin(GPIOF,	6,		outPushPull,				pullDisable,	1,	0, ospeed2MHz),	//LED
+	/*1 */	makepin(GPIOB,	7,		outOpenDrain,				pullDisable,	1,	0, ospeed2MHz),	//ON_OFF
+	/*2 */	makepin(GPIOA,	0,		digitalInput,				pullDisable,	0,	0, ospeed2MHz),	//CC_CV
+	/*3 */	makepin(GPIOA,	2,		alternateFunctionOpenDrain,	pullDisable,	1,	7, ospeed2MHz),	//DS18B20
+	/*4 */	makepin(GPIOA,	6,		outOpenDrain,				pullDisable,	1,	0, ospeed2MHz),	//RNG_HI
+	/*5 */	makepin(GPIOA,	1,		outPushPull,				pullDisable,	0,	0, ospeed2MHz),	//RNG_MEAS_SELECT
+	/*6 */	makepin(GPIOB,	6,		digitalInput,				pullDisable,	0,	0, ospeed2MHz),	//RNG_DETECT
+	/*7 */	makepin(GPIOA,	15,		outPushPull,				pullDisable,	1,	0, ospeed2MHz),	//ADC_NSS
+	/*8 */	makepin(GPIOF,	7,		outPushPull,				pullDisable,	1,	0, ospeed2MHz),	//NSS2
+	/*9 */	makepin(GPIOA,	12,		outPushPull,				pullDisable,	1,	0, ospeed2MHz),	//NSS3
 };
 static const uint32_t pinNum = sizeof(pinsMode) / sizeof(pinMode_type);
 
@@ -76,7 +76,7 @@ void gpio_init(void){
 	pgpiosEnd = pgpios + pinNum;
 
 	while(pgpios < pgpiosEnd){
-		gppin_init(pgpios->p, pgpios->npin, pgpios->mode, pgpios->pull, pgpios->iniState, pgpios->nAF);
+		gppin_init(pgpios->p, pgpios->npin, pgpios->mode, pgpios->pull, pgpios->iniState, pgpios->nAF, pgpios->ospeed);
 		pgpios++;
 	}
 }
@@ -84,7 +84,7 @@ void gpio_init(void){
 /*!****************************************************************************
 *
 */
-void gppin_init(GPIO_TypeDef *port, uint8_t npin, gpioMode_type mode, gpioPull_type pull, uint8_t iniState, uint8_t nAF){
+void gppin_init(GPIO_TypeDef *port, uint8_t npin, gpioMode_type mode, gpioPull_type pull, uint8_t iniState, uint8_t nAF, uint8_t ospeed){
 	//Clock enable
 		 if(port == GPIOA)   RCC->AHBENR    |= RCC_AHBENR_GPIOAEN;
 	else if(port == GPIOB)   RCC->AHBENR    |= RCC_AHBENR_GPIOBEN;
@@ -107,6 +107,7 @@ void gppin_init(GPIO_TypeDef *port, uint8_t npin, gpioMode_type mode, gpioPull_t
 	*/
 	port->MODER			&= ~(0x03 << (2 * npin));
 	port->OTYPER		&= ~(1<<npin);
+	port->OSPEEDR		&= ~(0x03 << (2 * npin));
 	port->PUPDR			&= ~(GPIO_RESERVED << (2*npin));
 	port->AFR[npin / 8] &= ~(GPIO_AFRL_AFRL0_Msk << (4*(npin % 8)));
 
@@ -130,23 +131,25 @@ void gppin_init(GPIO_TypeDef *port, uint8_t npin, gpioMode_type mode, gpioPull_t
 		case outPushPull:
 			port->MODER |= GPIO_GP_OUT << (2*npin);
 			port->OTYPER |= GPIO_PUSH_PULL << npin;
+			port->OSPEEDR |= ospeed << (2*npin);	// Speed
 			break;
 
 		case outOpenDrain:
 			port->MODER |= GPIO_GP_OUT << (2*npin);
 			port->OTYPER |= GPIO_OPEN_DRAIN << npin;
+			port->OSPEEDR |= ospeed << (2*npin);	// Speed
 			break;
 
 		case alternateFunctionPushPull:
 			port->MODER |= GPIO_AF_MODE << (2*npin);
 			port->OTYPER |= GPIO_PUSH_PULL << npin;
-			port->OSPEEDR |= 0 << (2*npin);	//Low speed
+			port->OSPEEDR |= ospeed << (2*npin);	// Speed
 			break;
 
 		case alternateFunctionOpenDrain:
 			port->MODER |= GPIO_AF_MODE << (2*npin);
 			port->OTYPER |= GPIO_OPEN_DRAIN << npin;
-			port->OSPEEDR |= 0 << (2*npin);	//Low speed
+			port->OSPEEDR |= ospeed << (2*npin);	// Speed
 			break;
 	}
 

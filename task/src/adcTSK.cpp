@@ -68,7 +68,7 @@ void adcTSK(void *pPrm){
 
 	vSemaphoreCreateBinary(spiSem);
 	xSemaphoreTake(spiSem, portMAX_DELAY);
-	spi_init(spi3, spiDiv4);
+	spi_init(spi3, spiDiv16);
 	spi_setCallback(spi3, spiTC_Hook);
 
 	static MovingAverageFilter<uint16_t, 16> f_tsh1(0);

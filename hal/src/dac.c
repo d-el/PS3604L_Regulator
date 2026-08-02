@@ -20,7 +20,7 @@
 * @brief    initialization DAC1 CH1, CH2
 */
 void dac_init(void){
-	gppin_init(GPIOA, 4, analogMode, pullDisable, 0, 0);
+	gppin_init(GPIOA, 4, analogMode, pullDisable, 0, 0, ospeed2MHz);
 
 	RCC->APB1ENR	|= RCC_APB1ENR_DAC1EN;				// Clock enable
 	RCC->APB1RSTR	|= RCC_APB1RSTR_DAC1RST;			// Reset
